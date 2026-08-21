@@ -1,0 +1,30 @@
+name: Pull Request Check
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build on hosted macOS
+    runs-on: macos-26
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
+        with:
+          fetch-depth: 0
+
+      - name: Validate public-repository privacy
+        run: ./Scripts/privacy_check.sh
+
+      - name: Validate scripts
+        run: bash -n Scripts/*.sh
+
+      - name: Build without signing
+        run: ./Scripts/test.sh

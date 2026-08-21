@@ -104,6 +104,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private var downscaleRetinaCheckbox: NSButton!
     private var captureMenuOrder: [CaptureMenuItemID] = []
     private var captureMenuOrderRowsStack: NSStackView?
+    private var captureExclusionRowsStack: NSStackView?
     // embedColorProfileCheckbox removed — native color profile is always embedded
     private var localMonitor: Any?
     #if !OFFLINE
@@ -698,7 +699,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     @objc private func revealSettingsFileClicked(_ sender: NSButton) {
         let prefsDir = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first!
             .appendingPathComponent("Preferences", isDirectory: true)
-        let bundleID = Bundle.main.bundleIdentifier ?? "com.sw33tlie.macshot.macshot"
+        let bundleID = Bundle.main.bundleIdentifier ?? "com.itvx.macshot"
         let plist = prefsDir.appendingPathComponent("\(bundleID).plist")
         if FileManager.default.fileExists(atPath: plist.path) {
             NSWorkspace.shared.activateFileViewerSelecting([plist])
@@ -852,6 +853,32 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
 
         stack.addArrangedSubview(indented(disableSelectionShadowCheckbox))
+        stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
+
+        // ── Capture Exclusions ─────────────────────────────────
+        stack.addArrangedSubview(sectionHeader(L("Capture Exclusions")))
+        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
+
+        let exclusionNote = NSTextField(wrappingLabelWithString: L(
+            "Excluded applications are removed from screenshots and recordings. While exclusions are configured, the menu bar and Dock are also hidden to prevent name or icon leakage."))
+        exclusionNote.font = NSFont.systemFont(ofSize: 10)
+        exclusionNote.textColor = .secondaryLabelColor
+        stack.addArrangedSubview(indented(exclusionNote))
+        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
+
+        stack.addArrangedSubview(indented(makeCaptureExclusionListView()))
+        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
+
+        let addExcludedApplicationButton = NSButton(
+            title: L("Add Application…"),
+            target: self,
+            action: #selector(addCaptureExcludedApplication(_:)))
+        addExcludedApplicationButton.bezelStyle = .rounded
+        if #unavailable(macOS 14.0) {
+            addExcludedApplicationButton.isEnabled = false
+            addExcludedApplicationButton.toolTip = L("Application exclusion requires macOS 14 or later.")
+        }
+        stack.addArrangedSubview(indented(addExcludedApplicationButton))
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
         // ── Output ───────────────────────────────────────────
@@ -1042,6 +1069,150 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
 
         finalizeSettingsStack(scroll: scroll, stack: stack)
         return scroll
+    }
+
+    private func makeCaptureExclusionListView() -> NSView {
+        let box = NSView()
+        box.translatesAutoresizingMaskIntoConstraints = false
+        box.wantsLayer = true
+        box.layer?.backgroundColor = NSColor.windowBackgroundColor.withAlphaComponent(0.5).cgColor
+        box.layer?.cornerRadius = 6
+        box.layer?.borderWidth = 1
+        box.layer?.borderColor = NSColor.separatorColor.cgColor
+        box.widthAnchor.constraint(greaterThanOrEqualToConstant: 340).isActive = true
+
+        let rows = NSStackView()
+        rows.orientation = .vertical
+        rows.alignment = .leading
+        rows.spacing = 0
+        rows.translatesAutoresizingMaskIntoConstraints = false
+        box.addSubview(rows)
+        captureExclusionRowsStack = rows
+
+        NSLayoutConstraint.activate([
+            rows.topAnchor.constraint(equalTo: box.topAnchor, constant: 6),
+            rows.leadingAnchor.constraint(equalTo: box.leadingAnchor, constant: 8),
+            rows.trailingAnchor.constraint(equalTo: box.trailingAnchor, constant: -8),
+            rows.bottomAnchor.constraint(equalTo: box.bottomAnchor, constant: -6),
+        ])
+
+        rebuildCaptureExclusionRows()
+        return box
+    }
+
+    private func rebuildCaptureExclusionRows() {
+        guard let rows = captureExclusionRowsStack else { return }
+        rows.arrangedSubviews.forEach {
+            rows.removeArrangedSubview($0)
+            $0.removeFromSuperview()
+        }
+
+        let applications = CaptureExclusionStore.applications
+        if applications.isEmpty {
+            let emptyLabel = NSTextField(labelWithString: L("No applications excluded"))
+            emptyLabel.font = NSFont.systemFont(ofSize: 12)
+            emptyLabel.textColor = .tertiaryLabelColor
+            let emptyRow = NSStackView(views: [emptyLabel])
+            emptyRow.edgeInsets = NSEdgeInsets(top: 5, left: 4, bottom: 5, right: 4)
+            rows.addArrangedSubview(emptyRow)
+            return
+        }
+
+        for application in applications {
+            let iconImage: NSImage
+            if let applicationURL = NSWorkspace.shared.urlForApplication(
+                withBundleIdentifier: application.bundleIdentifier) {
+                iconImage = NSWorkspace.shared.icon(forFile: applicationURL.path)
+            } else {
+                iconImage = NSImage(
+                    systemSymbolName: "app",
+                    accessibilityDescription: application.displayName) ?? NSImage()
+            }
+            iconImage.size = NSSize(width: 24, height: 24)
+            let icon = NSImageView(image: iconImage)
+            icon.imageScaling = .scaleProportionallyUpOrDown
+            icon.translatesAutoresizingMaskIntoConstraints = false
+            icon.widthAnchor.constraint(equalToConstant: 24).isActive = true
+            icon.heightAnchor.constraint(equalToConstant: 24).isActive = true
+
+            let name = NSTextField(labelWithString: application.displayName)
+            name.font = NSFont.systemFont(ofSize: 12, weight: .medium)
+            name.lineBreakMode = .byTruncatingTail
+
+            let bundleIdentifier = NSTextField(labelWithString: application.bundleIdentifier)
+            bundleIdentifier.font = NSFont.systemFont(ofSize: 9)
+            bundleIdentifier.textColor = .tertiaryLabelColor
+            bundleIdentifier.lineBreakMode = .byTruncatingMiddle
+
+            let labels = NSStackView(views: [name, bundleIdentifier])
+            labels.orientation = .vertical
+            labels.alignment = .leading
+            labels.spacing = 1
+            labels.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+
+            let spacer = NSView()
+            let removeButton = NSButton(
+                image: NSImage(
+                    systemSymbolName: "minus.circle",
+                    accessibilityDescription: L("Remove")) ?? NSImage(),
+                target: self,
+                action: #selector(removeCaptureExcludedApplication(_:)))
+            removeButton.identifier = NSUserInterfaceItemIdentifier(application.bundleIdentifier)
+            removeButton.isBordered = false
+            removeButton.contentTintColor = .secondaryLabelColor
+            removeButton.toolTip = L("Remove")
+
+            let row = NSStackView(views: [icon, labels, spacer, removeButton])
+            row.orientation = .horizontal
+            row.alignment = .centerY
+            row.spacing = 8
+            row.edgeInsets = NSEdgeInsets(top: 5, left: 4, bottom: 5, right: 4)
+            row.widthAnchor.constraint(greaterThanOrEqualToConstant: 320).isActive = true
+            rows.addArrangedSubview(row)
+        }
+    }
+
+    @objc private func addCaptureExcludedApplication(_ sender: NSButton) {
+        guard #available(macOS 14.0, *) else { return }
+        let panel = NSOpenPanel()
+        panel.title = L("Choose Applications to Exclude")
+        panel.message = L("Selected applications will not appear in screenshots or recordings.")
+        panel.prompt = L("Exclude")
+        panel.allowedContentTypes = [.applicationBundle]
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = true
+        panel.treatsFilePackagesAsDirectories = false
+        panel.directoryURL = URL(fileURLWithPath: "/Applications", isDirectory: true)
+
+        guard let window else { return }
+        panel.beginSheetModal(for: window) { [weak self] response in
+            guard response == .OK else { return }
+            var invalidNames: [String] = []
+            for url in panel.urls {
+                guard let application = CaptureExcludedApplication(bundleURL: url),
+                      application.bundleIdentifier != Bundle.main.bundleIdentifier else {
+                    invalidNames.append(url.lastPathComponent)
+                    continue
+                }
+                CaptureExclusionStore.add(application)
+            }
+            self?.rebuildCaptureExclusionRows()
+
+            guard !invalidNames.isEmpty else { return }
+            let alert = NSAlert()
+            alert.messageText = L("Some applications could not be added")
+            alert.informativeText = invalidNames.joined(separator: "\n")
+            alert.alertStyle = .warning
+            alert.addButton(withTitle: L("OK"))
+            alert.beginSheetModal(for: window, completionHandler: nil)
+        }
+    }
+
+    @objc private func removeCaptureExcludedApplication(_ sender: NSButton) {
+        guard let bundleIdentifier = sender.identifier?.rawValue else { return }
+        CaptureExclusionStore.remove(bundleIdentifier: bundleIdentifier)
+        rebuildCaptureExclusionRows()
     }
 
     private func makeCaptureMenuOrderView() -> NSView {
@@ -2012,7 +2183,9 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
                     let content = try await SCShareableContent.excludingDesktopWindows(true, onScreenWindowsOnly: true)
                     lines.append("=== ScreenCaptureKit Capture Info ===")
                     for display in content.displays {
-                        let filter = SCContentFilter(display: display, excludingWindows: [])
+                        let filter = CaptureExclusionStore.contentFilter(
+                            display: display,
+                            content: content)
                         let config = SCStreamConfiguration()
                         config.width = display.width
                         config.height = display.height

@@ -87,6 +87,12 @@ class ScreenCaptureManager {
         context: ImmediateCaptureContext,
         timing: (@Sendable (String) -> Void)? = nil
     ) -> [ScreenCapture] {
+        // CGWindowListCreateImage cannot reliably omit an entire application.
+        // Never use this fallback when privacy exclusions are configured.
+        guard !CaptureExclusionStore.hasConfiguredApplications else {
+            timing?("CG immediate capture skipped because application exclusions are active")
+            return []
+        }
         timing?("captureAllScreensImmediately screens=\(context.screens.count)")
         return context.screens.enumerated().compactMap { index, screen in
             let cgRect = CGRect(
@@ -137,7 +143,7 @@ class ScreenCaptureManager {
         timing: (@Sendable (String) -> Void)? = nil
     ) async -> [ScreenCapture]? {
         let showsCursor = UserDefaults.standard.bool(forKey: "captureCursor")
-        if #available(macOS 26.0, *) {
+        if #available(macOS 26.0, *), !CaptureExclusionStore.hasConfiguredApplications {
             if let captures = await captureAllScreensImmediatelySCKRect(
                 showsCursor: showsCursor,
                 timing: timing
@@ -147,9 +153,8 @@ class ScreenCaptureManager {
         }
 
         timing?("SCK immediate: shareable content begin")
-        guard
-            let content = try? await SCShareableContent.excludingDesktopWindows(
-                false, onScreenWindowsOnly: true)
+        guard let content = try? await SCShareableContent.excludingDesktopWindows(
+            false, onScreenWindowsOnly: true)
         else {
             timing?("SCK immediate: shareable content failed — fallback")
             return nil
@@ -179,10 +184,11 @@ class ScreenCaptureManager {
             for (index, pair) in pairs.enumerated() {
                 let (display, screen) = pair
                 group.addTask {
-                    // Capture the whole display, excluding nothing: transient UI
-                    // must be preserved. The cursor is controlled by showsCursor,
-                    // not by the window list.
-                    let filter = SCContentFilter(display: display, excludingWindows: [])
+                    // Capture the whole display while applying application-level
+                    // privacy exclusions. Transient UI from other apps remains visible.
+                    let filter = CaptureExclusionStore.contentFilter(
+                        display: display,
+                        content: content)
                     let config = SCStreamConfiguration()
                     let scale = Int(screen.backingScaleFactor)
                     config.width = display.width * scale
@@ -373,7 +379,7 @@ class ScreenCaptureManager {
                 // windows (e.g. thumbnails spawned after the cache was built) are
                 // present in the window list and can actually be excluded.
                 let content: SCShareableContent
-                if !excludingWindowNumbers.isEmpty {
+                if !excludingWindowNumbers.isEmpty || CaptureExclusionStore.hasConfiguredApplications {
                     timing?("SCShareableContent fresh begin")
                     content = try await SCShareableContent.excludingDesktopWindows(
                         true, onScreenWindowsOnly: true)
@@ -421,8 +427,10 @@ class ScreenCaptureManager {
                             if #available(macOS 14.0, *) {
                                 // SCScreenshotManager: single-shot API, no stream overhead
                                 timing?("SCScreenshotManager capture begin display=\(index)")
-                                let filter = SCContentFilter(
-                                    display: display, excludingWindows: excludedSCWindows)
+                                let filter = CaptureExclusionStore.contentFilter(
+                                    display: display,
+                                    content: content,
+                                    excludingWindows: excludedSCWindows)
                                 let config = SCStreamConfiguration()
                                 let scale = Int(screen.backingScaleFactor)
                                 config.width = display.width * scale
@@ -442,6 +450,10 @@ class ScreenCaptureManager {
                                 timing?("SCScreenshotManager capture end display=\(index) pixels=\(image.width)x\(image.height)")
                                 return ScreenCapture(screen: screen, image: image)
                             } else {
+                                guard !CaptureExclusionStore.hasConfiguredApplications else {
+                                    timing?("fallback CG capture skipped because application exclusions are active")
+                                    return nil
+                                }
                                 // macOS 12.3–13.x: use CGWindowListCreateImage which returns
                                 // a CGImage directly — no pixel buffer format ambiguity.
                                 // Convert the AppKit screen frame (bottom-left origin) to the
@@ -495,7 +507,9 @@ class ScreenCaptureManager {
     /// On macOS 12–13, uses `CGWindowListCreateImage` targeting the specific window.
     static func captureWindow(windowID: CGWindowID, screen: NSScreen) async -> CGImage? {
         func captureViaWindowList() -> CGImage? {
-            CGWindowListCreateImage(.null, .optionIncludingWindow, windowID, .bestResolution)
+            guard !isExcludedWindow(windowID) else { return nil }
+            return CGWindowListCreateImage(
+                .null, .optionIncludingWindow, windowID, .bestResolution)
         }
 
         if #available(macOS 14.0, *) {
@@ -506,6 +520,7 @@ class ScreenCaptureManager {
             guard
                 let scWindow = content.windows.first(where: { CGWindowID($0.windowID) == windowID })
             else { return captureViaWindowList() }
+            guard !CaptureExclusionStore.contains(scWindow.owningApplication) else { return nil }
 
             let filter: SCContentFilter
             if #available(macOS 14.2, *) {
@@ -540,5 +555,17 @@ class ScreenCaptureManager {
             // macOS 12.3–13.x: CGWindowListCreateImage targeting the specific window
             return captureViaWindowList()
         }
+    }
+
+    private static func isExcludedWindow(_ windowID: CGWindowID) -> Bool {
+        guard CaptureExclusionStore.hasConfiguredApplications,
+              let rows = CGWindowListCopyWindowInfo(
+                [.optionIncludingWindow], windowID) as? [[String: Any]],
+              let processID = rows.first?[kCGWindowOwnerPID as String] as? pid_t else {
+            return false
+        }
+        let bundleIdentifier = NSRunningApplication(
+            processIdentifier: processID)?.bundleIdentifier
+        return CaptureExclusionStore.contains(bundleIdentifier: bundleIdentifier)
     }
 }

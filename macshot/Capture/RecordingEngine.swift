@@ -155,7 +155,10 @@ final class RecordingEngine: NSObject {
             let excludeWindows = excludeIDs.compactMap { wid in
                 content.windows.first(where: { CGWindowID($0.windowID) == wid })
             }
-            let filter = SCContentFilter(display: display, excludingWindows: excludeWindows)
+            let filter = CaptureExclusionStore.contentFilter(
+                display: display,
+                content: content,
+                excludingWindows: excludeWindows)
             let config = SCStreamConfiguration()
             config.width = Int(cropRect.width * screen.backingScaleFactor)
             config.height = Int(cropRect.height * screen.backingScaleFactor)
