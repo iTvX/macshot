@@ -84,7 +84,7 @@ enum CaptureMenuItemID: String, CaseIterable {
 
 import os.log
 
-private let timingLog = OSLog(subsystem: "com.sw33tlie.macshot.macshot", category: "capture-timing")
+private let timingLog = OSLog(subsystem: "com.itvx.macshot", category: "capture-timing")
 
 // MARK: - Signal-safe diagnostic logging
 
@@ -235,12 +235,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         // Prevent multiple instances — if already running, activate the existing one and quit
-        let bundleID = Bundle.main.bundleIdentifier ?? "com.sw33tlie.macshot.macshot"
+        let bundleID = Bundle.main.bundleIdentifier ?? "com.itvx.macshot"
         let running = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID)
         if running.count > 1 {
             // Tell the existing instance to show its icon and open Settings
             DistributedNotificationCenter.default().postNotificationName(
-                .init("com.sw33tlie.macshot.showAndOpenPrefs"),
+                .init("com.itvx.macshot.showAndOpenPrefs"),
                 object: nil, userInfo: nil, deliverImmediately: true
             )
             NSApp.terminate(nil)
@@ -305,7 +305,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         // Listen for duplicate-launch notification to restore icon
         DistributedNotificationCenter.default().addObserver(
             self, selector: #selector(handleShowAndOpenPrefs),
-            name: .init("com.sw33tlie.macshot.showAndOpenPrefs"), object: nil
+            name: .init("com.itvx.macshot.showAndOpenPrefs"), object: nil
         )
 
         // Dismiss overlays when the user switches spaces
@@ -1542,7 +1542,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
     /// Path to the rolling timing log inside the sandbox container.
     /// Real path on disk:
-    ///   ~/Library/Containers/com.sw33tlie.macshot.macshot/Data/Library/Application Support/macshot/timing.log
+    ///   ~/Library/Containers/com.itvx.macshot/Data/Library/Application Support/macshot/timing.log
     static let timingLogURL: URL = {
         let fm = FileManager.default
         let support = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!

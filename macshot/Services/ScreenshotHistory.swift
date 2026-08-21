@@ -47,7 +47,7 @@ class ScreenshotHistory {
 
     private init() {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        historyDir = appSupport.appendingPathComponent("com.sw33tlie.macshot/history")
+        historyDir = appSupport.appendingPathComponent("com.itvx.macshot/history")
         indexFile = historyDir.appendingPathComponent("index.json")
 
         // Create directory with 0700 permissions (owner only)

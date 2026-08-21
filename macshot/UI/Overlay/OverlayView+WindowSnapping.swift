@@ -88,6 +88,12 @@ extension OverlayView {
 
             let appKitRect = NSRect(x: cgX, y: screenH - cgY - cgH, width: cgW, height: cgH)
             if appKitRect.contains(screenPoint) {
+                if let processID = info[kCGWindowOwnerPID as String] as? pid_t,
+                   CaptureExclusionStore.contains(
+                    bundleIdentifier: NSRunningApplication(
+                        processIdentifier: processID)?.bundleIdentifier) {
+                    continue
+                }
                 let viewRect = NSRect(
                     x: appKitRect.origin.x - windowOrigin.x,
                     y: appKitRect.origin.y - windowOrigin.y,

@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased — application-exclusion fork
+
+### Added
+
+- Application-level capture exclusions in Settings → Capture. Selected apps are removed at the ScreenCaptureKit source for screenshots, scroll capture, and recordings.
+- Privacy-preserving public release automation using a dedicated local macOS runner, local signing credentials, Apple notarization, GitHub Releases, and a fork-specific Sparkle feed.
+
+### Changed
+
+- The fork uses an independent bundle identifier, update-signing key, and update feed so it never installs updates from the upstream project.
+
 ## [4.2.2-beta.2] - 2026-08-12
 
 ### Added

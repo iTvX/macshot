@@ -112,6 +112,9 @@ final class ScrollCaptureController {
     // CGWindowList capture config
     private var targetWindowID: CGWindowID = kCGNullWindowID
     private var captureRectCG: CGRect = .zero  // CG coordinates (top-left origin)
+    private var exclusionFilter: SCContentFilter?
+    private var exclusionConfiguration: SCStreamConfiguration?
+    private var targetApplicationIsExcluded = false
 
     // MARK: - Init
 
@@ -144,6 +147,19 @@ final class ScrollCaptureController {
         // Find the target window under the capture region
         resolveTargetWindow()
         resolveTargetApp()
+
+        guard !targetApplicationIsExcluded else {
+            if !isCancelled { onSessionDone?(nil) }
+            return
+        }
+
+        if CaptureExclusionStore.hasConfiguredApplications {
+            await prepareExclusionCapture()
+            guard exclusionFilter != nil, exclusionConfiguration != nil else {
+                if !isCancelled { onSessionDone?(nil) }
+                return
+            }
+        }
 
         // Capture first settled frame
         guard let firstFrame = await captureSettledFrame() else {
@@ -276,6 +292,10 @@ final class ScrollCaptureController {
             let cgRect = CGRect(x: x, y: y, width: w, height: h)
 
             if cgRect.contains(CGPoint(x: centerX, y: centerY)) {
+                let bundleIdentifier = NSRunningApplication(
+                    processIdentifier: pid)?.bundleIdentifier
+                targetApplicationIsExcluded = CaptureExclusionStore.contains(
+                    bundleIdentifier: bundleIdentifier)
                 targetAppPID = pid
                 return
             }
@@ -287,11 +307,54 @@ final class ScrollCaptureController {
         NSRunningApplication(processIdentifier: targetAppPID)?.activate(options: [])
     }
 
-    // MARK: - Frame capture via CGWindowListCreateImage
+    // MARK: - Frame capture
+
+    private func prepareExclusionCapture() async {
+        guard #available(macOS 14.0, *) else { return }
+        guard let content = try? await SCShareableContent.excludingDesktopWindows(
+            false, onScreenWindowsOnly: true) else { return }
+        let screenID = screen.deviceDescription[
+            NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID
+        guard let display = content.displays.first(where: {
+            screenID != nil && $0.displayID == screenID!
+        }) ?? content.displays.first else { return }
+
+        let excludedWindows = excludedWindowIDs.compactMap { windowID in
+            content.windows.first { CGWindowID($0.windowID) == windowID }
+        }
+        let filter = CaptureExclusionStore.contentFilter(
+            display: display,
+            content: content,
+            excludingWindows: excludedWindows)
+
+        let localRect = CGRect(
+            x: captureRect.minX - screen.frame.minX,
+            y: screen.frame.maxY - captureRect.maxY,
+            width: captureRect.width,
+            height: captureRect.height)
+        let configuration = SCStreamConfiguration()
+        configuration.sourceRect = localRect
+        configuration.width = Int(localRect.width * backingScale)
+        configuration.height = Int(localRect.height * backingScale)
+        configuration.showsCursor = false
+        configuration.captureResolution = .best
+        configuration.pixelFormat = kCVPixelFormatType_32BGRA
+        configuration.scalesToFit = false
+
+        exclusionFilter = filter
+        exclusionConfiguration = configuration
+    }
 
     /// Captures the screen region using CGWindowListCreateImage.
     /// Returns a complete, compositor-finished snapshot — no stream management needed.
-    private func captureFrame() -> CGImage? {
+    private func captureFrame() async -> CGImage? {
+        if let exclusionFilter, let exclusionConfiguration {
+            guard #available(macOS 14.0, *) else { return nil }
+            return try? await SCScreenshotManager.captureImage(
+                contentFilter: exclusionFilter,
+                configuration: exclusionConfiguration)
+        }
+
         let excludeSet = Set(excludedWindowIDs)
         let listOption: CGWindowListOption = [.optionOnScreenBelowWindow]
         let windowID = excludeSet.isEmpty ? kCGNullWindowID : (excludeSet.first ?? kCGNullWindowID)
@@ -314,7 +377,7 @@ final class ScrollCaptureController {
 
         for _ in 0..<30 {
             guard !isCancelled else { return nil }
-            guard let cg = captureFrame() else {
+            guard let cg = await captureFrame() else {
                 try? await Task.sleep(nanoseconds: 30_000_000)
                 continue
             }
@@ -435,7 +498,7 @@ final class ScrollCaptureController {
         for _ in 0..<30 {
             guard isActive else { return false }
 
-            guard let cg = captureFrame() else {
+            guard let cg = await captureFrame() else {
                 try? await Task.sleep(nanoseconds: 30_000_000)
                 continue
             }
@@ -623,9 +686,16 @@ final class ScrollCaptureController {
     private func grabAndProcess() {
         guard isActive, !isCapturing else { return }
         isCapturing = true
+
+        Task { @MainActor [weak self] in
+            await self?.grabAndProcessFrame()
+        }
+    }
+
+    private func grabAndProcessFrame() async {
         defer { isCapturing = false }
 
-        guard let currentFrame = captureFrame() else { return }
+        guard let currentFrame = await captureFrame() else { return }
         guard let previousFrame = shotA else {
             shotA = currentFrame
             return

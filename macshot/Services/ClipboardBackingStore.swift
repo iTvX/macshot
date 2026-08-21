@@ -13,7 +13,7 @@ enum ClipboardBackingStore {
     static let directory: URL = {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         let dir = appSupport
-            .appendingPathComponent("com.sw33tlie.macshot", isDirectory: true)
+            .appendingPathComponent("com.itvx.macshot", isDirectory: true)
             .appendingPathComponent(subdirectory, isDirectory: true)
         if !FileManager.default.fileExists(atPath: dir.path) {
             try? FileManager.default.createDirectory(

@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/sw33tLie/macshot/releases/latest">Download</a> · <a href="https://github.com/sw33tLie/macshot/blob/main/CHANGELOG.md">Changelog</a> · <a href="https://github.com/sw33tLie/macshot/blob/main/PRIVACY.md">Privacy</a> · <a href="https://github.com/sw33tLie/macshot/blob/main/SECURITY.md">Security</a>
+  <a href="https://github.com/iTvX/macshot/releases/latest">Download</a> · <a href="https://github.com/iTvX/macshot/blob/main/CHANGELOG.md">Changelog</a> · <a href="https://github.com/iTvX/macshot/blob/main/PRIVACY.md">Privacy</a> · <a href="https://github.com/iTvX/macshot/blob/main/SECURITY.md">Security</a>
 </p>
 
 <p align="center">
@@ -22,6 +22,22 @@
 <p align="center">
   <img src="assets/preview-editor.png" alt="macshot video editor — timeline with cut, speed, freeze, zoom and censor effects" width="700"/>
 </p>
+
+---
+
+## About this fork
+
+This GPL-3.0 fork tracks the [upstream macshot project](https://github.com/sw33tLie/macshot)
+and adds application-level capture exclusions. Users can choose applications in
+**Settings → Capture → Capture Exclusions**; matching applications are removed at the
+ScreenCaptureKit source before screenshots or recordings are produced. Content behind an
+excluded application's windows appears naturally in the result. While exclusions are configured,
+the system menu bar and Dock are also omitted so an app name or Dock icon cannot leak into a
+full-screen capture.
+
+The fork uses its own bundle identifier, Developer ID release signature, Sparkle signing
+key, GitHub Releases, and update feed. Builds downloaded from this repository update only
+from this repository.
 
 ---
 
@@ -38,12 +54,9 @@
 
 ## Install
 
-**Homebrew:**
-```bash
-brew install --cask macshot
-```
-
-**Manual:** Download the latest `.dmg` from [Releases](https://github.com/sw33tLie/macshot/releases), open it, drag to `/Applications`.
+Download `MacShot.zip` from this fork's [latest release](https://github.com/iTvX/macshot/releases/latest),
+extract it, and move `macshot.app` to `/Applications`. The upstream Homebrew cask installs
+the upstream edition and does not contain this fork's capture-exclusion feature.
 
 ---
 
@@ -53,6 +66,18 @@ brew install --cask macshot
 2. Press `Cmd+Shift+X` to capture
 3. Drag to select, annotate with the toolbar, press `Cmd+C` to copy
 4. Press `Esc` to cancel
+
+### Exclude an application from captures
+
+1. Open **Settings → Capture**.
+2. Under **Capture Exclusions**, click **Add Application…**.
+3. Select one or more `.app` bundles.
+4. Keep the selected applications running and capture normally.
+
+The exclusion applies to full-screen and area screenshots, window capture, delayed capture,
+scroll capture, and screen recording. Attempting to snap directly to an excluded application's
+window is blocked. The feature requires macOS 14 or later and intentionally fails closed if a
+filtered capture cannot be produced.
 
 ---
 

@@ -1,0 +1,146 @@
+name: Release
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
+
+permissions:
+  contents: write
+
+concurrency:
+  group: macshot-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build, notarize, and publish
+    if: github.event.pull_request.merged == true
+    runs-on: [self-hosted, macOS, ARM64, macshot-release]
+    timeout-minutes: 120
+
+    steps:
+      - name: Mask release-Mac paths
+        shell: bash
+        run: |
+          echo "::add-mask::${HOME}"
+          echo "::add-mask::${RUNNER_WORKSPACE}"
+          echo "::add-mask::${RUNNER_TEMP}"
+
+      - name: Check out the merged source
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          fetch-depth: 0
+
+      - name: Validate public-repository privacy
+        run: ./Scripts/privacy_check.sh
+
+      - name: Resolve release metadata
+        id: release
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(awk -F ' = ' '/MARKETING_VERSION =/ { gsub(/;/, "", $2); print $2; exit }' macshot.xcodeproj/project.pbxproj)"
+          base_build="$(awk -F ' = ' '/CURRENT_PROJECT_VERSION =/ { gsub(/;/, "", $2); print $2; exit }' macshot.xcodeproj/project.pbxproj)"
+          if [[ ! "$version" =~ ^[0-9]+(\.[0-9]+){1,2}$ ]]; then
+            echo "::error::MARKETING_VERSION must be numeric."
+            exit 1
+          fi
+          if [[ ! "$base_build" =~ ^[0-9]+$ ]]; then
+            echo "::error::CURRENT_PROJECT_VERSION must contain digits only."
+            exit 1
+          fi
+          build_number="$((base_build + GITHUB_RUN_NUMBER))"
+          tag="v${version}-build.${build_number}"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "build_number=$build_number" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Validate scripts
+        run: bash -n Scripts/*.sh
+
+      - name: Run build validation
+        run: ./Scripts/test.sh
+
+      - name: Build, sign, and notarize on this Mac
+        env:
+          BUILD_NUMBER: ${{ steps.release.outputs.build_number }}
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+        run: ./Scripts/build_release.sh
+
+      - name: Verify release artifacts
+        run: ./Scripts/check_release_ready.sh
+
+      - name: Generate signed Sparkle appcast
+        env:
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+        run: ./Scripts/generate_appcast.sh
+
+      - name: Publish release tag
+        env:
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+          MERGE_COMMIT: ${{ github.event.pull_request.merge_commit_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git ls-remote --exit-code --tags origin "refs/tags/$RELEASE_TAG" >/dev/null 2>&1; then
+            existing_commit="$(git ls-remote --tags origin "refs/tags/$RELEASE_TAG" | awk '{print $1}')"
+            [[ "$existing_commit" == "$MERGE_COMMIT" ]] || {
+              echo "::error::Release tag already points to another commit."
+              exit 1
+            }
+          else
+            git tag "$RELEASE_TAG" "$MERGE_COMMIT"
+            git push origin "refs/tags/$RELEASE_TAG"
+          fi
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          assets=(
+            "Build/MacShot.zip#MacShot.zip"
+            "Build/MacShot.zip.sha256#MacShot.zip.sha256"
+          )
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber
+          else
+            gh release create "$RELEASE_TAG" "${assets[@]}" \
+              --title "MacShot $RELEASE_TAG" \
+              --generate-notes \
+              --verify-tag
+          fi
+
+      - name: Publish Sparkle update feed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view appcast >/dev/null 2>&1; then
+            gh release upload appcast "Build/Appcast/appcast.xml#appcast.xml" --clobber
+          else
+            gh release create appcast "Build/Appcast/appcast.xml#appcast.xml" \
+              --title "MacShot update feed" \
+              --notes "Machine-readable Sparkle update feed." \
+              --prerelease
+
+      - name: Remove expanded local build products
+        if: always()
+        shell: bash
+        run: |
+          if [[ -d Build/macshot.app ]]; then
+            /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister \
+              -u Build/macshot.app >/dev/null 2>&1 || true
+            /bin/rm -R Build/macshot.app
+          fi
+          if [[ -d .release ]]; then
+            /bin/rm -R .release
+          fi
+          fi

@@ -50,9 +50,9 @@
 	<key>NSCameraUsageDescription</key>
 	<string>macshot can show a webcam overlay during screen recordings.</string>
 	<key>SUFeedURL</key>
-	<string>https://raw.githubusercontent.com/sw33tLie/macshot/main/appcast.xml</string>
+	<string>https://github.com/iTvX/macshot/releases/download/appcast/appcast.xml</string>
 	<key>SUPublicEDKey</key>
-	<string>+5RTT9lGyoeOYAYuNfCdPhxugmruYvRDyFXgk6VPY1c=</string>
+	<string>IhqEpsOY8hgaC0YtEMKssi2d571eLCblCanpUD5t50g=</string>
 	<key>SUScheduledCheckInterval</key>
 	<integer>86400</integer>
 	<key>SUEnableAutomaticChecks</key>
