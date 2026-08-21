@@ -130,6 +130,7 @@ jobs:
               --title "MacShot update feed" \
               --notes "Machine-readable Sparkle update feed." \
               --prerelease
+          fi
 
       - name: Remove expanded local build products
         if: always()
