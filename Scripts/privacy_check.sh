@@ -45,11 +45,35 @@ if [[ "$failed" -ne 0 ]]; then
     exit 1
 fi
 
-if git log --format='%an <%ae>' upstream/main..HEAD 2>/dev/null \
-    | grep -Ev '^(MacShot Fork Maintainers <macshot-maintainers@users\.noreply\.github\.com>|github-actions\[bot\] <41898282\+github-actions\[bot\]@users\.noreply\.github\.com>)$' \
-    | grep -q .; then
+fork_history_base="270db084796cec47245c0c5fa5ca21b6d222ea76"
+git cat-file -e "${fork_history_base}^{commit}" 2>/dev/null || {
+    echo "Privacy check failed: the fork history boundary is unavailable." >&2
+    exit 1
+}
+
+while IFS= read -r commit; do
+    author_name="$(git show -s --format='%an' "$commit")"
+    author_email="$(git show -s --format='%ae' "$commit")"
+    committer_name="$(git show -s --format='%cn' "$commit")"
+    committer_email="$(git show -s --format='%ce' "$commit")"
+    parents="$(git show -s --format='%P' "$commit")"
+
+    case "${author_name} <${author_email}>" in
+        "MacShot Fork Maintainers <macshot-maintainers@users.noreply.github.com>"|\
+        "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>")
+            continue
+            ;;
+    esac
+
+    if [[ "$committer_name" == "GitHub" \
+        && "$committer_email" == "noreply@github.com" \
+        && "$author_email" =~ ^[0-9]+\+[^@]+@users\.noreply\.github\.com$ \
+        && "$parents" == *" "* ]]; then
+        continue
+    fi
+
     echo "Privacy check failed: fork commits contain an unexpected author identity." >&2
     exit 1
-fi
+done < <(git rev-list "${fork_history_base}..HEAD")
 
 echo "Public-repository privacy checks passed."
