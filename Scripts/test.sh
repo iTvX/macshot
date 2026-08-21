@@ -10,9 +10,11 @@ if [[ "$DERIVED_DATA" != "$ROOT_DIR"/.release/* ]]; then
     exit 1
 fi
 
-/bin/rm -R "$DERIVED_DATA" 2>/dev/null || true
+/bin/rm -Rf "$DERIVED_DATA"
 mkdir -p "$DERIVED_DATA"
 touch "$ROOT_DIR/.release/.metadata_never_index"
+
+python3 "$ROOT_DIR/Scripts/validate_workflows.py"
 
 cleanup() {
     local generated_app="$DERIVED_DATA/Build/Products/Debug/macshot.app"
