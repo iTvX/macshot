@@ -130,4 +130,17 @@ jobs:
               --title "MacShot update feed" \
               --notes "Machine-readable Sparkle update feed." \
               --prerelease
+
+      - name: Remove expanded local build products
+        if: always()
+        shell: bash
+        run: |
+          if [[ -d Build/macshot.app ]]; then
+            /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister \
+              -u Build/macshot.app >/dev/null 2>&1 || true
+            /bin/rm -R Build/macshot.app
+          fi
+          if [[ -d .release ]]; then
+            /bin/rm -R .release
+          fi
           fi
