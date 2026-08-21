@@ -98,12 +98,17 @@ if [[ -z "$SIGNING_IDENTITY" ]]; then
     exit 1
 fi
 
+signing_keychain_args=()
+if [[ -n "$SIGNING_KEYCHAIN" ]]; then
+    signing_keychain_args+=(--keychain "$SIGNING_KEYCHAIN")
+fi
+
 for target in "$DERIVED_DATA" "$BUILD_DIR"; do
     if [[ "$target" != "$ROOT_DIR"/.release/* && "$target" != "$ROOT_DIR/Build" ]]; then
         echo "Refusing to reset an unexpected release path." >&2
         exit 1
     fi
-    /bin/rm -R "$target" 2>/dev/null || true
+    /bin/rm -Rf "$target"
 done
 mkdir -p "$DERIVED_DATA" "$BUILD_DIR"
 touch "$ROOT_DIR/.release/.metadata_never_index" "$BUILD_DIR/.metadata_never_index"
@@ -164,11 +169,16 @@ for nested in \
     "$SPARKLE/Versions/Current/Updater.app" \
     "$SPARKLE/Versions/Current/Autoupdate"; do
     if [[ -e "$nested" ]]; then
-        run_codesign --force --options runtime --timestamp --sign "$SIGNING_IDENTITY" "$nested"
+        run_codesign --force --options runtime --timestamp \
+            "${signing_keychain_args[@]}" \
+            --sign "$SIGNING_IDENTITY" "$nested"
     fi
 done
-run_codesign --force --options runtime --timestamp --sign "$SIGNING_IDENTITY" "$SPARKLE"
 run_codesign --force --options runtime --timestamp \
+    "${signing_keychain_args[@]}" \
+    --sign "$SIGNING_IDENTITY" "$SPARKLE"
+run_codesign --force --options runtime --timestamp \
+    "${signing_keychain_args[@]}" \
     --entitlements "$ROOT_DIR/macshot/macshot.entitlements" \
     --sign "$SIGNING_IDENTITY" "$APP_PATH"
 
