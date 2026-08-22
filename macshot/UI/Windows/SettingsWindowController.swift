@@ -860,7 +860,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
 
         let exclusionNote = NSTextField(wrappingLabelWithString: L(
-            "Excluded applications are removed from screenshots and recordings. While exclusions are configured, the menu bar and Dock are also hidden to prevent name or icon leakage."))
+            "Excluded application windows are removed from screenshots and recordings. The menu bar, Dock, desktop icons, and wallpaper remain visible."))
         exclusionNote.font = NSFont.systemFont(ofSize: 10)
         exclusionNote.textColor = .secondaryLabelColor
         stack.addArrangedSubview(indented(exclusionNote))

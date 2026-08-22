@@ -84,19 +84,7 @@ enum CaptureExclusionStore {
         content: SCShareableContent,
         excludingWindows: [SCWindow] = []
     ) -> SCContentFilter {
-        let exclusionsConfigured = hasConfiguredApplications
-        let userExcludedApplications = resolvedApplications(in: content)
-        var excludedApplications = userExcludedApplications
-        if exclusionsConfigured,
-           let dock = content.applications.first(where: {
-            $0.bundleIdentifier == "com.apple.dock"
-           }),
-           !excludedApplications.contains(where: { $0.bundleIdentifier == dock.bundleIdentifier }) {
-            // Dock owns both the desktop wallpaper and the application icons.
-            // Excluding it prevents a selected app's running indicator/icon from
-            // revealing that app after its windows have been removed.
-            excludedApplications.append(dock)
-        }
+        let excludedApplications = resolvedApplications(in: content)
         let filter: SCContentFilter
         if excludedApplications.isEmpty {
             filter = SCContentFilter(display: display, excludingWindows: excludingWindows)
@@ -108,13 +96,6 @@ enum CaptureExclusionStore {
                 display: display,
                 excludingApplications: excludedApplications,
                 exceptingWindows: excludingWindows)
-        }
-
-        if #available(macOS 14.2, *), exclusionsConfigured {
-            // The active application's menu title is rendered by the system rather
-            // than by the excluded process. Remove the system-owned menu bar so it
-            // cannot reveal an excluded app's name.
-            filter.includeMenuBar = false
         }
         return filter
     }

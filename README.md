@@ -31,9 +31,8 @@ This GPL-3.0 fork tracks the [upstream macshot project](https://github.com/sw33t
 and adds application-level capture exclusions. Users can choose applications in
 **Settings → Capture → Capture Exclusions**; matching applications are removed at the
 ScreenCaptureKit source before screenshots or recordings are produced. Content behind an
-excluded application's windows appears naturally in the result. While exclusions are configured,
-the system menu bar and Dock are also omitted so an app name or Dock icon cannot leak into a
-full-screen capture.
+excluded application's windows appears naturally in the result. The system menu bar, Dock,
+desktop icons, and wallpaper remain visible.
 
 The fork uses its own bundle identifier, Developer ID release signature, Sparkle signing
 key, GitHub Releases, and update feed. Builds downloaded from this repository update only
