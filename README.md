@@ -28,7 +28,7 @@
 ## About this fork
 
 This GPL-3.0 fork tracks the [upstream macshot project](https://github.com/sw33tLie/macshot)
-and adds application-level capture exclusions. Users can choose applications in
+and adds alternative keyboard shortcuts and application-level capture exclusions. Users can choose applications in
 **Settings → Capture → Capture Exclusions**; matching applications are removed at the
 ScreenCaptureKit source before screenshots or recordings are produced. Content behind an
 excluded application's windows appears naturally in the result. The system menu bar, Dock,
@@ -164,6 +164,14 @@ filtered capture cannot be produced.
 <summary><b>Keyboard Shortcuts</b></summary>
 
 **Global hotkeys** (configurable in Preferences)
+
+In **Settings → Shortcuts → Keyboard Shortcuts**, every action supports a primary
+shortcut and an optional **Alternative**. Either combination triggers the same action,
+and each can be set or cleared independently. Existing shortcuts are preserved;
+alternatives start empty. Reset restores the primary default or clears the alternative.
+Duplicate assignments are rejected without replacing the previous shortcut. Press **Esc**
+to cancel recording. The menu displays the primary shortcut, or the alternative when the
+primary is empty. Overlay / Editor shortcuts continue to use one binding per action.
 
 | Shortcut | Action |
 |---|---|

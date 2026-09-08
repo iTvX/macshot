@@ -44,9 +44,9 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private var currentTabID: String = "general"
 
 
-    private var hotkeyFields: [HotkeyManager.HotkeySlot: NSTextField] = [:]
-    private var hotkeyButtons: [HotkeyManager.HotkeySlot: NSButton] = [:]
-    private var recordingSlot: HotkeyManager.HotkeySlot?
+    private var hotkeyFields: [HotkeyManager.Binding: NSTextField] = [:]
+    private var hotkeyButtons: [HotkeyManager.Binding: NSButton] = [:]
+    private var recordingBinding: HotkeyManager.Binding?
     private var toolShortcutFields: [ToolShortcutManager.Action: NSTextField] = [:]
     private var toolShortcutButtons: [ToolShortcutManager.Action: NSButton] = [:]
     private var showToolShortcutsInTooltipsCheckbox: NSButton!
@@ -263,6 +263,8 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
 
     private func showTab(id: String) {
         guard let container = tabContentContainer, let view = tabContentViews[id] else { return }
+        stopShortcutRecording()
+        stopToolShortcutRecording()
         // Remove existing content
         for sub in container.subviews { sub.removeFromSuperview() }
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -1352,52 +1354,73 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         stack.addArrangedSubview(sectionHeader(L("Keyboard Shortcuts")))
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
+        let explanation = NSTextField(wrappingLabelWithString: L("Each action can have a primary and an alternative shortcut. Both trigger the same action; either can be cleared independently."))
+        explanation.font = NSFont.systemFont(ofSize: 11)
+        explanation.textColor = .secondaryLabelColor
+        stack.addArrangedSubview(explanation)
+        explanation.widthAnchor.constraint(equalTo: stack.widthAnchor, constant: -40).isActive = true
+        stack.setCustomSpacing(14, after: explanation)
+
         for slot in HotkeyManager.HotkeySlot.allCases {
-            let field = NSTextField()
-            field.isEditable = false
-            field.isSelectable = false
-            field.alignment = .center
-            field.setContentHuggingPriority(.defaultHigh, for: .horizontal)
-            field.widthAnchor.constraint(equalToConstant: 80).isActive = true
-            field.stringValue = HotkeyManager.displayString(for: slot)
+            for kind in HotkeyManager.ShortcutKind.allCases {
+                let binding = HotkeyManager.Binding(slot: slot, kind: kind)
+                let field = NSTextField()
+                field.isEditable = false
+                field.isSelectable = false
+                field.alignment = .center
+                field.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+                field.widthAnchor.constraint(equalToConstant: 110).isActive = true
+                field.stringValue = HotkeyManager.displayString(for: slot, kind: kind)
+                field.setAccessibilityLabel(binding.label)
+                field.identifier = NSUserInterfaceItemIdentifier("hotkey.\(binding.id)")
 
-            let btn = NSButton(title: L("Set"), target: self, action: #selector(recordShortcut(_:)))
-            btn.bezelStyle = .rounded
-            btn.tag = slot.rawValue
+                let btn = NSButton(title: L("Set"), target: self, action: #selector(recordShortcut(_:)))
+                btn.bezelStyle = .rounded
+                btn.tag = binding.id
+                btn.setAccessibilityLabel("\(L("Set")) \(binding.label)")
 
-            let clearBtn = NSButton(title: "", target: self, action: #selector(clearShortcut(_:)))
-            clearBtn.bezelStyle = .inline
-            clearBtn.isBordered = false
-            clearBtn.image = NSImage(systemSymbolName: "xmark.circle.fill", accessibilityDescription: L("None"))
-            clearBtn.contentTintColor = .secondaryLabelColor
-            clearBtn.imagePosition = .imageOnly
-            clearBtn.tag = slot.rawValue
-            clearBtn.toolTip = L("None")
-            clearBtn.widthAnchor.constraint(equalToConstant: 20).isActive = true
+                let clearBtn = NSButton(title: "", target: self, action: #selector(clearShortcut(_:)))
+                clearBtn.bezelStyle = .inline
+                clearBtn.isBordered = false
+                clearBtn.image = NSImage(systemSymbolName: "xmark.circle.fill", accessibilityDescription: L("None"))
+                clearBtn.contentTintColor = .secondaryLabelColor
+                clearBtn.imagePosition = .imageOnly
+                clearBtn.tag = binding.id
+                clearBtn.toolTip = L("None")
+                clearBtn.setAccessibilityLabel("\(L("None")) \(binding.label)")
+                clearBtn.widthAnchor.constraint(equalToConstant: 20).isActive = true
 
-            let resetBtn = NSButton(title: "", target: self, action: #selector(resetShortcut(_:)))
-            resetBtn.bezelStyle = .inline
-            resetBtn.isBordered = false
-            resetBtn.image = NSImage(systemSymbolName: "arrow.counterclockwise.circle.fill", accessibilityDescription: L("Reset to default"))
-            resetBtn.contentTintColor = .secondaryLabelColor
-            resetBtn.imagePosition = .imageOnly
-            resetBtn.tag = slot.rawValue
-            resetBtn.toolTip = L("Reset to default")
-            resetBtn.widthAnchor.constraint(equalToConstant: 20).isActive = true
+                let resetBtn = NSButton(title: "", target: self, action: #selector(resetShortcut(_:)))
+                resetBtn.bezelStyle = .inline
+                resetBtn.isBordered = false
+                resetBtn.image = NSImage(systemSymbolName: "arrow.counterclockwise.circle.fill", accessibilityDescription: L("Reset to default"))
+                resetBtn.contentTintColor = .secondaryLabelColor
+                resetBtn.imagePosition = .imageOnly
+                resetBtn.tag = binding.id
+                resetBtn.toolTip = L("Reset to default")
+                resetBtn.setAccessibilityLabel("\(L("Reset to default")) \(binding.label)")
+                resetBtn.widthAnchor.constraint(equalToConstant: 20).isActive = true
 
-            hotkeyFields[slot] = field
-            hotkeyButtons[slot] = btn
+                hotkeyFields[binding] = field
+                hotkeyButtons[binding] = btn
 
-            stack.addArrangedSubview(labeledRow("\(slot.label):", controls: [field, btn, clearBtn, resetBtn]))
-            stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
+                let title = kind == .primary ? slot.label : L("Alternative")
+                let row = labeledRow("\(title):", controls: [field, btn, clearBtn, resetBtn])
+                if let label = row.subviews.first as? NSTextField, kind == .alternative {
+                    label.textColor = .secondaryLabelColor
+                }
+                stack.addArrangedSubview(row)
+                stack.setCustomSpacing(kind == .primary ? 4 : 14, after: row)
+            }
         }
 
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
-        let note = NSTextField(wrappingLabelWithString: L("Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut."))
+        let note = NSTextField(wrappingLabelWithString: L("Click Set and press a key with a modifier (⌘, ⌥, ⌃, ⇧), or an F1–F20 key. Press Esc to cancel. Alternatives are empty by default."))
         note.font = NSFont.systemFont(ofSize: 10)
         note.textColor = .secondaryLabelColor
-        stack.addArrangedSubview(indented(note))
+        stack.addArrangedSubview(note)
+        note.widthAnchor.constraint(equalTo: stack.widthAnchor, constant: -40).isActive = true
 
         // ── Overlay / Editor Tool Shortcuts ──────────────────
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
@@ -1476,10 +1499,10 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     }
 
     @objc private func recordShortcut(_ sender: NSButton) {
-        guard let slot = HotkeyManager.HotkeySlot(rawValue: sender.tag) else { return }
+        guard let binding = HotkeyManager.Binding(id: sender.tag) else { return }
 
         // If already recording this slot, stop
-        if recordingSlot == slot {
+        if recordingBinding == binding {
             stopShortcutRecording()
             return
         }
@@ -1487,12 +1510,13 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         stopShortcutRecording()
         stopToolShortcutRecording()
 
-        recordingSlot = slot
-        sender.title = L("Press keys...")
-        hotkeyFields[slot]?.stringValue = L("Waiting...")
+        recordingBinding = binding
+        HotkeyManager.shared.beginShortcutRecording()
+        sender.title = L("Cancel")
+        hotkeyFields[binding]?.stringValue = L("Waiting...")
 
         localMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            guard let self = self else { return event }
+            guard let self = self, event.window === self.window else { return event }
             let modifiers = event.modifierFlags
             var carbonMods: UInt32 = 0
             if modifiers.contains(.command) { carbonMods |= UInt32(cmdKey) }
@@ -1500,38 +1524,82 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
             if modifiers.contains(.option)  { carbonMods |= UInt32(optionKey) }
             if modifiers.contains(.control) { carbonMods |= UInt32(controlKey) }
             let keyCode = UInt32(event.keyCode)
+            if keyCode == UInt32(kVK_Escape), carbonMods == 0 {
+                self.stopShortcutRecording()
+                return nil
+            }
             if carbonMods == 0 && !HotkeyManager.isFunctionKey(keyCode) { return nil }
-            HotkeyManager.saveHotkey(for: slot, keyCode: keyCode, modifiers: carbonMods)
-            self.hotkeyFields[slot]?.stringValue = HotkeyManager.displayString(for: slot)
+            if let error = HotkeyManager.shared.validateShortcut(for: binding, keyCode: keyCode, modifiers: carbonMods) {
+                self.stopShortcutRecording()
+                self.showShortcutError(error)
+                return nil
+            }
+            HotkeyManager.saveHotkey(for: binding.slot, kind: binding.kind, keyCode: keyCode, modifiers: carbonMods)
             self.stopShortcutRecording()
             self.onHotkeyChanged?()
+            self.refreshHotkeyFields()
             return nil
         }
     }
 
     @objc private func clearShortcut(_ sender: NSButton) {
-        guard let slot = HotkeyManager.HotkeySlot(rawValue: sender.tag) else { return }
+        guard let binding = HotkeyManager.Binding(id: sender.tag) else { return }
         stopShortcutRecording()
-        HotkeyManager.disableHotkey(for: slot)
-        hotkeyFields[slot]?.stringValue = L("None")
+        stopToolShortcutRecording()
+        HotkeyManager.disableHotkey(for: binding.slot, kind: binding.kind)
+        hotkeyFields[binding]?.stringValue = L("None")
         onHotkeyChanged?()
+        refreshHotkeyFields()
     }
 
     @objc private func resetShortcut(_ sender: NSButton) {
-        guard let slot = HotkeyManager.HotkeySlot(rawValue: sender.tag) else { return }
+        guard let binding = HotkeyManager.Binding(id: sender.tag) else { return }
         stopShortcutRecording()
-        HotkeyManager.saveHotkey(for: slot, keyCode: slot.defaultKeyCode, modifiers: slot.defaultModifiers)
-        hotkeyFields[slot]?.stringValue = HotkeyManager.displayString(for: slot)
+        stopToolShortcutRecording()
+        let keyCode = binding.kind == .primary ? binding.slot.defaultKeyCode : 0
+        let modifiers = binding.kind == .primary ? binding.slot.defaultModifiers : 0
+        if modifiers != 0 || HotkeyManager.isFunctionKey(keyCode) {
+            HotkeyManager.shared.beginShortcutRecording()
+            let error = HotkeyManager.shared.validateShortcut(for: binding, keyCode: keyCode, modifiers: modifiers)
+            HotkeyManager.shared.endShortcutRecording()
+            if let error = error {
+                showShortcutError(error)
+                return
+            }
+        }
+        HotkeyManager.saveHotkey(for: binding.slot, kind: binding.kind, keyCode: keyCode, modifiers: modifiers)
+        hotkeyFields[binding]?.stringValue = HotkeyManager.displayString(for: binding.slot, kind: binding.kind)
         onHotkeyChanged?()
+        refreshHotkeyFields()
+    }
+
+    private func showShortcutError(_ message: String) {
+        guard let window = window else { return }
+        let alert = NSAlert()
+        alert.messageText = L("Shortcut unavailable")
+        alert.informativeText = message
+        alert.addButton(withTitle: L("OK"))
+        alert.beginSheetModal(for: window)
     }
 
     private func stopShortcutRecording() {
-        if let slot = recordingSlot {
-            hotkeyButtons[slot]?.title = L("Set")
-            hotkeyFields[slot]?.stringValue = HotkeyManager.displayString(for: slot)
-        }
-        recordingSlot = nil
+        guard let binding = recordingBinding else { return }
+        hotkeyButtons[binding]?.title = L("Set")
+        hotkeyFields[binding]?.stringValue = HotkeyManager.displayString(for: binding.slot, kind: binding.kind)
+        recordingBinding = nil
         if let m = localMonitor { NSEvent.removeMonitor(m); localMonitor = nil }
+        HotkeyManager.shared.endShortcutRecording()
+        refreshHotkeyFields()
+    }
+
+    private func refreshHotkeyFields() {
+        for binding in HotkeyManager.Binding.all where binding != recordingBinding {
+            guard let field = hotkeyFields[binding] else { continue }
+            field.stringValue = HotkeyManager.displayString(for: binding.slot, kind: binding.kind)
+            let failed = HotkeyManager.shared.registrationErrors[binding] != nil
+            field.textColor = failed ? .systemOrange : .labelColor
+            field.toolTip = failed ? L("This shortcut is unavailable. It may be used by macOS or another application.") : nil
+        }
     }
 
     // MARK: - Overlay Tool Shortcuts
@@ -1578,6 +1646,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         let allActions = ToolShortcutManager.Action.allCases
         guard sender.tag >= 0, sender.tag < allActions.count else { return }
         let action = allActions[sender.tag]
+        stopShortcutRecording()
         stopToolShortcutRecording()
         ToolShortcutManager.setKey("", for: action)
         toolShortcutFields[action]?.stringValue = L("None")
@@ -1587,6 +1656,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         let allActions = ToolShortcutManager.Action.allCases
         guard sender.tag >= 0, sender.tag < allActions.count else { return }
         let action = allActions[sender.tag]
+        stopShortcutRecording()
         stopToolShortcutRecording()
         ToolShortcutManager.setKey(action.defaultKey, for: action)
         toolShortcutFields[action]?.stringValue = ToolShortcutManager.displayString(for: action)
@@ -1597,6 +1667,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     }
 
     private func stopToolShortcutRecording() {
+        guard recordingToolAction != nil else { return }
         if let action = recordingToolAction {
             toolShortcutFields[action]?.stringValue = ToolShortcutManager.displayString(for: action)
             toolShortcutButtons[action]?.title = L("Set")
@@ -2541,9 +2612,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
 
     private func loadSettings() {
         // Load shortcut fields
-        for slot in HotkeyManager.HotkeySlot.allCases {
-            hotkeyFields[slot]?.stringValue = HotkeyManager.displayString(for: slot)
-        }
+        refreshHotkeyFields()
 
         savePathField.stringValue = SaveDirectoryAccess.displayPath
         selectSaveAction(SaveActionPreference.current)
@@ -3294,7 +3363,14 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     }
 
     func windowWillClose(_ notification: Notification) {
+        stopShortcutRecording()
+        stopToolShortcutRecording()
         (NSApp.delegate as? AppDelegate)?.returnFocusIfNeeded()
+    }
+
+    func windowDidResignKey(_ notification: Notification) {
+        stopShortcutRecording()
+        stopToolShortcutRecording()
     }
 }
 

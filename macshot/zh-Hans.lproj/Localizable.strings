@@ -671,3 +671,13 @@
 
 /* URL scheme: edit (PR #272) */
 "Open a history entry in the editor (keeps annotations editable)" = "在编辑器中打开历史记录（保持标注可编辑）";
+
+/* Alternative keyboard shortcuts */
+"Primary" = "主快捷键";
+"Alternative" = "备用快捷键";
+"Each action can have a primary and an alternative shortcut. Both trigger the same action; either can be cleared independently." = "每个操作均可设置主快捷键和备用快捷键。两者执行相同操作，也可分别清除。";
+"Click Set and press a key with a modifier (⌘, ⌥, ⌃, ⇧), or an F1–F20 key. Press Esc to cancel. Alternatives are empty by default." = "点击“设置”，按下带修饰键（⌘、⌥、⌃、⇧）的组合键，或 F1–F20 功能键。按 Esc 取消。备用快捷键默认为空。";
+"This shortcut is already assigned to %@." = "此快捷键已分配给 %@。";
+"Click Set to record a shortcut." = "点击“设置”以录入快捷键。";
+"This shortcut is unavailable. It may be used by macOS or another application." = "此快捷键不可用，可能已被 macOS 或其他应用占用。";
+"Shortcut unavailable" = "快捷键不可用";
