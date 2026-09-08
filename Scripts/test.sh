@@ -15,6 +15,7 @@ mkdir -p "$DERIVED_DATA"
 touch "$ROOT_DIR/.release/.metadata_never_index"
 
 python3 "$ROOT_DIR/Scripts/validate_workflows.py"
+"$ROOT_DIR/Scripts/test_shortcuts.sh"
 
 cleanup() {
     local generated_app="$DERIVED_DATA/Build/Products/Debug/macshot.app"
@@ -33,5 +34,7 @@ xcodebuild -quiet \
     CODE_SIGNING_ALLOWED=NO \
     CODE_SIGNING_REQUIRED=NO \
     build
+
+"$ROOT_DIR/Scripts/test_shortcuts_ui.sh"
 
 echo "Debug build validation passed."

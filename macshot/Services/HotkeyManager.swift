@@ -103,53 +103,103 @@ class HotkeyManager {
         }
     }
 
-    private var hotKeyRefs: [HotkeySlot: EventHotKeyRef] = [:]
+    enum ShortcutKind: Int, CaseIterable {
+        case primary = 0
+        case alternative = 1
+
+        var label: String { self == .primary ? L("Primary") : L("Alternative") }
+    }
+
+    /// Primary IDs and preference keys remain compatible with existing installations.
+    struct Binding: Hashable {
+        let slot: HotkeySlot
+        let kind: ShortcutKind
+
+        var id: Int { slot.rawValue + kind.rawValue * 1000 }
+        var keyCodeKey: String { slot.keyCodeKey + (kind == .primary ? "" : "_alternative") }
+        var modifiersKey: String { slot.modifiersKey + (kind == .primary ? "" : "_alternative") }
+        var disabledKey: String { slot.disabledKey + (kind == .primary ? "" : "_alternative") }
+        var label: String { "\(slot.label) — \(kind.label)" }
+
+        init(slot: HotkeySlot, kind: ShortcutKind = .primary) {
+            self.slot = slot
+            self.kind = kind
+        }
+
+        init?(id: Int) {
+            guard let kind = ShortcutKind(rawValue: id / 1000),
+                  let slot = HotkeySlot(rawValue: id % 1000) else { return nil }
+            self.init(slot: slot, kind: kind)
+        }
+
+        // Register every primary first, so an imported alternative never steals one.
+        static var all: [Binding] {
+            ShortcutKind.allCases.flatMap { kind in
+                HotkeySlot.allCases.map { Binding(slot: $0, kind: kind) }
+            }
+        }
+    }
+
+    private static let eventSignature: OSType = 0x4D53_4854
+    private var hotKeyRefs: [Binding: EventHotKeyRef] = [:]
     private var callbacks: [HotkeySlot: () -> Void] = [:]
     private var eventHandlerRef: EventHandlerRef?
+    private(set) var isRecordingShortcut = false
+    private(set) var registrationErrors: [Binding: OSStatus] = [:]
+    var registeredBindings: Set<Binding> { Set(hotKeyRefs.keys) }
 
     private init() {}
 
     /// Register a callback for a hotkey slot. Reads keyCode/modifiers from UserDefaults.
     func register(slot: HotkeySlot, callback: @escaping () -> Void) {
         callbacks[slot] = callback
+        refreshRegistrations()
+    }
 
-        // Unregister existing hotkey for this slot
-        if let ref = hotKeyRefs[slot] {
-            UnregisterEventHotKey(ref)
-            hotKeyRefs[slot] = nil
-        }
-
-        let (keyCode, modifiers) = Self.readHotkey(for: slot)
-        guard modifiers != 0 || Self.isFunctionKey(keyCode) else { return }  // no modifiers = disabled (unless function key)
-
+    private func refreshRegistrations() {
+        unregisterAll()
+        guard !isRecordingShortcut else { return }
         installEventHandler()
-        var ref: EventHotKeyRef?
-        var hotkeyID = EventHotKeyID(signature: OSType(0x4D53_4854), id: UInt32(slot.rawValue))
-
-        let status = RegisterEventHotKey(
-            keyCode, modifiers, hotkeyID,
-            GetApplicationEventTarget(), 0, &ref
-        )
-        if status == noErr, let ref = ref {
-            hotKeyRefs[slot] = ref
+        for binding in Binding.all where callbacks[binding.slot] != nil {
+            let (keyCode, modifiers) = Self.readHotkey(for: binding.slot, kind: binding.kind)
+            guard modifiers != 0 || Self.isFunctionKey(keyCode) else { continue }
+            var ref: EventHotKeyRef?
+            let hotkeyID = EventHotKeyID(signature: Self.eventSignature, id: UInt32(binding.id))
+            let status = RegisterEventHotKey(keyCode, modifiers, hotkeyID,
+                                            GetApplicationEventTarget(), 0, &ref)
+            if status == noErr, let ref = ref {
+                hotKeyRefs[binding] = ref
+            } else {
+                registrationErrors[binding] = status
+                os_log("Could not register shortcut id=%{public}d status=%{public}d",
+                       log: hotkeyLog, type: .error, binding.id, status)
+            }
         }
+    }
+
+    /// Release both sets while recording so existing hotkeys reach the recorder.
+    func beginShortcutRecording() {
+        isRecordingShortcut = true
+        unregisterAll()
+    }
+
+    func endShortcutRecording() {
+        guard isRecordingShortcut else { return }
+        isRecordingShortcut = false
+        refreshRegistrations()
     }
 
     /// Register all hotkeys with their callbacks.
     func registerAll(captureArea: @escaping () -> Void, captureFullScreen: @escaping () -> Void, recordArea: @escaping () -> Void, recordScreen: @escaping () -> Void, historyOverlay: @escaping () -> Void, captureOCR: @escaping () -> Void, quickCapture: @escaping () -> Void, scrollCapture: @escaping () -> Void, openFromClipboard: @escaping () -> Void, captureLastArea: @escaping () -> Void, pinFromClipboard: @escaping () -> Void, clearHistory: @escaping () -> Void) {
-        unregisterAll()
-        register(slot: .captureArea, callback: captureArea)
-        register(slot: .captureFullScreen, callback: captureFullScreen)
-        register(slot: .recordArea, callback: recordArea)
-        register(slot: .recordScreen, callback: recordScreen)
-        register(slot: .historyOverlay, callback: historyOverlay)
-        register(slot: .captureOCR, callback: captureOCR)
-        register(slot: .quickCapture, callback: quickCapture)
-        register(slot: .scrollCapture, callback: scrollCapture)
-        register(slot: .openFromClipboard, callback: openFromClipboard)
-        register(slot: .captureLastArea, callback: captureLastArea)
-        register(slot: .pinFromClipboard, callback: pinFromClipboard)
-        register(slot: .clearHistory, callback: clearHistory)
+        callbacks = [
+            .captureArea: captureArea, .captureFullScreen: captureFullScreen,
+            .recordArea: recordArea, .recordScreen: recordScreen,
+            .historyOverlay: historyOverlay, .captureOCR: captureOCR,
+            .quickCapture: quickCapture, .scrollCapture: scrollCapture,
+            .openFromClipboard: openFromClipboard, .captureLastArea: captureLastArea,
+            .pinFromClipboard: pinFromClipboard, .clearHistory: clearHistory,
+        ]
+        refreshRegistrations()
     }
 
     private func installEventHandler() {
@@ -164,10 +214,15 @@ class HotkeyManager {
                 let mgr = Unmanaged<HotkeyManager>.fromOpaque(userData).takeUnretainedValue()
 
                 var hotkeyID = EventHotKeyID()
-                GetEventParameter(event, EventParamName(kEventParamDirectObject), EventParamType(typeEventHotKeyID),
+                let status = GetEventParameter(event, EventParamName(kEventParamDirectObject), EventParamType(typeEventHotKeyID),
                                   nil, MemoryLayout<EventHotKeyID>.size, nil, &hotkeyID)
 
-                if let slot = HotkeySlot(rawValue: Int(hotkeyID.id)), let callback = mgr.callbacks[slot] {
+                guard status == noErr, hotkeyID.signature == HotkeyManager.eventSignature,
+                      !mgr.isRecordingShortcut,
+                      let binding = Binding(id: Int(hotkeyID.id)),
+                      mgr.hotKeyRefs[binding] != nil else { return OSStatus(eventNotHandledErr) }
+                let slot = binding.slot
+                if let callback = mgr.callbacks[slot] {
                     os_log("CARBON HANDLER ENTERED slot=%{public}d abs=%{public}.6f isMain=%{public}@",
                            log: hotkeyLog, type: .info,
                            slot.rawValue, CFAbsoluteTimeGetCurrent(),
@@ -192,6 +247,7 @@ class HotkeyManager {
             UnregisterEventHotKey(ref)
         }
         hotKeyRefs.removeAll()
+        registrationErrors.removeAll()
         if let handler = eventHandlerRef {
             RemoveEventHandler(handler)
             eventHandlerRef = nil
@@ -206,35 +262,61 @@ class HotkeyManager {
     // MARK: - UserDefaults Helpers
 
     /// Read the stored (or default) keyCode and modifiers for a slot.
-    static func readHotkey(for slot: HotkeySlot) -> (keyCode: UInt32, modifiers: UInt32) {
+    static func readHotkey(for slot: HotkeySlot, kind: ShortcutKind = .primary) -> (keyCode: UInt32, modifiers: UInt32) {
+        let binding = Binding(slot: slot, kind: kind)
         // If explicitly disabled, return (0, 0)
-        if UserDefaults.standard.bool(forKey: slot.disabledKey) {
+        if UserDefaults.standard.bool(forKey: binding.disabledKey) {
             return (0, 0)
         }
-        let storedKey = UInt32(UserDefaults.standard.integer(forKey: slot.keyCodeKey))
-        let storedMods = UInt32(UserDefaults.standard.integer(forKey: slot.modifiersKey))
+        // Imported settings may contain invalid integers; never trap converting them.
+        guard let storedKey = UInt32(exactly: UserDefaults.standard.integer(forKey: binding.keyCodeKey)),
+              storedKey <= UInt32(UInt16.max),
+              let storedMods = UInt32(exactly: UserDefaults.standard.integer(forKey: binding.modifiersKey)),
+              storedMods & ~UInt32(cmdKey | shiftKey | optionKey | controlKey) == 0 else { return (0, 0) }
 
         if storedKey == 0 && storedMods == 0 {
-            return (slot.defaultKeyCode, slot.defaultModifiers)
+            return kind == .primary ? (slot.defaultKeyCode, slot.defaultModifiers) : (0, 0)
         }
+        guard storedMods != 0 || isFunctionKey(storedKey) else { return (0, 0) }
         return (storedKey, storedMods)
     }
 
     /// Save a hotkey to UserDefaults.
-    static func saveHotkey(for slot: HotkeySlot, keyCode: UInt32, modifiers: UInt32) {
-        UserDefaults.standard.set(Int(keyCode), forKey: slot.keyCodeKey)
-        UserDefaults.standard.set(Int(modifiers), forKey: slot.modifiersKey)
-        UserDefaults.standard.removeObject(forKey: slot.disabledKey)
+    static func saveHotkey(for slot: HotkeySlot, kind: ShortcutKind = .primary, keyCode: UInt32, modifiers: UInt32) {
+        let binding = Binding(slot: slot, kind: kind)
+        UserDefaults.standard.set(Int(keyCode), forKey: binding.keyCodeKey)
+        UserDefaults.standard.set(Int(modifiers), forKey: binding.modifiersKey)
+        UserDefaults.standard.removeObject(forKey: binding.disabledKey)
     }
 
     /// Explicitly disable a hotkey slot.
-    static func disableHotkey(for slot: HotkeySlot) {
-        UserDefaults.standard.set(true, forKey: slot.disabledKey)
+    static func disableHotkey(for slot: HotkeySlot, kind: ShortcutKind = .primary) {
+        UserDefaults.standard.set(true, forKey: Binding(slot: slot, kind: kind).disabledKey)
+    }
+
+    static func conflictingBinding(for binding: Binding, keyCode: UInt32, modifiers: UInt32) -> Binding? {
+        guard modifiers != 0 || isFunctionKey(keyCode) else { return nil }
+        return Binding.all.first {
+            $0 != binding && readHotkey(for: $0.slot, kind: $0.kind) == (keyCode, modifiers)
+        }
+    }
+
+    /// Called with our hotkeys suspended. Probe Carbon before replacing a working binding.
+    func validateShortcut(for binding: Binding, keyCode: UInt32, modifiers: UInt32) -> String? {
+        if let conflict = Self.conflictingBinding(for: binding, keyCode: keyCode, modifiers: modifiers) {
+            return String(format: L("This shortcut is already assigned to %@."), conflict.label)
+        }
+        guard isRecordingShortcut else { return L("Click Set to record a shortcut.") }
+        var ref: EventHotKeyRef?
+        let id = EventHotKeyID(signature: Self.eventSignature, id: 0)
+        let status = RegisterEventHotKey(keyCode, modifiers, id, GetApplicationEventTarget(), 0, &ref)
+        if let ref = ref { UnregisterEventHotKey(ref) }
+        return status == noErr ? nil : L("This shortcut is unavailable. It may be used by macOS or another application.")
     }
 
     /// Display string for a slot's current hotkey.
-    static func displayString(for slot: HotkeySlot) -> String {
-        let (keyCode, modifiers) = readHotkey(for: slot)
+    static func displayString(for slot: HotkeySlot, kind: ShortcutKind = .primary) -> String {
+        let (keyCode, modifiers) = readHotkey(for: slot, kind: kind)
         if keyCode == 0 && modifiers == 0 { return L("None") }
         return modifierString(from: modifiers) + keyString(from: keyCode)
     }
@@ -357,8 +439,8 @@ class HotkeyManager {
 
     /// Returns the NSMenuItem keyEquivalent string and modifier mask for a slot,
     /// or nil if the slot is disabled / has no hotkey.
-    static func menuKeyEquivalent(for slot: HotkeySlot) -> (key: String, modifiers: NSEvent.ModifierFlags)? {
-        let (keyCode, carbonMods) = readHotkey(for: slot)
+    static func menuKeyEquivalent(for slot: HotkeySlot, kind: ShortcutKind = .primary) -> (key: String, modifiers: NSEvent.ModifierFlags)? {
+        let (keyCode, carbonMods) = readHotkey(for: slot, kind: kind)
         if keyCode == 0 && carbonMods == 0 { return nil }
 
         // Special keys need Unicode function characters. Character keys use the
@@ -387,9 +469,16 @@ class HotkeyManager {
 
     /// Apply the configured hotkey for a slot to an NSMenuItem (if one is set).
     static func applyMenuShortcut(for slot: HotkeySlot, to item: NSMenuItem) {
-        if let equiv = menuKeyEquivalent(for: slot) {
+        // AppKit displays one equivalent. Prefer primary, falling back to alternative.
+        item.keyEquivalent = ""
+        item.keyEquivalentModifierMask = []
+        item.toolTip = nil
+        if let equiv = menuKeyEquivalent(for: slot) ?? menuKeyEquivalent(for: slot, kind: .alternative) {
             item.keyEquivalent = equiv.key
             item.keyEquivalentModifierMask = equiv.modifiers
+        }
+        if menuKeyEquivalent(for: slot, kind: .alternative) != nil {
+            item.toolTip = "\(L("Alternative")): \(displayString(for: slot, kind: .alternative))"
         }
     }
 }

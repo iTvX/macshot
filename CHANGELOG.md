@@ -1,5 +1,22 @@
 # Changelog
 
+## 4.2.2 — alternative keyboard shortcuts (fork)
+
+### Added
+
+- An optional alternative keyboard shortcut for all 12 global actions in Settings → Shortcuts. Primary and alternative bindings can be set, cleared, and reset independently, and both are included in settings backups.
+- Shortcut conflict feedback before an assignment replaces an existing binding.
+- Automated regression coverage for preference compatibility, native Carbon registration and dispatch, menu equivalents, recording suspension, and settings portability.
+
+### Fixed
+
+- Global shortcuts are suspended during shortcut recording and restored on completion, cancellation, tab changes, window closing, or loss of focus.
+- Invalid imported shortcut integers no longer cause a conversion crash.
+
+### Unchanged
+
+- Overlay / Editor shortcut bindings and the capture / recording application-exclusion pipeline.
+
 ## Unreleased — application-exclusion fork
 
 ### Added
