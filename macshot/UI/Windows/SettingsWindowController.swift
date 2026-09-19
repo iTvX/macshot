@@ -152,6 +152,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
 
     var onHotkeyChanged: (() -> Void)?
     var onEditorCommandShortcutChanged: (() -> Void)?
+    var onCheckForUpdates: (() -> Void)?
 
     init() {
         let window = SettingsWindow(
@@ -2390,7 +2391,12 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         versionLabel.font = NSFont.systemFont(ofSize: 12)
         versionLabel.textColor = .secondaryLabelColor
         stack.addArrangedSubview(versionLabel)
-        stack.setCustomSpacing(20, after: versionLabel)
+        stack.setCustomSpacing(12, after: versionLabel)
+
+        let updateButton = NSButton(title: L("Check for Updates..."), target: self, action: #selector(checkForUpdates))
+        updateButton.bezelStyle = .rounded
+        stack.addArrangedSubview(updateButton)
+        stack.setCustomSpacing(20, after: updateButton)
 
         // Description
         let desc = NSTextField(wrappingLabelWithString: L("A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit."))
@@ -2436,6 +2442,10 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         stack.addArrangedSubview(screenInfoHint)
 
         return container
+    }
+
+    @objc private func checkForUpdates() {
+        onCheckForUpdates?()
     }
 
     @objc private func copyScreenInfo() {
@@ -3606,6 +3616,11 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         window?.makeKeyAndOrderFront(nil)
         NSApp.setActivationPolicy(.regular)
         NSApp.activate(ignoringOtherApps: true)
+    }
+
+    func selectAboutTab() {
+        showTab(id: "about")
+        window?.toolbar?.selectedItemIdentifier = NSToolbarItem.Identifier("about")
     }
 
     func windowWillClose(_ notification: Notification) {

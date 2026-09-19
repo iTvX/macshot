@@ -633,7 +633,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         mainMenu.addItem(appMenuItem)
 
         let appMenu = NSMenu()
-        appMenu.addItem(withTitle: "About macshot", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
+        let aboutItem = appMenu.addItem(withTitle: "About macshot", action: #selector(openAbout), keyEquivalent: "")
+        aboutItem.target = self
         appMenu.addItem(NSMenuItem.separator())
         appMenu.addItem(withTitle: "Quit macshot", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         appMenuItem.submenu = appMenu
@@ -2346,8 +2347,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             settingsController?.onEditorCommandShortcutChanged = { [weak self] in
                 self?.setupMainMenu()
             }
+            settingsController?.onCheckForUpdates = { [weak self] in
+                self?.checkForUpdates()
+            }
         }
         settingsController?.showWindow()
+    }
+
+    @objc private func openAbout() {
+        openSettings()
+        settingsController?.selectAboutTab()
     }
 
     // MARK: - Quit
