@@ -707,3 +707,7 @@
 /* Fork clipboard compatibility */
 "Enable Finder clipboard compatibility" = "Enable Finder clipboard compatibility";
 "Enable to paste screenshots as files in Finder on macOS 26 or earlier. Leave off for image pasting in Teams, websites, and remote desktops." = "Enable to paste screenshots as files in Finder on macOS 26 or earlier. Leave off for image pasting in Teams, websites, and remote desktops.";
+
+/* Fork maintainer and upstream attribution */
+"Maintained by" = "Maintained by";
+"Based on macshot by sw33tLie and contributors." = "Based on macshot by sw33tLie and contributors.";
