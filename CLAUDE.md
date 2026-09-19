@@ -25,7 +25,11 @@ The fork currently publishes the normal app as `MacShot.zip`.
 
 ## Architecture
 
-Menu bar agent app. No main window. Global hotkey (Cmd+Shift+X) or menu bar click triggers screen capture → fullscreen overlay → selection → annotation → output.
+Menu bar agent app. No main window. Global hotkey (Cmd+Shift+5 for new installations) or menu bar click triggers screen capture → fullscreen overlay → selection → annotation → output.
+
+`FactorySettings` seeds reviewed portable preferences before services initialize.
+Existing installations retain their saved and implicit legacy settings. See
+`FACTORY_SETTINGS.md`; never ship a raw preference-domain export as defaults.
 
 ### File Structure
 
@@ -307,7 +311,7 @@ Copy to clipboard, Save to file (PNG/JPEG/HEIC/WebP), Pin (floating always-on-to
 - Build & Run (Cmd+R)
 - Grant Screen Recording permission when prompted
 - App appears as icon in menu bar (no dock icon)
-- Click menu bar icon → "Capture Screen" or use global hotkey (default: Cmd+Shift+X)
+- Click menu bar icon → "Capture Screen" or use global hotkey (new-install default: Cmd+Shift+5)
 
 ## Releasing
 

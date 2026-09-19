@@ -1,5 +1,8 @@
 import Cocoa
 
+// Seed before AppDelegate and its services can read any preferences.
+FactorySettings.installIfNeeded()
+
 // Disable "AutomaticAppKit" layer content format introduced in Big Sur.
 // With automatic format, the window server's compositor applies ordered
 // dithering to draw()-based layer content during compositing, which alters

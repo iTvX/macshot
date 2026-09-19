@@ -690,7 +690,7 @@
 "Primary" = "Primary";
 "Alternative" = "Alternative";
 "Each action can have a primary and an alternative shortcut. Both trigger the same action; either can be cleared independently." = "Each action can have a primary and an alternative shortcut. Both trigger the same action; either can be cleared independently.";
-"Click Set and press a key with a modifier (⌘, ⌥, ⌃, ⇧), or an F1–F20 key. Press Esc to cancel. Alternatives are empty by default." = "Click Set and press a key with a modifier (⌘, ⌥, ⌃, ⇧), or an F1–F20 key. Press Esc to cancel. Alternatives are empty by default.";
+"Click Set and press a key with a modifier (⌘, ⌥, ⌃, ⇧), or an F1–F20 key. Press Esc to cancel." = "Click Set and press a key with a modifier (⌘, ⌥, ⌃, ⇧), or an F1–F20 key. Press Esc to cancel.";
 "This shortcut is already assigned to %@." = "This shortcut is already assigned to %@.";
 "Click Set to record a shortcut." = "Click Set to record a shortcut.";
 "This shortcut is unavailable. It may be used by macOS or another application." = "This shortcut is unavailable. It may be used by macOS or another application.";

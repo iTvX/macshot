@@ -1461,7 +1461,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
 
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
-        let note = NSTextField(wrappingLabelWithString: L("Click Set and press a key with a modifier (⌘, ⌥, ⌃, ⇧), or an F1–F20 key. Press Esc to cancel. Alternatives are empty by default."))
+        let note = NSTextField(wrappingLabelWithString: L("Click Set and press a key with a modifier (⌘, ⌥, ⌃, ⇧), or an F1–F20 key. Press Esc to cancel."))
         note.font = NSFont.systemFont(ofSize: 10)
         note.textColor = .secondaryLabelColor
         stack.addArrangedSubview(note)
@@ -1649,8 +1649,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         stopShortcutRecording()
         stopCommandShortcutRecording()
         stopToolShortcutRecording()
-        let keyCode = binding.kind == .primary ? binding.slot.defaultKeyCode : 0
-        let modifiers = binding.kind == .primary ? binding.slot.defaultModifiers : 0
+        let (keyCode, modifiers) = FactorySettings.hotkey(for: binding)
         if modifiers != 0 || HotkeyManager.isFunctionKey(keyCode) {
             HotkeyManager.shared.beginShortcutRecording()
             let error = HotkeyManager.shared.validateShortcut(for: binding, keyCode: keyCode, modifiers: modifiers)
@@ -1661,6 +1660,11 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
             }
         }
         HotkeyManager.saveHotkey(for: binding.slot, kind: binding.kind, keyCode: keyCode, modifiers: modifiers)
+        // Zero values alone fall back to legacy primary shortcuts. A factory-unassigned
+        // action must stay explicitly disabled instead of reviving that old binding.
+        if keyCode == 0 && modifiers == 0 {
+            HotkeyManager.disableHotkey(for: binding.slot, kind: binding.kind)
+        }
         hotkeyFields[binding]?.stringValue = HotkeyManager.displayString(for: binding.slot, kind: binding.kind)
         onHotkeyChanged?()
         refreshHotkeyFields()
