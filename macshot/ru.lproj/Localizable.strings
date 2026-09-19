@@ -185,15 +185,20 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Нажмите на окно  ·  Выделите область  ·  F для полного экрана";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Нажмите на элемент  ·  Выделите область  ·  F для полного экрана";
 "Drag to select  ·  Click for full screen" = "Выделите область  ·  Нажмите для полного экрана";
 "Release to annotate and edit" = "Отпустите для аннотации и редактирования";
 "Release to finish" = "Отпустите для завершения";
 "Hold Space to move. Release to annotate and edit" = "Удерживайте Пробел для перемещения. Отпустите для аннотации и редактирования";
 "Hold Space to move. Release to finish" = "Удерживайте Пробел для перемещения. Отпустите для завершения";
 "Window snap: " = "Привязка к окнам: ";
+"Snap mode: " = "Режим привязки: ";
 "ON" = "ВКЛ";
 "OFF" = "ВЫКЛ";
+"WINDOW" = "ОКНО";
+"ELEMENT" = "ЭЛЕМЕНТ";
 "  (Tab to toggle)" = "  (Tab для переключения)";
+"  (Tab to switch)" = "  (Tab для переключения)";
 "Space" = "Пробел";
 "Right-click to copy" = "Нажмите правой кнопкой, чтобы скопировать";
 "Copied %@" = "Скопировано: %@";
@@ -228,6 +233,8 @@
 "Launch at login" = "Запускать при входе в систему";
 "Show snap alignment guides" = "Показывать направляющие привязки";
 "Snap selection edges to image boundaries" = "Привязывать края выделения к границам изображения";
+"Enhance browser and Electron element snapping" = "Улучшить привязку элементов в браузере и Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Строит дерево доступности целевого приложения в режиме элементов. Отключите, если браузер или Electron-приложение начинает медленно работать или возникают проблемы с вводом.";
 "Capture mouse cursor in screenshot" = "Захватывать курсор мыши на снимке экрана";
 "Double-click selection to copy" = "Копировать двойным щелчком по выделению";
 "Hide capture instructions" = "Скрывать подсказки при захвате";
@@ -339,6 +346,7 @@
 "Signed in" = "Вход выполнен";
 "Not signed in" = "Вход не выполнен";
 "Account:" = "Аккаунт:";
+"Folder:" = "Папка:";
 "Test Connection" = "Проверить подключение";
 "Fill in endpoint, bucket, and credentials first" = "Сначала заполните адрес, бакет и учётные данные";
 "Testing..." = "Проверка...";
@@ -351,6 +359,8 @@
 "Secret Key:" = "Секретный ключ:";
 "Public URL:" = "Публичный URL:";
 "Path Prefix:" = "Префикс пути:";
+"Make uploads publicly readable" = "Сделать загрузки общедоступными для чтения";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "Отправляет ACL public-read, чтобы загруженные файлы были доступны всем по ссылке. Необходимо для AWS S3, DigitalOcean Spaces, MinIO и Backblaze B2, которые по умолчанию хранят объекты приватно. Отключите для Cloudflare R2, который не поддерживает ACL и отклоняет этот заголовок.";
 "API key:" = "API-ключ:";
 "Upload History" = "История загрузок";
 "No uploads yet." = "Загрузок пока нет.";
@@ -467,7 +477,7 @@
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Требуется мониторинг ввода";
 "macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot требуется разрешение на мониторинг ввода для отображения нажатий клавиш во время записи. Предоставьте доступ в System Settings и попробуйте снова.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot требуется разрешение Универсального доступа для отображения нажатий клавиш во время записи. Предоставьте доступ в System Settings и попробуйте снова.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot требуется разрешение Универсального доступа для привязки к отдельным элементам интерфейса. Предоставьте доступ в Системных настройках и повторите попытку.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "Показывать нажатия клавиш";
@@ -506,6 +516,7 @@
 "Settings" = "Настройки";
 "macshot Settings" = "Настройки macshot";
 "Also open in Editor" = "Также открыть в редакторе";
+"Close editor after copying" = "Закрывать редактор после копирования";
 "Hide controls" = "Скрыть элементы управления";
 "Hide recording controls" = "Скрыть элементы управления записью";
 "Stop recording from the menu bar icon instead." = "Остановите запись через значок в строке меню.";
@@ -551,12 +562,13 @@
 
 "Same as screenshots" = "Как у скриншотов";
 "  Preview size:" = "  Размер превью:";
+"Fit image in preview (letterbox)" = "Вписать изображение в превью (с полосами)";
 "(0 = off)" = "(0 = выкл)";
 "Clear All" = "Очистить всё";
 "Clear History?" = "Очистить историю?";
 "This will permanently delete all screenshots from history." = "Это безвозвратно удалит все скриншоты из истории.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Нажмите \"Задать\" и введите комбинацию клавиш с хотя бы одним модификатором (⌘, ⌥, ⌃, ⇧), чтобы установить сочетание.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Файлы загружаются в папку \"macshot\" на вашем Google Drive. Всё остаётся приватным — ничего не публикуется в открытый доступ.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused — a new one is created instead. Everything stays private — nothing is shared publicly." = "Файлы загружаются в эту папку на вашем Google Drive. Оставьте поле пустым, чтобы использовать \"macshot\". macshot может использовать только созданные им самим папки, поэтому папка с таким же именем, созданная вами в Drive, не будет использована — вместо неё будет создана новая. Всё остаётся приватным — ничего не публикуется в открытый доступ.";
 
 "Pressure" = "Нажим";
 
@@ -669,3 +681,14 @@
 
 /* URL scheme: edit (PR #272) */
 "Open a history entry in the editor (keeps annotations editable)" = "Открыть запись истории в редакторе (аннотации останутся редактируемыми)";
+
+/* Auto-adjust selection (#317) */
+"Auto-Adjust Selection" = "Автоматическая подгонка области";
+"Auto-adjust selection" = "Автоматически подогнать область";
+"Could not analyze selection edges" = "Не удалось проанализировать границы области";
+"Detecting nearby edges…" = "Поиск ближайших границ…";
+"No nearby edges found" = "Ближайшие границы не найдены";
+"Selection adjusted" = "Область скорректирована";
+"Selection is already aligned" = "Область уже выровнена";
+"Space to move. Release to annotate and edit" = "Пробел — перемещение. Отпустите, чтобы добавить аннотации и перейти к редактированию";
+"Space to move. Release to finish" = "Пробел — перемещение. Отпустите, чтобы завершить";

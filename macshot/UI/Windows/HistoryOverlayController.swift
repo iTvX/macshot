@@ -1070,6 +1070,19 @@ private final class HistoryPanelView: NSView, NSDraggingSource {
     // MARK: - Keyboard
 
     override func keyDown(with event: NSEvent) {
+        if KeyboardShortcutMatcher.matches(event, character: "c", modifiers: .command) {
+            activateSelectedForCopy()
+            return
+        }
+        if KeyboardShortcutMatcher.matches(event, character: "s", modifiers: .command) {
+            activateSelectedForSave()
+            return
+        }
+        if KeyboardShortcutMatcher.matches(event, character: "e", modifiers: .command) {
+            activateSelectedForOpenEditor()
+            return
+        }
+
         let cmd = event.modifierFlags.contains(.command)
 
         switch event.keyCode {
@@ -1085,12 +1098,6 @@ private final class HistoryPanelView: NSView, NSDraggingSource {
             activateSelectedForQuickLook()
         case 51, 117: // Delete / Forward-Delete
             activateSelectedForDelete()
-        case 8 where cmd: // Cmd+C
-            activateSelectedForCopy()
-        case 1 where cmd: // Cmd+S
-            activateSelectedForSave()
-        case 14 where cmd: // Cmd+E
-            activateSelectedForOpenEditor()
         default:
             super.keyDown(with: event)
         }

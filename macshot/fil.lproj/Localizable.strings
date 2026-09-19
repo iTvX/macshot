@@ -172,6 +172,7 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "I-click ang window  ·  I-drag para sa custom na lugar  ·  F para sa buong screen";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "I-click ang elemento  ·  I-drag para sa custom na lugar  ·  F para sa buong screen";
 "Drag to select  ·  Click for full screen" = "I-drag upang pumili  ·  I-click para sa buong screen";
 "Release to annotate and edit" = "Bitawan upang mag-annotate at mag-edit";
 "Release to finish" = "Bitawan upang tapusin";
@@ -179,9 +180,13 @@
 "Hold Space to move. Release to finish" = "Pindutin ang Space upang ilipat. Bitawan upang tapusin";
 "Space" = "Space";
 "Window snap: " = "Window snap: ";
+"Snap mode: " = "Snap mode: ";
 "ON" = "ON";
 "OFF" = "OFF";
+"WINDOW" = "WINDOW";
+"ELEMENT" = "ELEMENT";
 "  (Tab to toggle)" = "  (Tab upang i-toggle)";
+"  (Tab to switch)" = "  (Tab upang magpalit)";
 "Right-click to copy" = "I-right-click upang kopyahin";
 "Copied %@" = "Nakopya ang %@";
 "Set color %@" = "Itakda ang kulay %@";
@@ -226,6 +231,8 @@
 "Launch at login" = "Buksan kapag nag-login";
 "Show snap alignment guides" = "Ipakita ang mga gabay sa pagkakahanay";
 "Snap selection edges to image boundaries" = "I-snap ang mga gilid ng seleksiyon sa hangganan ng imahe";
+"Enhance browser and Electron element snapping" = "Pahusayin ang element snapping ng browser at Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Gumagawa ng accessibility tree ng target app sa Element mode. I-disable ito kung mabagal ang browser o Electron app o may mga problema sa input.";
 "Capture mouse cursor in screenshot" = "Isama ang cursor ng mouse sa screenshot";
 "Double-click selection to copy" = "I-double-click ang pinili upang kopyahin";
 "Hide capture instructions" = "Itago ang mga tagubilin sa pagkuha ng screenshot";
@@ -339,6 +346,7 @@
 "Signed in" = "Naka-sign in";
 "Not signed in" = "Hindi naka-sign in";
 "Account:" = "Account:";
+"Folder:" = "Folder:";
 "Test Connection" = "Subukan ang Koneksyon";
 "Fill in endpoint, bucket, and credentials first" = "Punan muna ang endpoint, bucket, at mga kredensyal";
 "Testing..." = "Sinusubukan...";
@@ -351,6 +359,8 @@
 "Secret Key:" = "Secret Key:";
 "Public URL:" = "Public URL:";
 "Path Prefix:" = "Path Prefix:";
+"Make uploads publicly readable" = "Gawing pampublikong nababasa ang mga upload";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "Nagpapadala ng public-read ACL para makita ng kahit sino na may link ang mga na-upload na file. Kailangan para sa AWS S3, DigitalOcean Spaces, MinIO at Backblaze B2 na nag-iimbak ng mga object nang pribado bilang default. I-off para sa Cloudflare R2 na walang ACL at tinatanggihan ang header.";
 "API key:" = "API key:";
 "Upload History" = "Kasaysayan ng Pag-upload";
 "No uploads yet." = "Wala pang mga upload.";
@@ -467,7 +477,7 @@
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Kinakailangan ang Input Monitoring";
 "macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "Kailangan ng macshot ang Input Monitoring permission upang ipakita ang mga keystroke habang nagre-record. Pakibigyan ng access sa System Settings, pagkatapos ay subukang muli.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "Kailangan ng macshot ang Accessibility permission upang ipakita ang mga keystroke habang nagre-record. Pakibigyan ng access sa System Settings, pagkatapos ay subukang muli.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "Kailangan ng macshot ang Accessibility permission para sa pag-snap sa mga indibidwal na elemento ng interface. Mangyaring bigyan ng access sa System Settings, pagkatapos subukan muli.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "Ipakita ang mga Keystroke";
@@ -505,6 +515,7 @@
 "Settings..." = "Mga Setting...";
 "macshot Settings" = "Mga Setting ng macshot";
 "Also open in Editor" = "Buksan din sa Editor";
+"Close editor after copying" = "Isara ang editor pagkatapos kumopya";
 "Hide controls" = "Itago ang mga kontrol";
 "Hide recording controls" = "Itago ang mga kontrol sa pag-record";
 "Stop recording from the menu bar icon instead." = "Ihinto ang pag-record mula sa icon sa menu bar.";
@@ -551,12 +562,13 @@
 
 "Same as screenshots" = "Kapareho ng mga screenshot";
 "  Preview size:" = "  Laki ng preview:";
+"Fit image in preview (letterbox)" = "Ipakita ang buong larawan sa preview (letterbox)";
 "(0 = off)" = "(0 = off)";
 "Clear All" = "I-clear Lahat";
 "Clear History?" = "I-clear ang History?";
 "This will permanently delete all screenshots from history." = "Permanenteng mabubura ang lahat ng screenshot mula sa history.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "I-click ang \"Set\" at pindutin ang kombinasyon ng key na may kahit isang modifier (⌘, ⌥, ⌃, ⇧) upang magtakda ng shortcut.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Ina-upload ang mga file sa isang \"macshot\" na folder sa iyong Google Drive. Nananatiling pribado ang lahat — walang ibinabahagi nang publiko.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused — a new one is created instead. Everything stays private — nothing is shared publicly." = "Ina-upload ang mga file sa folder na ito sa iyong Google Drive. Iwanang blangko para gamitin ang \"macshot\". Maaari lamang gamitin ng macshot ang mga folder na nilikha nito, kaya ang folder na may parehong pangalan na ginawa mo sa Drive ay hindi gagamitin muli — sa halip ay lilikha ng bagong folder. Nananatiling pribado ang lahat — walang ibinabahagi nang publiko.";
 
 "Pressure" = "Pressure";
 
@@ -671,3 +683,14 @@
 
 /* URL scheme: edit (PR #272) */
 "Open a history entry in the editor (keeps annotations editable)" = "Buksan ang isang history entry sa editor (nananatiling ma-e-edit ang mga anotasyon)";
+
+/* Selection auto-adjust and Spacebar movement */
+"Auto-Adjust Selection" = "Awtomatikong Ayusin ang Pinili";
+"Auto-adjust selection" = "Awtomatikong ayusin ang pinili";
+"Could not analyze selection edges" = "Hindi masuri ang mga gilid ng pinili";
+"Detecting nearby edges…" = "Hinahanap ang mga kalapit na gilid…";
+"No nearby edges found" = "Walang nakitang kalapit na gilid";
+"Selection adjusted" = "Naisayos ang pinili";
+"Selection is already aligned" = "Naka-align na ang pinili";
+"Space to move. Release to annotate and edit" = "Pindutin nang matagal ang Space para ilipat. Bitawan para mag-anotate at mag-edit";
+"Space to move. Release to finish" = "Pindutin nang matagal ang Space para ilipat. Bitawan para tapusin";

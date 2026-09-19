@@ -174,6 +174,13 @@
 "ON" = "روشن";
 "OFF" = "خاموش";
 "  (Tab to toggle)" = "  (Tab برای تغییر)";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "روی یک عنصر کلیک کنید  ·  برای منطقه سفارشی بکشید  ·  F برای تمام صفحه";
+"Snap mode: " = "حالت چسبش: ";
+"WINDOW" = "پنجره";
+"ELEMENT" = "عنصر";
+"  (Tab to switch)" = "  (Tab برای تغییر)";
+"Enhance browser and Electron element snapping" = "بهبود چسبش عناصر مرورگر و الکترون";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "درخت دسترسی‌پذیری برنامه هدف را در حالت عنصر می‌سازد. اگر مرورگر یا برنامه الکترون کند می‌شود یا مشکلات ورودی دارد، این را غیرفعال کنید.";
 "Right-click to copy" = "کلیک راست برای کپی";
 "Copied %@" = "کپی شد %@";
 "Set color %@" = "تنظیم رنگ %@";
@@ -332,6 +339,7 @@
 "Signed in" = "وارد شده";
 "Not signed in" = "وارد نشده";
 "Account:" = "حساب کاربری:";
+"Folder:" = "پوشه:";
 "Test Connection" = "تست اتصال";
 "Fill in endpoint, bucket, and credentials first" = "ابتدا آدرس، باکت و اطلاعات ورود را پر کنید";
 "Testing..." = "در حال تست...";
@@ -344,6 +352,8 @@
 "Secret Key:" = "کلید محرمانه:";
 "Public URL:" = "آدرس عمومی:";
 "Path Prefix:" = "پیشوند مسیر:";
+"Make uploads publicly readable" = "قابل خواندن عمومی کردن بارگذاری‌ها";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "ACL از نوع public-read ارسال می‌کند تا فایل‌های بارگذاری‌شده برای هر کسی که لینک را دارد قابل مشاهده باشند. برای AWS S3، DigitalOcean Spaces، MinIO و Backblaze B2 که اشیاء را به صورت خصوصی ذخیره می‌کنند لازم است. برای Cloudflare R2 که ACLs ندارد و هدر را رد می‌کند، خاموش بگذارید.";
 "API key:" = "کلید API:";
 "Upload History" = "تاریخچه بارگذاری";
 "No uploads yet." = "هنوز بارگذاری‌ای انجام نشده.";
@@ -460,7 +470,7 @@
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "نظارت بر ورودی لازم است";
 "macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot برای نمایش کلیدهای فشرده‌شده هنگام ضبط ویدیو به مجوز نظارت بر ورودی نیاز دارد. لطفا دسترسی را در System Settings اعطا کنید و دوباره تلاش کنید.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot برای نمایش کلیدهای فشرده‌شده هنگام ضبط ویدیو به مجوز دسترسی‌پذیری نیاز دارد. لطفا دسترسی را در System Settings اعطا کنید و دوباره تلاش کنید.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot برای چسبیدن به عناصر جداگانهٔ رابط کاربری به مجوز دسترس‌پذیری نیاز دارد. لطفاً در تنظیمات سیستم دسترسی بدهید و دوباره امتحان کنید.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "نمایش کلیدهای فشرده‌شده";
@@ -498,6 +508,7 @@
 "Settings..." = "تنظیمات...";
 "macshot Settings" = "تنظیمات macshot";
 "Also open in Editor" = "باز کردن در ویرایشگر نیز";
+"Close editor after copying" = "بستن ویرایشگر پس از کپی";
 "Hide controls" = "پنهان کردن کنترل‌ها";
 "Hide recording controls" = "پنهان کردن کنترل‌های ضبط ویدیو";
 "Stop recording from the menu bar icon instead." = "به جای آن، ضبط ویدیو را از آیکون نوار منو متوقف کنید.";
@@ -543,12 +554,13 @@
 
 "Same as screenshots" = "مشابه اسکرین‌شات‌ها";
 "  Preview size:" = "  اندازه پیش‌نمایش:";
+"Fit image in preview (letterbox)" = "جا دادن تصویر در پیش‌نمایش (با نوار)";
 "(0 = off)" = "(0 = خاموش)";
 "Clear All" = "پاک کردن همه";
 "Clear History?" = "پاک کردن تاریخچه؟";
 "This will permanently delete all screenshots from history." = "این کار تمام اسکرین‌شات‌ها را به‌طور دائمی از تاریخچه حذف می‌کند.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "روی \"تنظیم\" کلیک کنید و یک ترکیب کلید با حداقل یک کلید تغییردهنده (⌘, ⌥, ⌃, ⇧) را برای تعیین میانبر فشار دهید.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "فایل‌ها در پوشه‌ای به نام \"macshot\" در Google Drive شما بارگذاری می‌شوند. همه چیز خصوصی می‌ماند — هیچ چیز به‌صورت عمومی به اشتراک گذاشته نمی‌شود.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused — a new one is created instead. Everything stays private — nothing is shared publicly." = "فایل‌ها در این پوشه در Google Drive شما بارگذاری می‌شوند. برای استفاده از \"macshot\" خالی بگذارید. macshot فقط می‌تواند از پوشه‌هایی استفاده کند که خودش ساخته است، بنابراین پوشه‌ای که خودتان با همین نام در Drive ساخته‌اید دوباره استفاده نمی‌شود — به‌جای آن یک پوشهٔ جدید ساخته می‌شود. همه چیز خصوصی می‌ماند — هیچ چیز به‌صورت عمومی به اشتراک گذاشته نمی‌شود.";
 
 "Pressure" = "فشار";
 
@@ -671,3 +683,14 @@
 
 /* URL scheme: edit (PR #272) */
 "Open a history entry in the editor (keeps annotations editable)" = "باز کردن یک مورد از تاریخچه در ویرایشگر (حاشیه‌نویسی‌ها قابل ویرایش می‌مانند)";
+
+/* Selection auto-adjust and Spacebar movement */
+"Auto-Adjust Selection" = "تنظیم خودکار محدودهٔ انتخاب";
+"Auto-adjust selection" = "تنظیم خودکار محدودهٔ انتخاب";
+"Could not analyze selection edges" = "تحلیل لبه‌های محدودهٔ انتخاب ممکن نشد";
+"Detecting nearby edges…" = "در حال شناسایی لبه‌های نزدیک…";
+"No nearby edges found" = "هیچ لبهٔ نزدیکی پیدا نشد";
+"Selection adjusted" = "محدودهٔ انتخاب تنظیم شد";
+"Selection is already aligned" = "محدودهٔ انتخاب از قبل تراز است";
+"Space to move. Release to annotate and edit" = "برای جابه‌جایی، کلید فاصله را نگه دارید. برای حاشیه‌نویسی و ویرایش رها کنید";
+"Space to move. Release to finish" = "برای جابه‌جایی، کلید فاصله را نگه دارید. برای پایان دادن رها کنید";

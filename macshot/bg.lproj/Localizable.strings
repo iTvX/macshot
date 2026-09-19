@@ -185,15 +185,20 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Щракнете върху прозорец  ·  Плъзнете за произволна област  ·  F за цял екран";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Щракнете върху елемент  ·  Плъзнете за произволна област  ·  F за цял екран";
 "Drag to select  ·  Click for full screen" = "Плъзнете за избиране  ·  Щракнете за цял екран";
 "Release to annotate and edit" = "Отпуснете за анотиране и редактиране";
 "Release to finish" = "Отпуснете за завършване";
 "Hold Space to move. Release to annotate and edit" = "Задръжте Интервал за преместване. Отпуснете за анотиране и редактиране";
 "Hold Space to move. Release to finish" = "Задръжте Интервал за преместване. Отпуснете за завършване";
 "Window snap: " = "Прилепване към прозорец: ";
+"Snap mode: " = "Режим на прилепване: ";
 "ON" = "ВКЛ.";
 "OFF" = "ИЗКЛ.";
+"WINDOW" = "ПРОЗОРЕЦ";
+"ELEMENT" = "ЕЛЕМЕНТ";
 "  (Tab to toggle)" = "  (Tab за превключване)";
+"  (Tab to switch)" = "  (Tab за превключване)";
 "Space" = "Интервал";
 "Right-click to copy" = "Десен бутон за копиране";
 "Copied %@" = "Копирано %@";
@@ -228,6 +233,8 @@
 "Launch at login" = "Стартиране при вход";
 "Show snap alignment guides" = "Показване на водачи за подравняване";
 "Snap selection edges to image boundaries" = "Прилепване на ръбовете на селекцията към границите на изображението";
+"Enhance browser and Electron element snapping" = "Подобряване на прилепването на елементи в браузър и Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Изгражда дървото на достъпност на целевото приложение в режим на елементи. Деактивирайте, ако браузър или Electron приложение се забави или има проблеми с въвеждането.";
 "Capture mouse cursor in screenshot" = "Заснемане на курсора в екранната снимка";
 "Double-click selection to copy" = "Копиране с двойно щракване върху селекцията";
 "Hide capture instructions" = "Скриване на указанията при заснемане";
@@ -339,6 +346,7 @@
 "Signed in" = "Влезли сте";
 "Not signed in" = "Не сте влезли";
 "Account:" = "Акаунт:";
+"Folder:" = "Папка:";
 "Test Connection" = "Тестване на връзката";
 "Fill in endpoint, bucket, and credentials first" = "Първо попълнете адрес, контейнер и идентификационни данни";
 "Testing..." = "Тестване...";
@@ -351,6 +359,8 @@
 "Secret Key:" = "Таен ключ:";
 "Public URL:" = "Публичен URL:";
 "Path Prefix:" = "Префикс на пътя:";
+"Make uploads publicly readable" = "Направи качванията публично достъпни за четене";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "Изпраща ACL public-read, за да бъдат качените файлове достъпни за всеки с връзката. Необходимо за AWS S3, DigitalOcean Spaces, MinIO и Backblaze B2, които по подразбиране съхраняват обектите като частни. Оставете изключено за Cloudflare R2, който не поддържа ACL и отхвърля заглавието.";
 "API key:" = "API ключ:";
 "Upload History" = "История на качванията";
 "No uploads yet." = "Все още няма качвания.";
@@ -467,7 +477,7 @@
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Необходим е мониторинг на въвеждането";
 "macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot се нуждае от разрешение за мониторинг на въвеждането, за да показва натисканията на клавиши по време на запис. Моля, дайте достъп в System Settings и опитайте отново.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot се нуждае от разрешение за достъпност, за да показва натисканията на клавиши по време на запис. Моля, дайте достъп в System Settings и опитайте отново.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot се нуждае от разрешение за достъпност за прилепване към отделни елементи на интерфейса. Моля, разрешете достъпа в Системни настройки и опитайте отново.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "Показване на натискания";
@@ -506,6 +516,7 @@
 "Settings..." = "Настройки...";
 "macshot Settings" = "Настройки на macshot";
 "Also open in Editor" = "Отвори и в редактора";
+"Close editor after copying" = "Затвори редактора след копиране";
 "Hide controls" = "Скрий контролите";
 "Hide recording controls" = "Скрий контролите за запис";
 "Stop recording from the menu bar icon instead." = "Вместо това спрете записа от иконата в лентата с менюта.";
@@ -551,12 +562,13 @@
 
 "Same as screenshots" = "Същото като екранните снимки";
 "  Preview size:" = "  Размер на предварителния преглед:";
+"Fit image in preview (letterbox)" = "Вмести изображението в прегледа (с ленти)";
 "(0 = off)" = "(0 = изкл.)";
 "Clear All" = "Изчисти всичко";
 "Clear History?" = "Изчисти историята?";
 "This will permanently delete all screenshots from history." = "Това ще изтрие окончателно всички екранни снимки от историята.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Кликнете върху \"Set\" и натиснете комбинация от клавиши с поне един модификатор (⌘, ⌥, ⌃, ⇧), за да зададете пряк път.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Файловете се качват в папка \"macshot\" във вашия Google Drive. Всичко остава поверително — нищо не се споделя публично.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused — a new one is created instead. Everything stays private — nothing is shared publicly." = "Файловете се качват в тази папка във вашия Google Drive. Оставете празно, за да се използва \"macshot\". macshot може да използва само папки, които сам е създал, затова папка със същото име, създадена от вас в Drive, няма да бъде използвана — вместо нея ще бъде създадена нова. Всичко остава поверително — нищо не се споделя публично.";
 
 "Pressure" = "Натиск";
 
@@ -669,3 +681,14 @@
 
 /* URL scheme: edit (PR #272) */
 "Open a history entry in the editor (keeps annotations editable)" = "Отваряне на запис от историята в редактора (анотациите остават редактируеми)";
+
+/* Selection auto-adjust and Spacebar movement */
+"Auto-Adjust Selection" = "Автоматично коригиране на селекцията";
+"Auto-adjust selection" = "Коригиране на селекцията автоматично";
+"Could not analyze selection edges" = "Неуспешен анализ на краищата на селекцията";
+"Detecting nearby edges…" = "Откриване на близки краища…";
+"No nearby edges found" = "Не са намерени близки краища";
+"Selection adjusted" = "Селекцията е коригирана";
+"Selection is already aligned" = "Селекцията вече е подравнена";
+"Space to move. Release to annotate and edit" = "Задръжте интервала за преместване. Отпуснете за анотиране и редактиране";
+"Space to move. Release to finish" = "Задръжте интервала за преместване. Отпуснете за завършване";

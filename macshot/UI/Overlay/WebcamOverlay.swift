@@ -10,6 +10,11 @@ enum WebcamPosition: String {
 enum WebcamSize: String {
     case small, medium, large, xlarge
 
+    static let defaultsKey = "webcamSizePoints"
+    static let minPoints: CGFloat = 80
+    static let maxPoints: CGFloat = 480
+    static let defaultPoints: CGFloat = 120
+
     var points: CGFloat {
         switch self {
         case .small: return 80
@@ -17,6 +22,22 @@ enum WebcamSize: String {
         case .large: return 160
         case .xlarge: return 220
         }
+    }
+
+    /// Read the continuous size, falling back to the legacy named presets.
+    static var savedPoints: CGFloat {
+        if let value = UserDefaults.standard.object(forKey: defaultsKey) as? NSNumber {
+            return min(max(CGFloat(value.doubleValue), minPoints), maxPoints)
+        }
+        let legacy = WebcamSize(
+            rawValue: UserDefaults.standard.string(forKey: "webcamSize") ?? "medium")
+            ?? .medium
+        return legacy.points
+    }
+
+    static func save(points: CGFloat) {
+        let clamped = min(max(points.rounded(), minPoints), maxPoints)
+        UserDefaults.standard.set(Double(clamped), forKey: defaultsKey)
     }
 }
 
@@ -35,7 +56,7 @@ class WebcamOverlay: NSPanel {
     private var previewLayer: AVCaptureVideoPreviewLayer?
     private var spinner: NSProgressIndicator?
 
-    private var currentSize: CGFloat = WebcamSize.medium.points
+    private var currentSize: CGFloat = WebcamSize.defaultPoints
     private var currentShape: WebcamShape = .circle
 
     init(screen: NSScreen) {
@@ -65,12 +86,15 @@ class WebcamOverlay: NSPanel {
 
     // MARK: - Public API
 
-    func configure(position: WebcamPosition, size: WebcamSize, shape: WebcamShape, recordingRect: NSRect) {
-        currentSize = size.points
+    func configure(position: WebcamPosition, size: CGFloat, shape: WebcamShape, recordingRect: NSRect) {
+        let padding: CGFloat = 12
+        let maximumFittingSize = max(1, min(recordingRect.width, recordingRect.height) - padding * 2)
+        currentSize = min(
+            min(max(size, WebcamSize.minPoints), WebcamSize.maxPoints),
+            maximumFittingSize)
         currentShape = shape
 
         let s = currentSize
-        let padding: CGFloat = 12
 
         var origin: NSPoint
         switch position {

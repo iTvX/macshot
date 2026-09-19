@@ -6,7 +6,7 @@ import CoreImage
 /// Uses performClose so windowShouldClose is called (triggers unsaved changes warning).
 private class EditorWindow: NSWindow {
     override func performKeyEquivalent(with event: NSEvent) -> Bool {
-        if event.modifierFlags.contains(.command) && event.keyCode == 12 {  // Q
+        if KeyboardShortcutMatcher.matches(event, character: "q", modifiers: .command) {
             performClose(nil)
             return true
         }
@@ -412,6 +412,9 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
         ImageEncoder.copyToClipboard(image)
         playCopySound()
         autoSaveToHistoryIfNeeded(compositedImage: image, annotationData: annotationData)
+        if UserDefaults.standard.bool(forKey: "closeEditorAfterCopy") {
+            window?.close()
+        }
         (NSApp.delegate as? AppDelegate)?.showFloatingThumbnail(image: image, annotationData: annotationData, historyEntryID: historyEntryID)
     }
 
@@ -585,7 +588,7 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
     func overlayViewDidRequestToggleAutoScroll() {}
     func overlayViewDidRequestAccessibilityPermission() {}
     func overlayViewDidRequestInputMonitoringPermission() {}
-    func overlayViewDidChangeWindowSnapState() {}  // Not applicable in editor mode
+    func overlayViewDidChangeSnapMode() {}  // Not applicable in editor mode
 
     func overlayViewDidRequestAddCapture() {
         guard let editorWindow = window else { return }
@@ -757,10 +760,10 @@ private class AddCaptureOverlayHandler: NSObject, OverlayWindowControllerDelegat
         return NSImage(cgImage: cgImage, size: globalRect.size)
     }
 
-    func overlayDidChangeWindowSnapState(_ controller: OverlayWindowController) {
+    func overlayDidChangeSnapMode(_ controller: OverlayWindowController) {
         // Notify all other overlays to redraw (for multi-monitor setups during "Add Capture" in editor)
         for other in overlayControllers where other !== controller {
-            other.triggerRedraw()
+            other.refreshSnapMode()
         }
     }
 }

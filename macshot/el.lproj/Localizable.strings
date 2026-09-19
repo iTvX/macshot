@@ -186,6 +186,13 @@
 "ON" = "ON";
 "OFF" = "OFF";
 "  (Tab to toggle)" = "  (Tab για εναλλαγή)";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Κλικ σε στοιχείο  ·  Σύρσιμο για προσαρμοσμένη περιοχή  ·  F για πλήρη οθόνη";
+"Snap mode: " = "Λειτουργία κουμπώματος: ";
+"WINDOW" = "ΠΑΡΑΘΥΡΟ";
+"ELEMENT" = "ΣΤΟΙΧΕΙΟ";
+"  (Tab to switch)" = "  (Tab για εναλλαγή)";
+"Enhance browser and Electron element snapping" = "Βελτίωση της κούμπωσης στοιχείων σε προγράμματα περιήγησης και Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Κατασκευάζει το δέντρο προσβασιμότητας της εφαρμογής-στόχου στη λειτουργία Στοιχείο. Απενεργοποιήστε το αν ένα πρόγραμμα περιήγησης ή Electron γίνει αργό ή έχει προβλήματα εισαγωγής.";
 "Right-click to copy" = "Δεξί κλικ για αντιγραφή";
 "Copied %@" = "Αντιγράφηκε %@";
 "Set color %@" = "Ορισμός χρώματος %@";
@@ -339,6 +346,7 @@
 "Signed in" = "Συνδεδεμένος";
 "Not signed in" = "Μη συνδεδεμένος";
 "Account:" = "Λογαριασμός:";
+"Folder:" = "Φάκελος:";
 "Test Connection" = "Δοκιμή σύνδεσης";
 "Fill in endpoint, bucket, and credentials first" = "Συμπληρώστε πρώτα το endpoint, το bucket και τα διαπιστευτήρια";
 "Testing..." = "Δοκιμή...";
@@ -351,6 +359,8 @@
 "Secret Key:" = "Μυστικό κλειδί:";
 "Public URL:" = "Δημόσιο URL:";
 "Path Prefix:" = "Πρόθεμα διαδρομής:";
+"Make uploads publicly readable" = "Δημόσια αναγνώσιμες μεταφορτώσεις";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "Στέλνει το ACL public-read ώστε τα μεταφορτωμένα αρχεία να είναι ορατά σε οποιονδήποτε έχει τον σύνδεσμο. Απαιτείται για AWS S3, DigitalOcean Spaces, MinIO και Backblaze B2, που αποθηκεύουν αντικείμενα ιδιωτικά από προεπιλογή. Αφήστε το απενεργοποιημένο για Cloudflare R2, που δεν υποστηρίζει ACLs και απορρίπτει την κεφαλίδα.";
 "API key:" = "Κλειδί API:";
 "Upload History" = "Ιστορικό μεταφορτώσεων";
 "No uploads yet." = "Δεν υπάρχουν μεταφορτώσεις ακόμα.";
@@ -468,7 +478,7 @@
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Απαιτείται παρακολούθηση εισόδου";
 "macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "Το macshot χρειάζεται άδεια παρακολούθησης εισόδου για να εμφανίζει τα πλήκτρα κατά την εγγραφή. Παραχωρήστε πρόσβαση στις System Settings και δοκιμάστε ξανά.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "Το macshot χρειάζεται άδεια προσβασιμότητας για να εμφανίζει τα πλήκτρα κατά την εγγραφή. Παραχωρήστε πρόσβαση στις System Settings και δοκιμάστε ξανά.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "Το macshot χρειάζεται άδεια Προσβασιμότητας για προσκόλληση σε μεμονωμένα στοιχεία της διεπαφής. Παραχωρήστε πρόσβαση στις Ρυθμίσεις Συστήματος και δοκιμάστε ξανά.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "Εμφάνιση πλήκτρων";
@@ -507,6 +517,7 @@
 "Settings..." = "Ρυθμίσεις...";
 "macshot Settings" = "Ρυθμίσεις macshot";
 "Also open in Editor" = "Άνοιγμα και σε επεξεργαστή";
+"Close editor after copying" = "Κλείσιμο του επεξεργαστή μετά την αντιγραφή";
 "Hide controls" = "Απόκρυψη χειριστηρίων";
 "Hide recording controls" = "Απόκρυψη χειριστηρίων εγγραφής";
 "Stop recording from the menu bar icon instead." = "Σταματήστε την εγγραφή από το εικονίδιο στη γραμμή μενού.";
@@ -553,12 +564,13 @@
 
 "Same as screenshots" = "Ίδιο με τα στιγμιότυπα";
 "  Preview size:" = "  Μέγεθος προεπισκόπησης:";
+"Fit image in preview (letterbox)" = "Προσαρμογή εικόνας στην προεπισκόπηση (letterbox)";
 "(0 = off)" = "(0 = απενεργοποίηση)";
 "Clear All" = "Εκκαθάριση όλων";
 "Clear History?" = "Εκκαθάριση ιστορικού;";
 "This will permanently delete all screenshots from history." = "Αυτό θα διαγράψει μόνιμα όλα τα στιγμιότυπα από το ιστορικό.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Κάνε κλικ στο \"Ορισμός\" και πάτησε έναν συνδυασμό πλήκτρων με τουλάχιστον έναν τροποποιητή (⌘, ⌥, ⌃, ⇧) για να ορίσεις μια συντόμευση.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Τα αρχεία ανεβαίνουν σε έναν φάκελο \"macshot\" στο Google Drive σου. Όλα παραμένουν ιδιωτικά — τίποτα δεν κοινοποιείται δημόσια.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused — a new one is created instead. Everything stays private — nothing is shared publicly." = "Τα αρχεία ανεβαίνουν σε αυτόν τον φάκελο στο Google Drive σου. Άφησέ το κενό για να χρησιμοποιηθεί ο \"macshot\". Το macshot μπορεί να χρησιμοποιήσει μόνο φακέλους που δημιούργησε το ίδιο, οπότε ένας φάκελος με το ίδιο όνομα που δημιούργησες στο Drive δεν θα επαναχρησιμοποιηθεί — αντί γι' αυτό δημιουργείται νέος. Όλα παραμένουν ιδιωτικά — τίποτα δεν κοινοποιείται δημόσια.";
 
 "Pressure" = "Πίεση";
 
@@ -671,3 +683,14 @@
 
 /* URL scheme: edit (PR #272) */
 "Open a history entry in the editor (keeps annotations editable)" = "Άνοιγμα καταχώρισης ιστορικού στον επεξεργαστή (διατηρεί τις επισημάνσεις επεξεργάσιμες)";
+
+/* Selection auto-adjust and Spacebar movement */
+"Auto-Adjust Selection" = "Αυτόματη προσαρμογή επιλογής";
+"Auto-adjust selection" = "Αυτόματη προσαρμογή επιλογής";
+"Could not analyze selection edges" = "Δεν ήταν δυνατή η ανάλυση των ορίων της επιλογής";
+"Detecting nearby edges…" = "Εντοπισμός κοντινών ορίων…";
+"No nearby edges found" = "Δεν βρέθηκαν κοντινά όρια";
+"Selection adjusted" = "Η επιλογή προσαρμόστηκε";
+"Selection is already aligned" = "Η επιλογή είναι ήδη ευθυγραμμισμένη";
+"Space to move. Release to annotate and edit" = "Κρατήστε πατημένο το πλήκτρο διαστήματος για μετακίνηση. Αφήστε το για σχολιασμό και επεξεργασία";
+"Space to move. Release to finish" = "Κρατήστε πατημένο το πλήκτρο διαστήματος για μετακίνηση. Αφήστε το για ολοκλήρωση";

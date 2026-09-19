@@ -2,6 +2,13 @@ import Foundation
 import AVFoundation
 import VideoToolbox
 
+enum VideoExportPreferences {
+    static func validatedScale(_ stored: Double) -> CGFloat {
+        guard stored.isFinite, (0.25...1.0).contains(stored) else { return 1.0 }
+        return CGFloat(stored)
+    }
+}
+
 /// Video encoding quality tiers for both live recording and post-recording export.
 ///
 /// Each tier targets a "bits per pixel per frame" ratio (bppf) rather than a fixed

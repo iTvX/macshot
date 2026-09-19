@@ -171,15 +171,20 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Klik op een venster  ·  Sleep voor aangepast gebied  ·  F voor volledig scherm";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Klik op een element  ·  Sleep voor aangepast gebied  ·  F voor volledig scherm";
 "Drag to select  ·  Click for full screen" = "Sleep om te selecteren  ·  Klik voor volledig scherm";
 "Release to annotate and edit" = "Laat los om te annoteren en bewerken";
 "Release to finish" = "Laat los om te voltooien";
 "Hold Space to move. Release to annotate and edit" = "Houd Spatie ingedrukt om te verplaatsen. Laat los om te annoteren en bewerken";
 "Hold Space to move. Release to finish" = "Houd Spatie ingedrukt om te verplaatsen. Laat los om te voltooien";
 "Window snap: " = "Venster-snap: ";
+"Snap mode: " = "Snap-modus: ";
 "ON" = "AAN";
 "OFF" = "UIT";
+"WINDOW" = "VENSTER";
+"ELEMENT" = "ELEMENT";
 "  (Tab to toggle)" = "  (Tab om te wisselen)";
+"  (Tab to switch)" = "  (Tab om te schakelen)";
 "Right-click to copy" = "Rechtsklik om te kopieren";
 "Copied %@" = "%@ gekopieerd";
 "Set color %@" = "Kleur %@ ingesteld";
@@ -213,6 +218,8 @@
 "Launch at login" = "Open bij inloggen";
 "Show snap alignment guides" = "Uitlijnhulplijnen tonen";
 "Snap selection edges to image boundaries" = "Selectieranden uitlijnen op afbeeldingsgrenzen";
+"Enhance browser and Electron element snapping" = "Verbeter browser- en Electron-element-snap";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Bouwt de toegankelijkheidsboom van de doel-app op in Element-modus. Schakel dit uit als een browser of Electron-app traag wordt of invoerproblemen heeft.";
 "Capture mouse cursor in screenshot" = "Muiscursor vastleggen in schermafbeelding";
 "Double-click selection to copy" = "Dubbelklik op selectie om te kopiëren";
 "Hide capture instructions" = "Opname-instructies verbergen";
@@ -328,6 +335,7 @@
 "Signed in" = "Ingelogd";
 "Not signed in" = "Niet ingelogd";
 "Account:" = "Account:";
+"Folder:" = "Map:";
 "Test Connection" = "Verbinding testen";
 "Fill in endpoint, bucket, and credentials first" = "Vul eerst endpoint, bucket en inloggegevens in";
 "Testing..." = "Testen...";
@@ -340,6 +348,8 @@
 "Secret Key:" = "Geheime sleutel:";
 "Public URL:" = "Publieke URL:";
 "Path Prefix:" = "Padprefix:";
+"Make uploads publicly readable" = "Uploads publiek leesbaar maken";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "Verstuurt de public-read ACL zodat geüploade bestanden zichtbaar zijn voor iedereen met de link. Vereist voor AWS S3, DigitalOcean Spaces, MinIO en Backblaze B2, die objecten standaard privé opslaan. Laat uitgeschakeld voor Cloudflare R2, dat geen ACL's ondersteunt en de header weigert.";
 "API key:" = "API-sleutel:";
 "Upload History" = "Uploadgeschiedenis";
 "No uploads yet." = "Nog geen uploads.";
@@ -457,7 +467,7 @@
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Invoerbewaking vereist";
 "macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot heeft de toestemming Invoerbewaking nodig om toetsaanslagen te tonen tijdens de opname. Verleen toegang in System Settings en probeer het opnieuw.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot heeft de toegankelijkheidstoestemming nodig om toetsaanslagen te tonen tijdens de opname. Verleen toegang in System Settings en probeer het opnieuw.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot heeft toegankelijkheidstoestemming nodig om uit te lijnen op afzonderlijke interface-elementen. Verleen toegang in Systeeminstellingen en probeer het opnieuw.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "Toetsaanslagen tonen";
@@ -496,6 +506,7 @@
 "Settings" = "Instellingen";
 "macshot Settings" = "macshot-instellingen";
 "Also open in Editor" = "Ook openen in editor";
+"Close editor after copying" = "Editor sluiten na kopiëren";
 "Hide controls" = "Bedieningselementen verbergen";
 "Hide recording controls" = "Opnamebediening verbergen";
 "Stop recording from the menu bar icon instead." = "Stop de opname via het menubalkpictogram.";
@@ -540,12 +551,13 @@
 
 "Same as screenshots" = "Hetzelfde als schermafbeeldingen";
 "  Preview size:" = "  Voorbeeldgrootte:";
+"Fit image in preview (letterbox)" = "Afbeelding passend maken in voorbeeld (letterbox)";
 "(0 = off)" = "(0 = uit)";
 "Clear All" = "Alles wissen";
 "Clear History?" = "Geschiedenis wissen?";
 "This will permanently delete all screenshots from history." = "Hiermee worden alle schermafbeeldingen definitief uit de geschiedenis verwijderd.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Klik op \"Instellen\" en druk op een toetscombinatie met ten minste één modifier (⌘, ⌥, ⌃, ⇧) om een sneltoets in te stellen.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Bestanden worden geüpload naar een \"macshot\"-map in uw Google Drive. Alles blijft privé — er wordt niets openbaar gedeeld.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused — a new one is created instead. Everything stays private — nothing is shared publicly." = "Bestanden worden geüpload naar deze map in uw Google Drive. Laat leeg om \"macshot\" te gebruiken. macshot kan alleen mappen gebruiken die het zelf heeft aangemaakt, dus een map met dezelfde naam die u zelf in Drive hebt gemaakt wordt niet hergebruikt — er wordt in plaats daarvan een nieuwe aangemaakt. Alles blijft privé — er wordt niets openbaar gedeeld.";
 
 "Pressure" = "Druk";
 
@@ -671,3 +683,14 @@
 
 /* URL scheme: edit (PR #272) */
 "Open a history entry in the editor (keeps annotations editable)" = "Open een geschiedenisitem in de editor (annotaties blijven bewerkbaar)";
+
+/* Auto-adjust selection (#317) */
+"Auto-Adjust Selection" = "Selectie automatisch aanpassen";
+"Auto-adjust selection" = "Selectie automatisch aanpassen";
+"Could not analyze selection edges" = "Kon de randen van de selectie niet analyseren";
+"Detecting nearby edges…" = "Nabije randen detecteren…";
+"No nearby edges found" = "Geen nabije randen gevonden";
+"Selection adjusted" = "Selectie aangepast";
+"Selection is already aligned" = "Selectie is al uitgelijnd";
+"Space to move. Release to annotate and edit" = "Spatie om te verplaatsen. Laat los om te annoteren en bewerken";
+"Space to move. Release to finish" = "Spatie om te verplaatsen. Laat los om te voltooien";

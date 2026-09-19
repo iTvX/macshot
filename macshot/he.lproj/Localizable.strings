@@ -174,6 +174,13 @@
 "ON" = "פעיל";
 "OFF" = "כבוי";
 "  (Tab to toggle)" = "  (Tab להחלפה)";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "לחץ על אלמנט  ·  גרור לאזור מותאם אישית  ·  F למסך מלא";
+"Snap mode: " = "מצב הצמדה: ";
+"WINDOW" = "חלון";
+"ELEMENT" = "אלמנט";
+"  (Tab to switch)" = "  (Tab להחלפה)";
+"Enhance browser and Electron element snapping" = "שיפור הצמדת אלמנטים בדפדפן ובאפליקציות Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "בונה את עץ הנגישות של האפליקצייה היעד במצב אלמנט. השבת זאת אם דפדפן או אפליקציית Electron הופכים איטיים או יש להם בעיות קלט.";
 "Right-click to copy" = "לחץ ימני להעתקה";
 "Copied %@" = "הועתק %@";
 "Set color %@" = "הגדר צבע %@";
@@ -332,6 +339,7 @@
 "Signed in" = "מחובר";
 "Not signed in" = "לא מחובר";
 "Account:" = "חשבון:";
+"Folder:" = "תיקייה:";
 "Test Connection" = "בדוק חיבור";
 "Fill in endpoint, bucket, and credentials first" = "מלא קודם כתובת שרת, bucket ופרטי גישה";
 "Testing..." = "בודק...";
@@ -344,6 +352,8 @@
 "Secret Key:" = "מפתח סודי:";
 "Public URL:" = "כתובת URL ציבורית:";
 "Path Prefix:" = "קידומת נתיב:";
+"Make uploads publicly readable" = "הפוך העלאות לקריאה ציבורית";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "שולח ACL מסוג public-read כדי שקבצים שהועלו יהיו נגישים לכל מי שיש לו את הקישור. נדרש עבור AWS S3, DigitalOcean Spaces, MinIO ו-Backblaze B2, ששומרים אובייקטים באופן פרטי כברירת מחדל. השאר כבוי עבור Cloudflare R2, שאינו תומך ב-ACLs ודוחה את הכותרת.";
 "API key:" = "מפתח API:";
 "Upload History" = "היסטוריית העלאות";
 "No uploads yet." = "אין העלאות עדיין.";
@@ -460,7 +470,7 @@
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "נדרש ניטור קלט";
 "macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot זקוק להרשאת ניטור קלט כדי להציג הקשות מקשים בזמן הקלטה. אנא אשר גישה ב-System Settings ונסה שוב.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot זקוק להרשאת נגישות כדי להציג הקשות מקשים בזמן הקלטה. אנא אשר גישה ב-System Settings ונסה שוב.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot זקוק להרשאת נגישות כדי להיצמד לרכיבי ממשק בודדים. אנא הענק גישה בהגדרות המערכת ונסה שוב.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "הצג הקשות מקשים";
@@ -498,6 +508,7 @@
 "Settings..." = "הגדרות...";
 "macshot Settings" = "הגדרות macshot";
 "Also open in Editor" = "פתח גם בעורך";
+"Close editor after copying" = "סגור את העורך לאחר ההעתקה";
 "Hide controls" = "הסתר פקדים";
 "Hide recording controls" = "הסתר פקדי הקלטה";
 "Stop recording from the menu bar icon instead." = "עצור הקלטה מסמל שורת התפריטים במקום.";
@@ -543,12 +554,13 @@
 
 "Same as screenshots" = "זהה לצילומי המסך";
 "  Preview size:" = "  גודל תצוגה מקדימה:";
+"Fit image in preview (letterbox)" = "התאם את התמונה לתצוגה המקדימה (עם פסים)";
 "(0 = off)" = "(0 = כבוי)";
 "Clear All" = "נקה הכל";
 "Clear History?" = "לנקות את ההיסטוריה?";
 "This will permanently delete all screenshots from history." = "פעולה זו תמחק לצמיתות את כל צילומי המסך מההיסטוריה.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "לחץ על \"הגדר\" ולחץ על צירוף מקשים עם לפחות משנה אחד (⌘, ⌥, ⌃, ⇧) כדי להגדיר קיצור דרך.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "הקבצים מועלים לתיקייה \"macshot\" ב-Google Drive שלך. הכל נשאר פרטי — שום דבר אינו משותף באופן ציבורי.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused — a new one is created instead. Everything stays private — nothing is shared publicly." = "הקבצים מועלים לתיקייה זו ב-Google Drive שלך. השאר ריק כדי להשתמש ב-\"macshot\". macshot יכול להשתמש רק בתיקיות שהוא יצר בעצמו, ולכן תיקייה שיצרת ב-Drive עם אותו שם לא תנוצל מחדש — במקומה תיווצר תיקייה חדשה. הכל נשאר פרטי — שום דבר אינו משותף באופן ציבורי.";
 
 "Pressure" = "לחץ";
 
@@ -671,3 +683,14 @@
 
 /* URL scheme: edit (PR #272) */
 "Open a history entry in the editor (keeps annotations editable)" = "פתח רשומת היסטוריה בעורך (שומר על הערות ניתנות לעריכה)";
+
+/* Selection auto-adjust and Spacebar movement */
+"Auto-Adjust Selection" = "התאמה אוטומטית של הבחירה";
+"Auto-adjust selection" = "התאמה אוטומטית של הבחירה";
+"Could not analyze selection edges" = "לא ניתן היה לנתח את גבולות הבחירה";
+"Detecting nearby edges…" = "מזהה גבולות סמוכים…";
+"No nearby edges found" = "לא נמצאו גבולות סמוכים";
+"Selection adjusted" = "הבחירה הותאמה";
+"Selection is already aligned" = "הבחירה כבר מיושרת";
+"Space to move. Release to annotate and edit" = "החזיקו את מקש הרווח כדי להזיז. שחררו כדי להוסיף הערות ולערוך";
+"Space to move. Release to finish" = "החזיקו את מקש הרווח כדי להזיז. שחררו כדי לסיים";

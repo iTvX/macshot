@@ -46,8 +46,16 @@ if [[ "$failed" -ne 0 ]]; then
 fi
 
 fork_history_base="270db084796cec47245c0c5fa5ca21b6d222ea76"
+# Reviewed public upstream history. Keep its original attribution; only fork-authored
+# descendants must use our privacy-preserving identity. Advance this pinned boundary
+# explicitly after reviewing a new sw33tLie/macshot upstream revision.
+upstream_history_base="43d5ae4852ec5b991a577a3dd0f254cbda93ae51"
 git cat-file -e "${fork_history_base}^{commit}" 2>/dev/null || {
     echo "Privacy check failed: the fork history boundary is unavailable." >&2
+    exit 1
+}
+git cat-file -e "${upstream_history_base}^{commit}" 2>/dev/null || {
+    echo "Privacy check failed: the reviewed upstream history is unavailable." >&2
     exit 1
 }
 
@@ -74,6 +82,6 @@ while IFS= read -r commit; do
 
     echo "Privacy check failed: fork commits contain an unexpected author identity." >&2
     exit 1
-done < <(git rev-list "${fork_history_base}..HEAD")
+done < <(git rev-list "${fork_history_base}..HEAD" --not "$upstream_history_base")
 
 echo "Public-repository privacy checks passed."

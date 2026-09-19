@@ -172,15 +172,20 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Clicar numa janela  ·  Arrastar para area personalizada  ·  F para ecra inteiro";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Clicar num elemento  ·  Arrastar para area personalizada  ·  F para ecra inteiro";
 "Drag to select  ·  Click for full screen" = "Arrastar para selecionar  ·  Clicar para ecra inteiro";
 "Release to annotate and edit" = "Soltar para anotar e editar";
 "Release to finish" = "Soltar para concluir";
 "Hold Space to move. Release to annotate and edit" = "Mantenha Espaco para mover. Solte para anotar e editar";
 "Hold Space to move. Release to finish" = "Mantenha Espaco para mover. Solte para concluir";
 "Window snap: " = "Ajuste a janela: ";
+"Snap mode: " = "Modo de ajuste: ";
 "ON" = "LIGADO";
 "OFF" = "DESLIGADO";
+"WINDOW" = "JANELA";
+"ELEMENT" = "ELEMENTO";
 "  (Tab to toggle)" = "  (Tab para alternar)";
+"  (Tab to switch)" = "  (Tab para mudar)";
 "Right-click to copy" = "Clique direito para copiar";
 "Copied %@" = "Copiado %@";
 "Set color %@" = "Definir cor %@";
@@ -215,6 +220,8 @@
 "Launch at login" = "Iniciar ao arrancar";
 "Show snap alignment guides" = "Mostrar guias de alinhamento";
 "Snap selection edges to image boundaries" = "Ajustar as margens da seleção aos limites da imagem";
+"Enhance browser and Electron element snapping" = "Melhorar ajuste de elementos de navegador e Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Constrói a árvore de acessibilidade da aplicação alvo no modo Elemento. Desative se um navegador ou aplicação Electron ficar lento ou tiver problemas de entrada.";
 "Capture mouse cursor in screenshot" = "Capturar cursor do rato na captura de ecra";
 "Double-click selection to copy" = "Duplo clique na selecao para copiar";
 "Hide capture instructions" = "Ocultar instrucoes de captura";
@@ -329,6 +336,7 @@
 "Signed in" = "Sessao iniciada";
 "Not signed in" = "Sessao nao iniciada";
 "Account:" = "Conta:";
+"Folder:" = "Pasta:";
 "Test Connection" = "Testar Ligacao";
 "Fill in endpoint, bucket, and credentials first" = "Preencha primeiro o endpoint, bucket e credenciais";
 "Testing..." = "A testar...";
@@ -341,6 +349,8 @@
 "Secret Key:" = "Chave Secreta:";
 "Public URL:" = "URL Publico:";
 "Path Prefix:" = "Prefixo do Caminho:";
+"Make uploads publicly readable" = "Tornar carregamentos legíveis publicamente";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "Envia a ACL public-read para que os ficheiros carregados fiquem visíveis para qualquer pessoa com a ligação. Necessário para AWS S3, DigitalOcean Spaces, MinIO e Backblaze B2, que armazenam objetos de forma privada por predefinição. Deixe desativado para Cloudflare R2, que não possui ACLs e rejeita o cabeçalho.";
 "API key:" = "Chave API:";
 "Upload History" = "Historico de Carregamentos";
 "No uploads yet." = "Sem carregamentos ainda.";
@@ -458,7 +468,7 @@
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Monitorizacao de Entrada Necessaria";
 "macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "O macshot necessita da permissao de Monitorizacao de Entrada para mostrar as teclas premidas durante a gravacao. Conceda acesso em System Settings e tente novamente.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "O macshot necessita da permissao de Acessibilidade para mostrar as teclas premidas durante a gravacao. Conceda acesso em System Settings e tente novamente.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "O macshot necessita da permissão de Acessibilidade para se ajustar a elementos individuais da interface. Conceda acesso nas Definições do Sistema e tente novamente.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "Mostrar teclas premidas";
@@ -497,6 +507,7 @@
 "Settings" = "Definições";
 "macshot Settings" = "Definicoes do macshot";
 "Also open in Editor" = "Abrir tambem no Editor";
+"Close editor after copying" = "Fechar o editor após copiar";
 "Hide controls" = "Ocultar controlos";
 "Hide recording controls" = "Ocultar controlos de gravacao";
 "Stop recording from the menu bar icon instead." = "Pare a gravacao a partir do icone na barra de menus.";
@@ -541,12 +552,13 @@
 
 "Same as screenshots" = "Igual às capturas de ecrã";
 "  Preview size:" = "  Tamanho da pré-visualização:";
+"Fit image in preview (letterbox)" = "Ajustar imagem à pré-visualização (com barras)";
 "(0 = off)" = "(0 = desligado)";
 "Clear All" = "Limpar tudo";
 "Clear History?" = "Limpar histórico?";
 "This will permanently delete all screenshots from history." = "Isto irá eliminar permanentemente todas as capturas de ecrã do histórico.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Clique em \"Definir\" e prima uma combinação de teclas com pelo menos um modificador (⌘, ⌥, ⌃, ⇧) para definir um atalho.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Os ficheiros são carregados para uma pasta \"macshot\" no seu Google Drive. Tudo permanece privado — nada é partilhado publicamente.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused — a new one is created instead. Everything stays private — nothing is shared publicly." = "Os ficheiros são carregados para esta pasta no seu Google Drive. Deixe vazio para usar \"macshot\". O macshot só pode usar pastas que ele próprio criou, pelo que uma pasta com o mesmo nome criada por si no Drive não será reutilizada — será criada uma nova. Tudo permanece privado — nada é partilhado publicamente.";
 
 "Pressure" = "Pressão";
 
@@ -671,3 +683,14 @@
 
 /* URL scheme: edit (PR #272) */
 "Open a history entry in the editor (keeps annotations editable)" = "Abrir uma entrada do histórico no editor (mantém as anotações editáveis)";
+
+/* Auto-adjust selection (#317) */
+"Auto-Adjust Selection" = "Ajuste automático da seleção";
+"Auto-adjust selection" = "Ajustar a seleção automaticamente";
+"Could not analyze selection edges" = "Não foi possível analisar os limites da seleção";
+"Detecting nearby edges…" = "A detetar limites próximos…";
+"No nearby edges found" = "Não foram encontrados limites próximos";
+"Selection adjusted" = "Seleção ajustada";
+"Selection is already aligned" = "A seleção já está alinhada";
+"Space to move. Release to annotate and edit" = "Espaço para mover. Solte para anotar e editar";
+"Space to move. Release to finish" = "Espaço para mover. Solte para concluir";

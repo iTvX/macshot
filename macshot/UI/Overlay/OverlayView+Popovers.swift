@@ -416,30 +416,29 @@ extension OverlayView {
             posSeg.action = #selector(PosHandler.changed(_:))
             objc_setAssociatedObject(posSeg, "handler", posHandler, .OBJC_ASSOCIATION_RETAIN)
 
-            // Size
-            let sizeSeg = NSSegmentedControl(labels: ["S", "M", "L", "XL"], trackingMode: .selectOne, target: nil, action: nil)
-            let currentSize = UserDefaults.standard.string(forKey: "webcamSize") ?? "medium"
-            switch currentSize {
-            case "small": sizeSeg.selectedSegment = 0
-            case "medium": sizeSeg.selectedSegment = 1
-            case "large": sizeSeg.selectedSegment = 2
-            case "xlarge": sizeSeg.selectedSegment = 3
-            default: sizeSeg.selectedSegment = 1
-            }
+            // Size — continuous and live so it scales well on high-resolution displays.
+            let sizeSlider = NSSlider(
+                value: Double(WebcamSize.savedPoints),
+                minValue: Double(WebcamSize.minPoints),
+                maxValue: Double(WebcamSize.maxPoints), target: nil, action: nil)
+            sizeSlider.isContinuous = true
 
             class SizeHandler: NSObject {
                 weak var overlayView: OverlayView?
-                init(overlayView: OverlayView?) { self.overlayView = overlayView; super.init() }
-                @objc func changed(_ sender: NSSegmentedControl) {
-                    let values = ["small", "medium", "large", "xlarge"]
-                    UserDefaults.standard.set(values[sender.selectedSegment], forKey: "webcamSize")
+                init(overlayView: OverlayView?) {
+                    self.overlayView = overlayView
+                    super.init()
+                }
+                @objc func changed(_ sender: NSSlider) {
+                    WebcamSize.save(points: CGFloat(sender.doubleValue))
+                    sender.doubleValue = Double(WebcamSize.savedPoints)
                     overlayView?.updateWebcamSetupPreview()
                 }
             }
             let sizeHandler = SizeHandler(overlayView: self)
-            sizeSeg.target = sizeHandler
-            sizeSeg.action = #selector(SizeHandler.changed(_:))
-            objc_setAssociatedObject(sizeSeg, "handler", sizeHandler, .OBJC_ASSOCIATION_RETAIN)
+            sizeSlider.target = sizeHandler
+            sizeSlider.action = #selector(SizeHandler.changed(_:))
+            objc_setAssociatedObject(sizeSlider, "handler", sizeHandler, .OBJC_ASSOCIATION_RETAIN)
 
             // Shape
             let shapeSeg = NSSegmentedControl(labels: ["●", "▢"], trackingMode: .selectOne, target: nil, action: nil)
@@ -461,7 +460,7 @@ extension OverlayView {
             objc_setAssociatedObject(shapeSeg, "handler", shapeHandler, .OBJC_ASSOCIATION_RETAIN)
 
             addRow(label: L("Cam pos:"), control: posSeg)
-            addRow(label: L("Cam size:"), control: sizeSeg)
+            addRow(label: L("Cam size:"), control: sizeSlider)
             addRow(label: L("Cam shape:"), control: shapeSeg)
         }
 

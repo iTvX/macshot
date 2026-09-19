@@ -145,7 +145,7 @@ private class PinPanel: NSPanel {
 
     // Don't let Cmd+Q propagate to the app — just close the pin
     override func performKeyEquivalent(with event: NSEvent) -> Bool {
-        if event.modifierFlags.contains(.command) && event.keyCode == 12 {  // Q
+        if KeyboardShortcutMatcher.matches(event, character: "q", modifiers: .command) {
             (contentView as? PinView)?.onClose?()
             return true
         }

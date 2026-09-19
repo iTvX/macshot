@@ -185,15 +185,20 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Кликни на прозор  ·  Превуци за произвољну област  ·  F за цео екран";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Кликни на елемент  ·  Превуци за произвољну област  ·  F за цео екран";
 "Drag to select  ·  Click for full screen" = "Превуци за селекцију  ·  Кликни за цео екран";
 "Release to annotate and edit" = "Отпусти за означавање и уређивање";
 "Release to finish" = "Отпусти за завршетак";
 "Hold Space to move. Release to annotate and edit" = "Држи Размак за померање. Отпусти за означавање и уређивање";
 "Hold Space to move. Release to finish" = "Држи Размак за померање. Отпусти за завршетак";
 "Window snap: " = "Прилепљивање на прозор: ";
+"Snap mode: " = "Режим прилепљивања: ";
 "ON" = "УКЉУЧЕНО";
 "OFF" = "ИСКЉУЧЕНО";
+"WINDOW" = "ПРОЗОР";
+"ELEMENT" = "ЕЛЕМЕНТ";
 "  (Tab to toggle)" = "  (Tab за пребацивање)";
+"  (Tab to switch)" = "  (Tab за пребацивање)";
 "Space" = "Размак";
 "Right-click to copy" = "Десни клик за копирање";
 "Copied %@" = "Копирано %@";
@@ -228,6 +233,8 @@
 "Launch at login" = "Покрени при пријављивању";
 "Show snap alignment guides" = "Прикажи водиље за поравнање";
 "Snap selection edges to image boundaries" = "Привежи ивице избора уз границе слике";
+"Enhance browser and Electron element snapping" = "Побољшај лепљење елемената у прегледачу и Electron-у";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Гради стабло доступности циљне апликације у режиму елемената. Онемогућите ако прегледач или Electron апликација постане спора или има проблема са уносом.";
 "Capture mouse cursor in screenshot" = "Сними курсор миша на снимку екрана";
 "Double-click selection to copy" = "Копирај двокликом на селекцију";
 "Hide capture instructions" = "Сакриј упутства при снимању";
@@ -339,6 +346,7 @@
 "Signed in" = "Пријављени";
 "Not signed in" = "Нисте пријављени";
 "Account:" = "Налог:";
+"Folder:" = "Фасцикла:";
 "Test Connection" = "Тестирај конекцију";
 "Fill in endpoint, bucket, and credentials first" = "Прво попуните крајњу тачку, кошару и акредитиве";
 "Testing..." = "Тестирање...";
@@ -351,6 +359,8 @@
 "Secret Key:" = "Тајни кључ:";
 "Public URL:" = "Јавни URL:";
 "Path Prefix:" = "Префикс путање:";
+"Make uploads publicly readable" = "Учини отпремања јавно читљивим";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "Шаље ACL public-read тако да отпремљени фајлови буду доступни свима са линком. Потребно за AWS S3, DigitalOcean Spaces, MinIO и Backblaze B2, који подразумевано чувају објекте приватно. Оставите искључено за Cloudflare R2, који не подржава ACL и одбија ово заглавље.";
 "API key:" = "API кључ:";
 "Upload History" = "Историја отпремања";
 "No uploads yet." = "Још нема отпремања.";
@@ -467,7 +477,7 @@
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Потребно праћење уноса";
 "macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot захтева дозволу за праћење уноса да би приказивао притиске тастера током снимања. Одобрите приступ у System Settings, па покушајте поново.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot захтева дозволу приступачности да би приказивао притиске тастера током снимања. Одобрите приступ у System Settings, па покушајте поново.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot-у је потребна дозвола приступачности за прилепљивање уз појединачне елементе интерфејса. Одобрите приступ у Подешавањима система и покушајте поново.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "Прикажи притиске тастера";
@@ -506,6 +516,7 @@
 "Settings" = "Подешавања";
 "macshot Settings" = "macshot подешавања";
 "Also open in Editor" = "Отвори и у уређивачу";
+"Close editor after copying" = "Затвори уређивач након копирања";
 "Hide controls" = "Сакриј контроле";
 "Hide recording controls" = "Сакриј контроле снимања";
 "Stop recording from the menu bar icon instead." = "Уместо тога, зауставите снимање преко иконице у траци менија.";
@@ -553,12 +564,13 @@
 
 "Same as screenshots" = "Isto kao snimci ekrana";
 "  Preview size:" = "  Veličina pregleda:";
+"Fit image in preview (letterbox)" = "Uklopi sliku u pregled (sa trakama)";
 "(0 = off)" = "(0 = isključeno)";
 "Clear All" = "Obriši sve";
 "Clear History?" = "Obrisati istoriju?";
 "This will permanently delete all screenshots from history." = "Ovo će trajno obrisati sve snimke ekrana iz istorije.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Kliknite \"Postavi\" i pritisnite kombinaciju tastera sa barem jednim modifikatorom (⌘, ⌥, ⌃, ⇧) da biste postavili prečicu.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Fajlovi se otpremaju u fasciklu \"macshot\" na vašem Google disku. Sve ostaje privatno — ništa se ne deli javno.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused — a new one is created instead. Everything stays private — nothing is shared publicly." = "Фајлови се отпремају у ову фасциклу на вашем Google диску. Оставите празно да бисте користили \"macshot\". macshot може да користи само фасцикле које је сам направио, па фасцикла са истим именом коју сте ви направили на Диску неће бити поново искоришћена — уместо ње биће направљена нова. Све остаје приватно — ништа се не дели јавно.";
 
 "Pressure" = "Pritisak";
 
@@ -671,3 +683,14 @@
 
 /* URL scheme: edit (PR #272) */
 "Open a history entry in the editor (keeps annotations editable)" = "Otvori stavku istorije u uređivaču (zadržava mogućnost uređivanja napomena)";
+
+/* Selection edge adjustment */
+"Auto-Adjust Selection" = "Automatsko prilagođavanje izbora";
+"Auto-adjust selection" = "Automatski prilagodi izbor";
+"Could not analyze selection edges" = "Nije moguće analizirati ivice izbora";
+"Detecting nearby edges…" = "Otkrivanje obližnjih ivica…";
+"No nearby edges found" = "Nisu pronađene obližnje ivice";
+"Selection adjusted" = "Izbor je prilagođen";
+"Selection is already aligned" = "Izbor je već poravnat";
+"Space to move. Release to annotate and edit" = "Držite razmaknicu za pomeranje. Otpustite za dodavanje napomena i uređivanje";
+"Space to move. Release to finish" = "Držite razmaknicu za pomeranje. Otpustite da završite";

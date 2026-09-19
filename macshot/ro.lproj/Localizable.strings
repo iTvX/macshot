@@ -174,6 +174,13 @@
 "ON" = "ACTIVAT";
 "OFF" = "DEZACTIVAT";
 "  (Tab to toggle)" = "  (Tab pentru comutare)";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Clic pe un element  ·  Trage pentru zona personalizată  ·  F pentru ecran complet";
+"Snap mode: " = "Mod fixare: ";
+"WINDOW" = "FEREASTRĂ";
+"ELEMENT" = "ELEMENT";
+"  (Tab to switch)" = "  (Tab pentru comutare)";
+"Enhance browser and Electron element snapping" = "Îmbunătățește fixarea elementelor de browser și Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Construiește arborele de accesibilitate al aplicației țintă în modul Element. Dezactivează dacă un browser sau aplicație Electron devine lentă sau are probleme de intrare.";
 "Right-click to copy" = "Clic dreapta pentru copiere";
 "Copied %@" = "Copiat %@";
 "Set color %@" = "Seteaza culoarea %@";
@@ -332,6 +339,7 @@
 "Signed in" = "Conectat";
 "Not signed in" = "Neconectat";
 "Account:" = "Cont:";
+"Folder:" = "Folder:";
 "Test Connection" = "Testeaza conexiunea";
 "Fill in endpoint, bucket, and credentials first" = "Completeaza mai intai endpoint-ul, bucket-ul si credentialele";
 "Testing..." = "Se testeaza...";
@@ -344,6 +352,8 @@
 "Secret Key:" = "Cheie secreta:";
 "Public URL:" = "URL public:";
 "Path Prefix:" = "Prefix cale:";
+"Make uploads publicly readable" = "Fa incarcările citibile public";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "Trimite ACL-ul public-read ca fisierele incarcate sa fie vizibile de oricine are linkul. Necesar pentru AWS S3, DigitalOcean Spaces, MinIO si Backblaze B2, care stocheaza obiectele privat in mod implicit. Lasa dezactivat pentru Cloudflare R2, care nu suporta ACL-uri si respinge headerul.";
 "API key:" = "Cheie API:";
 "Upload History" = "Istoric incarcari";
 "No uploads yet." = "Nicio incarcare inca.";
@@ -460,7 +470,7 @@
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Monitorizarea tastaturii este necesara";
 "macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot are nevoie de permisiunea Monitorizare intrare pentru a afisa apasarile de taste in timpul inregistrarii. Acorda acces din System Settings, apoi incearca din nou.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot are nevoie de permisiunea de accesibilitate pentru a afisa apasarile de taste in timpul inregistrarii. Acorda acces din System Settings, apoi incearca din nou.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot are nevoie de permisiunea Accesibilitate pentru alinierea la elementele individuale ale interfeței. Acordați acces în Setările Sistemului și încercați din nou.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "Afiseaza apasarile de taste";
@@ -498,7 +508,8 @@
 "Settings..." = "Setări...";
 "Settings" = "Setări";
 "macshot Settings" = "Setari macshot";
-"Also open in Editor" = "Deschide si in editor";
+"Also open in Editor" = "Deschide și în editor";
+"Close editor after copying" = "Închide editorul după copiere";
 "Hide controls" = "Ascunde controalele";
 "Hide recording controls" = "Ascunde controalele de inregistrare";
 "Stop recording from the menu bar icon instead." = "Opreste inregistrarea din pictograma barei de meniu.";
@@ -543,12 +554,13 @@
 
 "Same as screenshots" = "La fel ca capturile de ecran";
 "  Preview size:" = "  Dimensiune previzualizare:";
+"Fit image in preview (letterbox)" = "Încadrează imaginea în previzualizare (cu benzi)";
 "(0 = off)" = "(0 = dezactivat)";
 "Clear All" = "Șterge tot";
 "Clear History?" = "Ștergi istoricul?";
 "This will permanently delete all screenshots from history." = "Aceasta va șterge definitiv toate capturile de ecran din istoric.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Apasă \"Setează\" și tastează o combinație de taste cu cel puțin un modificator (⌘, ⌥, ⌃, ⇧) pentru a seta o scurtătură.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Fișierele sunt încărcate într-un folder \"macshot\" din Google Drive-ul tău. Totul rămâne privat — nimic nu este distribuit public.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused — a new one is created instead. Everything stays private — nothing is shared publicly." = "Fișierele sunt încărcate în acest folder din Google Drive-ul tău. Lasă gol pentru a folosi \"macshot\". macshot poate folosi doar folderele create de el însuși, așa că un folder creat de tine în Drive cu același nume nu va fi refolosit — în schimb, se creează unul nou. Totul rămâne privat — nimic nu este distribuit public.";
 
 "Pressure" = "Presiune";
 
@@ -669,3 +681,14 @@
 
 /* URL scheme: edit (PR #272) */
 "Open a history entry in the editor (keeps annotations editable)" = "Deschide o intrare din istoric în editor (păstrează adnotările editabile)";
+
+/* Auto-adjust selection (#317) */
+"Auto-Adjust Selection" = "Ajustare automată a selecției";
+"Auto-adjust selection" = "Ajustează automat selecția";
+"Could not analyze selection edges" = "Nu s-au putut analiza marginile selecției";
+"Detecting nearby edges…" = "Se detectează marginile din apropiere…";
+"No nearby edges found" = "Nu s-au găsit margini în apropiere";
+"Selection adjusted" = "Selecție ajustată";
+"Selection is already aligned" = "Selecția este deja aliniată";
+"Space to move. Release to annotate and edit" = "Spațiu pentru mutare. Eliberează pentru a adăuga adnotări și a edita";
+"Space to move. Release to finish" = "Spațiu pentru mutare. Eliberează pentru a finaliza";

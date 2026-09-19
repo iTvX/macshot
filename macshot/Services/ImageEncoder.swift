@@ -224,31 +224,22 @@ enum ImageEncoder {
     private static let clipboardGenerationLock = NSLock()
     private static var clipboardGeneration = 0
 
-    /// Copy image to pasteboard as PNG.
-    /// Explicitly sets PNG data so receiving apps (browsers, editors) get
-    /// a lossless PNG instead of the TIFF that NSImage.writeObjects provides.
-    /// Also writes a retained backing file so Finder paste works and clipboard
-    /// history tools do not keep references to deleted `/tmp` files.
-    static func copyToClipboard(_ image: NSImage, sourceFileURL: URL? = nil) {
-        let pasteboard = NSPasteboard.general
+    static let finderClipboardCompatibilityKey = "finderClipboardCompatibility"
+
+    /// Image data is the default for Teams/RDP/web compatibility. Finder on older
+    /// macOS can optionally receive a retained file URL as well.
+    static func copyToClipboard(_ image: NSImage, pasteboard: NSPasteboard = .general) {
+        let includeFile = UserDefaults.standard.bool(forKey: finderClipboardCompatibilityKey)
         let generation = beginClipboardCopy()
 
         DispatchQueue.global(qos: .userInitiated).async {
-            let validSourceURL = reusableSourceURL(sourceFileURL)
             guard let bitmap = makeBitmap(image),
                   let pngData = bitmap.representation(using: .png, properties: [:]) else {
-                if let validSourceURL {
-                    DispatchQueue.main.async {
-                        guard isCurrentClipboardCopy(generation) else { return }
-                        pasteboard.clearContents()
-                        pasteboard.writeObjects([validSourceURL as NSURL])
-                    }
-                }
                 return
             }
 
-            let backingURL = validSourceURL ?? ClipboardBackingStore.writeImageData(pngData)
             let tiffData = bitmap.representation(using: .tiff, properties: [:])
+            let backingURL = includeFile ? ClipboardBackingStore.writeImageData(pngData) : nil
 
             DispatchQueue.main.async {
                 guard isCurrentClipboardCopy(generation) else { return }
@@ -275,14 +266,6 @@ enum ImageEncoder {
         return generation == clipboardGeneration
     }
 
-    private static func reusableSourceURL(_ url: URL?) -> URL? {
-        guard let url else { return nil }
-        guard !downscaleRetina else { return nil }
-        guard url.pathExtension.lowercased() == "png" else { return nil }
-        guard FileManager.default.fileExists(atPath: url.path) else { return nil }
-        return url
-    }
-
     private static func writeImagePasteboard(
         _ pasteboard: NSPasteboard,
         backingURL: URL?,
@@ -292,15 +275,9 @@ enum ImageEncoder {
         pasteboard.clearContents()
 
         if let backingURL, pasteboard.writeObjects([backingURL as NSURL]) {
-            var extraTypes: [NSPasteboard.PasteboardType] = [.png]
-            if tiffData != nil {
-                extraTypes.append(.tiff)
-            }
-            pasteboard.addTypes(extraTypes, owner: nil)
+            pasteboard.addTypes(tiffData == nil ? [.png] : [.png, .tiff], owner: nil)
             pasteboard.setData(pngData, forType: .png)
-            if let tiffData {
-                pasteboard.setData(tiffData, forType: .tiff)
-            }
+            if let tiffData { pasteboard.setData(tiffData, forType: .tiff) }
             return
         }
 

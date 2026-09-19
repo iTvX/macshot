@@ -174,6 +174,13 @@
 "ON" = "ACTIVAT";
 "OFF" = "DESACTIVAT";
 "  (Tab to toggle)" = "  (Tab per canviar)";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Clic a un element  ·  Arrossegar per a area personalitzada  ·  F per a pantalla completa";
+"Snap mode: " = "Mode d'ajust: ";
+"WINDOW" = "FINESTRA";
+"ELEMENT" = "ELEMENT";
+"  (Tab to switch)" = "  (Tab per canviar)";
+"Enhance browser and Electron element snapping" = "Millora l'ajust d'elements de navegador i aplicacions Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Construeix l'arbre d'accessibilitat de l'aplicació objectiu en mode Element. Desactiveu-ho si un navegador o aplicació Electron es torna lent o té problemes d'entrada.";
 "Right-click to copy" = "Clic dret per copiar";
 "Copied %@" = "Copiat %@";
 "Set color %@" = "Color establert %@";
@@ -332,6 +339,7 @@
 "Signed in" = "Sessio iniciada";
 "Not signed in" = "Sessio no iniciada";
 "Account:" = "Compte:";
+"Folder:" = "Carpeta:";
 "Test Connection" = "Provar connexio";
 "Fill in endpoint, bucket, and credentials first" = "Ompliu primer l'endpoint, el bucket i les credencials";
 "Testing..." = "Provant...";
@@ -344,6 +352,8 @@
 "Secret Key:" = "Clau secreta:";
 "Public URL:" = "URL publica:";
 "Path Prefix:" = "Prefix de ruta:";
+"Make uploads publicly readable" = "Fer les pujades llegibles publicament";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "Envia l'ACL public-read perque els fitxers pujats siguin visibles per qualsevol persona amb l'enllac. Necessari per a AWS S3, DigitalOcean Spaces, MinIO i Backblaze B2, que emmagatzemen objectes de manera privada per defecte. Deixeu-ho desactivat per a Cloudflare R2, que no admet ACLs i rebutja la capcalera.";
 "API key:" = "Clau API:";
 "Upload History" = "Historial de pujades";
 "No uploads yet." = "Encara no hi ha pujades.";
@@ -460,7 +470,7 @@
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Es requereix monitoratge d'entrada";
 "macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot necessita permis de monitoratge d'entrada per mostrar les pulsacions de tecles durant la gravacio. Concediu l'acces a System Settings i torneu-ho a provar.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot necessita permis d'accessibilitat per mostrar les pulsacions de tecles durant la gravacio. Concediu l'acces a System Settings i torneu-ho a provar.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot necessita permís d'accessibilitat per ajustar-se a elements individuals de la interfície. Concediu l'accés a Configuració del sistema i torneu-ho a provar.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "Mostrar pulsacions de tecles";
@@ -498,7 +508,8 @@
 "Settings" = "Configuració";
 "Settings..." = "Configuració...";
 "macshot Settings" = "Configuracio de macshot";
-"Also open in Editor" = "Obrir tambe a l'editor";
+"Also open in Editor" = "Obrir també a l'editor";
+"Close editor after copying" = "Tanca l'editor després de copiar";
 "Hide controls" = "Amagar controls";
 "Hide recording controls" = "Amagar controls de gravacio";
 "Stop recording from the menu bar icon instead." = "Atureu la gravacio des de la icona de la barra de menus.";
@@ -545,12 +556,13 @@
 
 "Same as screenshots" = "Igual que les captures de pantalla";
 "  Preview size:" = "  Mida de la previsualització:";
+"Fit image in preview (letterbox)" = "Ajusta la imatge a la previsualització (amb franges)";
 "(0 = off)" = "(0 = desactivat)";
 "Clear All" = "Esborra-ho tot";
 "Clear History?" = "Esborrar l'historial?";
 "This will permanently delete all screenshots from history." = "Això eliminarà permanentment totes les captures de pantalla de l'historial.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Feu clic a \"Establir\" i premeu una combinació de tecles amb almenys un modificador (⌘, ⌥, ⌃, ⇧) per definir una drecera.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Els fitxers es pugen a una carpeta \"macshot\" del vostre Google Drive. Tot és privat — res no es comparteix públicament.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused — a new one is created instead. Everything stays private — nothing is shared publicly." = "Els fitxers es pugen a aquesta carpeta del vostre Google Drive. Deixeu-ho buit per utilitzar \"macshot\". macshot només pot utilitzar carpetes que ha creat ell mateix, de manera que una carpeta amb el mateix nom que hàgiu creat a Drive no es reutilitzarà — se'n crearà una de nova. Tot és privat — res no es comparteix públicament.";
 
 "Pressure" = "Pressió";
 
@@ -671,3 +683,14 @@
 
 /* URL scheme: edit (PR #272) */
 "Open a history entry in the editor (keeps annotations editable)" = "Obre una entrada de l'historial a l'editor (manté les anotacions editables)";
+
+/* Selection auto-adjust and Spacebar movement */
+"Auto-Adjust Selection" = "Ajust automàtic de la selecció";
+"Auto-adjust selection" = "Ajusta automàticament la selecció";
+"Could not analyze selection edges" = "No s'han pogut analitzar les vores de la selecció";
+"Detecting nearby edges…" = "S'estan detectant les vores properes…";
+"No nearby edges found" = "No s'ha trobat cap vora propera";
+"Selection adjusted" = "S'ha ajustat la selecció";
+"Selection is already aligned" = "La selecció ja està alineada";
+"Space to move. Release to annotate and edit" = "Mantén premuda la barra espai per moure. Deixa-la anar per anotar i editar";
+"Space to move. Release to finish" = "Mantén premuda la barra espai per moure. Deixa-la anar per acabar";

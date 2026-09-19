@@ -185,15 +185,20 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Клацніть вікно  ·  Перетягніть для довільної області  ·  F для повного екрана";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Клацніть елемент  ·  Перетягніть для довільної області  ·  F для повного екрана";
 "Drag to select  ·  Click for full screen" = "Перетягніть для вибору  ·  Клацніть для повного екрана";
 "Release to annotate and edit" = "Відпустіть для анотації та редагування";
 "Release to finish" = "Відпустіть для завершення";
 "Hold Space to move. Release to annotate and edit" = "Утримуйте Пробіл для переміщення. Відпустіть для анотації та редагування";
 "Hold Space to move. Release to finish" = "Утримуйте Пробіл для переміщення. Відпустіть для завершення";
 "Window snap: " = "Прилипання до вікна: ";
+"Snap mode: " = "Режим прилипання: ";
 "ON" = "УВІМК.";
 "OFF" = "ВИМК.";
+"WINDOW" = "ВІКНО";
+"ELEMENT" = "ЕЛЕМЕНТ";
 "  (Tab to toggle)" = "  (Tab для перемикання)";
+"  (Tab to switch)" = "  (Tab для перемикання)";
 "Space" = "Пробіл";
 "Right-click to copy" = "Клацніть правою кнопкою, щоб копіювати";
 "Copied %@" = "Скопійовано %@";
@@ -228,6 +233,8 @@
 "Launch at login" = "Запускати при вході в систему";
 "Show snap alignment guides" = "Показувати напрямні вирівнювання";
 "Snap selection edges to image boundaries" = "Прив'язувати краї виділення до меж зображення";
+"Enhance browser and Electron element snapping" = "Покращення прилипання елементів у браузері та Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Будує дерево доступності цільової програми в режимі елементів. Вимкніть, якщо браузер або Electron-програма працює повільно або має проблеми з введенням.";
 "Capture mouse cursor in screenshot" = "Захоплювати курсор миші на знімку екрана";
 "Double-click selection to copy" = "Копіювати подвійним клацанням по виділенню";
 "Hide capture instructions" = "Приховувати підказки під час захоплення";
@@ -339,6 +346,7 @@
 "Signed in" = "Увійдено";
 "Not signed in" = "Не увійдено";
 "Account:" = "Обліковий запис:";
+"Folder:" = "Папка:";
 "Test Connection" = "Перевірити з'єднання";
 "Fill in endpoint, bucket, and credentials first" = "Спочатку заповніть адресу, бакет та облікові дані";
 "Testing..." = "Перевірка...";
@@ -351,6 +359,8 @@
 "Secret Key:" = "Секретний ключ:";
 "Public URL:" = "Публічна URL-адреса:";
 "Path Prefix:" = "Префікс шляху:";
+"Make uploads publicly readable" = "Зробити завантаження публічно доступними для читання";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "Надсилає ACL public-read, щоб завантажені файли були доступні всім за посиланням. Потрібно для AWS S3, DigitalOcean Spaces, MinIO та Backblaze B2, які за замовчуванням зберігають об'єкти приватно. Вимкніть для Cloudflare R2, який не підтримує ACL і відхиляє цей заголовок.";
 "API key:" = "API-ключ:";
 "Upload History" = "Історія завантажень";
 "No uploads yet." = "Завантажень ще немає.";
@@ -467,7 +477,7 @@
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Потрібен моніторинг введення";
 "macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot потребує дозволу на моніторинг введення для відображення натискань клавіш під час запису. Надайте доступ у System Settings і спробуйте знову.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot потребує дозволу Універсального доступу для відображення натискань клавіш під час запису. Надайте доступ у System Settings і спробуйте знову.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot потребує дозволу Доступності для прив’язки до окремих елементів інтерфейсу. Надайте доступ у Системних параметрах і спробуйте знову.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "Показувати натискання клавіш";
@@ -506,6 +516,7 @@
 "Settings..." = "Налаштування...";
 "macshot Settings" = "Налаштування macshot";
 "Also open in Editor" = "Також відкрити в редакторі";
+"Close editor after copying" = "Закривати редактор після копіювання";
 "Hide controls" = "Сховати елементи керування";
 "Hide recording controls" = "Сховати елементи керування записом";
 "Stop recording from the menu bar icon instead." = "Зупиніть запис через іконку в смузі меню.";
@@ -551,12 +562,13 @@
 
 "Same as screenshots" = "Як у знімках екрана";
 "  Preview size:" = "  Розмір попереднього перегляду:";
+"Fit image in preview (letterbox)" = "Вписати зображення в попередній перегляд (зі смугами)";
 "(0 = off)" = "(0 = вимкнено)";
 "Clear All" = "Очистити все";
 "Clear History?" = "Очистити історію?";
 "This will permanently delete all screenshots from history." = "Це назавжди видалить усі знімки екрана з історії.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Натисніть \"Встановити\" та введіть комбінацію клавіш з принаймні одним модифікатором (⌘, ⌥, ⌃, ⇧), щоб призначити ярлик.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Файли завантажуються до папки \"macshot\" на вашому Google Диску. Все залишається приватним — нічого не публікується у відкритому доступі.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused — a new one is created instead. Everything stays private — nothing is shared publicly." = "Файли завантажуються до цієї папки на вашому Google Диску. Залиште поле порожнім, щоб використовувати \"macshot\". macshot може використовувати лише папки, які створив сам, тому папку з такою ж назвою, створену вами на Диску, не буде використано — натомість буде створено нову. Все залишається приватним — нічого не публікується у відкритому доступі.";
 
 "Pressure" = "Тиск";
 
@@ -669,3 +681,14 @@
 
 /* URL scheme: edit (PR #272) */
 "Open a history entry in the editor (keeps annotations editable)" = "Відкрити запис історії в редакторі (анотації залишаються редагованими)";
+
+/* Selection edge adjustment */
+"Auto-Adjust Selection" = "Автовирівнювання виділення";
+"Auto-adjust selection" = "Автоматично вирівняти виділення";
+"Could not analyze selection edges" = "Не вдалося проаналізувати межі виділення";
+"Detecting nearby edges…" = "Виявлення найближчих меж…";
+"No nearby edges found" = "Найближчих меж не знайдено";
+"Selection adjusted" = "Виділення скориговано";
+"Selection is already aligned" = "Виділення вже вирівняно";
+"Space to move. Release to annotate and edit" = "Утримуйте Пробіл, щоб перемістити. Відпустіть, щоб додати анотацію та редагувати";
+"Space to move. Release to finish" = "Утримуйте Пробіл, щоб перемістити. Відпустіть, щоб завершити";

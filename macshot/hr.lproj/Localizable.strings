@@ -185,15 +185,20 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Klikni prozor  ·  Povuci za podrucje  ·  F za cijeli zaslon";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Klikni element  ·  Povuci za podrucje  ·  F za cijeli zaslon";
 "Drag to select  ·  Click for full screen" = "Povuci za odabir  ·  Klikni za cijeli zaslon";
 "Release to annotate and edit" = "Pusti za oznacavanje i uredivanje";
 "Release to finish" = "Pusti za završetak";
 "Hold Space to move. Release to annotate and edit" = "Držite Razmaknicu za pomicanje. Pustite za označavanje i uređivanje";
 "Hold Space to move. Release to finish" = "Držite Razmaknicu za pomicanje. Pustite za završetak";
 "Window snap: " = "Hvatanje prozora: ";
+"Snap mode: " = "Režim hvatanja: ";
 "ON" = "UKLJ.";
 "OFF" = "ISKLJ.";
+"WINDOW" = "PROZOR";
+"ELEMENT" = "ELEMENT";
 "  (Tab to toggle)" = "  (Tab za prebacivanje)";
+"  (Tab to switch)" = "  (Tab za prebacivanje)";
 "Space" = "Razmaknica";
 "Right-click to copy" = "Desni klik za kopiranje";
 "Copied %@" = "Kopirano %@";
@@ -228,6 +233,8 @@
 "Launch at login" = "Pokreni pri prijavi";
 "Show snap alignment guides" = "Prikazi vodilice za poravnanje";
 "Snap selection edges to image boundaries" = "Privezi rubove odabira uz granice slike";
+"Enhance browser and Electron element snapping" = "Poboljšaj hvatanje elemenata u pregledniku i Electron-u";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Izgrađuje stablo pristupačnosti ciljne aplikacije u načinu elemenata. Onemogućite ako preglednik ili Electron aplikacija postane spora ili ima problema s unosom.";
 "Capture mouse cursor in screenshot" = "Snimi kursor misa na snimci zaslona";
 "Double-click selection to copy" = "Kopiraj dvostrukim klikom na odabir";
 "Hide capture instructions" = "Sakrij upute pri snimanju";
@@ -338,7 +345,8 @@
 "Sign Out" = "Odjava";
 "Signed in" = "Prijavljeni";
 "Not signed in" = "Niste prijavljeni";
-"Account:" = "Racun:";
+"Account:" = "Račun:";
+"Folder:" = "Mapa:";
 "Test Connection" = "Testiraj vezu";
 "Fill in endpoint, bucket, and credentials first" = "Najprije unesite krajnju tocku, spremnik i vjerodajnice";
 "Testing..." = "Testiranje...";
@@ -351,6 +359,8 @@
 "Secret Key:" = "Tajni kljuc:";
 "Public URL:" = "Javni URL:";
 "Path Prefix:" = "Prefiks putanje:";
+"Make uploads publicly readable" = "Ucini ucitavanja javno citljivima";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "Salje ACL public-read tako da ucitane datoteke budu dostupne svima s poveznicom. Potrebno za AWS S3, DigitalOcean Spaces, MinIO i Backblaze B2, koji prema zadanim postavkama pohranjuju objekte privatno. Ostavite iskljuceno za Cloudflare R2, koji ne podrzava ACL i odbija to zaglavlje.";
 "API key:" = "API kljuc:";
 "Upload History" = "Povijest ucitavanja";
 "No uploads yet." = "Nema ucitavanja.";
@@ -467,7 +477,7 @@
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Potrebno pracenje unosa";
 "macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot treba dozvolu pracenja unosa za prikaz pritisaka tipki tijekom snimanja. Odobrite pristup u System Settings, zatim pokusajte ponovo.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot treba dozvolu pristupacnosti za prikaz pritisaka tipki tijekom snimanja. Odobrite pristup u System Settings, zatim pokusajte ponovo.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot treba dozvolu pristupačnosti za prianjanje uz pojedinačne elemente sučelja. Odobrite pristup u Postavkama sustava i pokušajte ponovno.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "Prikazi pritiske tipki";
@@ -506,7 +516,8 @@
 "Offline build: upload and cloud storage integrations are removed. Update checks may still connect to MacShot's update server. Screenshots and recordings stay local unless you share or save them yourself." = "Izvanmrežna verzija: integracije za prijenos i pohranu u oblaku uklonjene su. Provjere ažuriranja i dalje se mogu povezivati s MacShotovim poslužiteljem za ažuriranja. Snimke zaslona i snimke ostaju lokalne osim ako ih sami ne podijelite ili spremite.";
 "Settings..." = "Postavke...";
 "macshot Settings" = "macshot Postavke";
-"Also open in Editor" = "Otvori i u uredivacku";
+"Also open in Editor" = "Otvori i u uređivaču";
+"Close editor after copying" = "Zatvori uređivač nakon kopiranja";
 "Hide controls" = "Sakrij kontrole";
 "Hide recording controls" = "Sakrij kontrole snimanja";
 "Stop recording from the menu bar icon instead." = "Umjesto toga zaustavite snimanje putem ikone u traci izbornika.";
@@ -551,12 +562,13 @@
 
 "Same as screenshots" = "Isto kao snimke zaslona";
 "  Preview size:" = "  Veličina pregleda:";
+"Fit image in preview (letterbox)" = "Uklopi sliku u pregled (s trakama)";
 "(0 = off)" = "(0 = isključeno)";
 "Clear All" = "Obriši sve";
 "Clear History?" = "Obrisati povijest?";
 "This will permanently delete all screenshots from history." = "Ovo će trajno izbrisati sve snimke zaslona iz povijesti.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Kliknite \"Postavi\" i pritisnite kombinaciju tipki s barem jednim modifikatorom (⌘, ⌥, ⌃, ⇧) za postavljanje prečaca.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Datoteke se učitavaju u mapu \"macshot\" na vašem Google Disku. Sve ostaje privatno — ništa se ne dijeli javno.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused — a new one is created instead. Everything stays private — nothing is shared publicly." = "Datoteke se učitavaju u ovu mapu na vašem Google Disku. Ostavite prazno za korištenje mape \"macshot\". macshot može koristiti samo mape koje je sam stvorio, pa mapa s istim nazivom koju ste vi izradili na Disku neće biti ponovno korištena — umjesto nje stvara se nova. Sve ostaje privatno — ništa se ne dijeli javno.";
 
 "Pressure" = "Pritisak";
 
@@ -669,3 +681,14 @@
 
 /* URL scheme: edit (PR #272) */
 "Open a history entry in the editor (keeps annotations editable)" = "Otvori stavku povijesti u uređivaču (bilješke ostaju uredive)";
+
+/* Selection auto-adjust and Spacebar movement */
+"Auto-Adjust Selection" = "Automatski prilagodi odabir";
+"Auto-adjust selection" = "Automatski prilagodi odabir";
+"Could not analyze selection edges" = "Nije moguće analizirati rubove odabira";
+"Detecting nearby edges…" = "Otkrivanje obližnjih rubova…";
+"No nearby edges found" = "Nisu pronađeni obližnji rubovi";
+"Selection adjusted" = "Odabir je prilagođen";
+"Selection is already aligned" = "Odabir je već poravnat";
+"Space to move. Release to annotate and edit" = "Držite razmaknicu za pomicanje. Otpustite za dodavanje bilješki i uređivanje";
+"Space to move. Release to finish" = "Držite razmaknicu za pomicanje. Otpustite za završetak";
