@@ -223,10 +223,10 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         sep.translatesAutoresizingMaskIntoConstraints = false
 
         // Footer labels
-        let madeBy = NSTextField(labelWithString: "\(L("Made by")) sw33tLie")
-        madeBy.font = NSFont.systemFont(ofSize: 11)
-        madeBy.textColor = .secondaryLabelColor
-        madeBy.translatesAutoresizingMaskIntoConstraints = false
+        let maintainerLabel = NSTextField(labelWithString: "\(L("Maintained by")) iTvX")
+        maintainerLabel.font = NSFont.systemFont(ofSize: 11)
+        maintainerLabel.textColor = .secondaryLabelColor
+        maintainerLabel.translatesAutoresizingMaskIntoConstraints = false
 
         let linkBtn = NSButton(title: "github.com/iTvX/macshot", target: self, action: #selector(openGitHub))
         linkBtn.bezelStyle = .inline
@@ -239,7 +239,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         ])
         linkBtn.translatesAutoresizingMaskIntoConstraints = false
 
-        let footerStack = NSStackView(views: [madeBy, NSView(), linkBtn])
+        let footerStack = NSStackView(views: [maintainerLabel, NSView(), linkBtn])
         footerStack.orientation = .horizontal
         footerStack.spacing = 0
         footerStack.translatesAutoresizingMaskIntoConstraints = false
@@ -2398,7 +2398,14 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         desc.textColor = .labelColor
         desc.alignment = .center
         stack.addArrangedSubview(desc)
-        stack.setCustomSpacing(20, after: desc)
+        stack.setCustomSpacing(12, after: desc)
+
+        let upstreamCredit = NSTextField(wrappingLabelWithString: L("Based on macshot by sw33tLie and contributors."))
+        upstreamCredit.font = NSFont.systemFont(ofSize: 11)
+        upstreamCredit.textColor = .secondaryLabelColor
+        upstreamCredit.alignment = .center
+        stack.addArrangedSubview(upstreamCredit)
+        stack.setCustomSpacing(20, after: upstreamCredit)
 
         #if OFFLINE
         let offlineNote = NSTextField(wrappingLabelWithString: L("Offline build: upload and cloud storage integrations are removed. Update checks may still connect to MacShot's update server. Screenshots and recordings stay local unless you share or save them yourself."))

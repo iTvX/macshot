@@ -707,3 +707,7 @@
 /* Fork clipboard compatibility */
 "Enable Finder clipboard compatibility" = "启用 Finder 剪贴板兼容模式";
 "Enable to paste screenshots as files in Finder on macOS 26 or earlier. Leave off for image pasting in Teams, websites, and remote desktops." = "启用后可在 macOS 26 或更早版本的 Finder 中将截图粘贴为文件。在 Teams、网页和远程桌面中粘贴图片时，请保持关闭。";
+
+/* Fork maintainer and upstream attribution */
+"Maintained by" = "维护者";
+"Based on macshot by sw33tLie and contributors." = "基于 sw33tLie 及其他贡献者开发的 macshot。";
