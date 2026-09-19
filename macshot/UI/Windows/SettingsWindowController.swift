@@ -228,11 +228,11 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         madeBy.textColor = .secondaryLabelColor
         madeBy.translatesAutoresizingMaskIntoConstraints = false
 
-        let linkBtn = NSButton(title: "github.com/sw33tLie/macshot", target: self, action: #selector(openGitHub))
+        let linkBtn = NSButton(title: "github.com/iTvX/macshot", target: self, action: #selector(openGitHub))
         linkBtn.bezelStyle = .inline
         linkBtn.isBordered = false
         linkBtn.font = NSFont.systemFont(ofSize: 11)
-        linkBtn.attributedTitle = NSAttributedString(string: "github.com/sw33tLie/macshot", attributes: [
+        linkBtn.attributedTitle = NSAttributedString(string: "github.com/iTvX/macshot", attributes: [
             .font: NSFont.systemFont(ofSize: 11),
             .foregroundColor: NSColor.linkColor,
             .underlineStyle: NSUnderlineStyle.single.rawValue,
@@ -3094,7 +3094,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         LanguageManager.shared.currentLanguage = languages[idx].code
     }
     @objc private func openGitHub() {
-        if let url = URL(string: "https://github.com/sw33tLie/macshot") { NSWorkspace.shared.open(url) }
+        if let url = URL(string: "https://github.com/iTvX/macshot") { NSWorkspace.shared.open(url) }
     }
     @objc private func imageFormatChanged(_ sender: NSPopUpButton) {
         guard let raw = sender.selectedItem?.representedObject as? String,
