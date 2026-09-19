@@ -26,7 +26,9 @@ enum ClipboardBackingStore {
     }()
 
     static func writeImageData(_ data: Data) -> URL? {
-        let url = makeUniqueURL(fileExtension: "png")
+        // Encoding can finish concurrently for two copies. A UUID avoids the
+        // check-then-write race of timestamp-based names overwriting each other.
+        let url = directory.appendingPathComponent("\(UUID().uuidString).png")
         do {
             try data.write(to: url, options: .atomic)
             return url
@@ -72,21 +74,4 @@ enum ClipboardBackingStore {
         return result
     }
 
-    private static func makeUniqueURL(fileExtension: String) -> URL {
-        let filename = FilenameFormatter.defaultImageFilename(fileExtension: fileExtension)
-        let base = (filename as NSString).deletingPathExtension
-        let ext = (filename as NSString).pathExtension
-
-        var candidate = directory.appendingPathComponent(filename)
-        var counter = 2
-        while FileManager.default.fileExists(atPath: candidate.path) {
-            let name = ext.isEmpty ? "\(base) (\(counter))" : "\(base) (\(counter)).\(ext)"
-            candidate = directory.appendingPathComponent(name)
-            counter += 1
-            if counter > 1000 {
-                return directory.appendingPathComponent("\(UUID().uuidString).\(fileExtension)")
-            }
-        }
-        return candidate
-    }
 }

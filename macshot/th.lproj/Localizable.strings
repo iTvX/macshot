@@ -171,6 +171,7 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "คลิกที่หน้าต่าง  ·  ลากเพื่อเลือกพื้นที่  ·  F เพื่อเต็มจอ";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "คลิกที่องค์ประกอบ  ·  ลากเพื่อเลือกพื้นที่  ·  F เพื่อเต็มจอ";
 "Drag to select  ·  Click for full screen" = "ลากเพื่อเลือก  ·  คลิกเพื่อเต็มจอ";
 "Release to annotate and edit" = "ปล่อยเพื่อใส่คำอธิบายและแก้ไข";
 "Release to finish" = "ปล่อยเพื่อเสร็จสิ้น";
@@ -178,9 +179,13 @@
 "Hold Space to move. Release to finish" = "กด Space ค้างเพื่อย้าย ปล่อยเพื่อเสร็จสิ้น";
 "Space" = "Space";
 "Window snap: " = "จับหน้าต่าง: ";
+"Snap mode: " = "โหมดจับ: ";
 "ON" = "เปิด";
 "OFF" = "ปิด";
+"WINDOW" = "หน้าต่าง";
+"ELEMENT" = "องค์ประกอบ";
 "  (Tab to toggle)" = "  (Tab เพื่อสลับ)";
+"  (Tab to switch)" = "  (Tab เพื่อสลับ)";
 "Right-click to copy" = "คลิกขวาเพื่อคัดลอก";
 "Copied %@" = "คัดลอก %@ แล้ว";
 "Set color %@" = "ตั้งสี %@";
@@ -225,6 +230,8 @@
 "Launch at login" = "เปิดเมื่อเข้าสู่ระบบ";
 "Show snap alignment guides" = "แสดงเส้นจัดแนว";
 "Snap selection edges to image boundaries" = "ดูดขอบพื้นที่เลือกเข้ากับขอบเขตของภาพ";
+"Enhance browser and Electron element snapping" = "เพิ่มการจับองค์ประกอบของเบราว์เซอร์และ Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "สร้าง accessibility tree ของแอปเป้าหมายในโหมดองค์ประกอบ ปิดการใช้งานนี้หากเบราว์เซอร์หรือแอป Electron ทำงานช้ากว่าปกติหรือมีปัญหาในการรับข้อมูล";
 "Capture mouse cursor in screenshot" = "จับภาพเคอร์เซอร์เมาส์ในภาพหน้าจอ";
 "Double-click selection to copy" = "ดับเบิลคลิกที่พื้นที่ที่เลือกเพื่อคัดลอก";
 "Hide capture instructions" = "ซ่อนคำแนะนำการจับภาพหน้าจอ";
@@ -338,6 +345,7 @@
 "Signed in" = "เข้าสู่ระบบแล้ว";
 "Not signed in" = "ยังไม่ได้เข้าสู่ระบบ";
 "Account:" = "บัญชี:";
+"Folder:" = "โฟลเดอร์:";
 "Test Connection" = "ทดสอบการเชื่อมต่อ";
 "Fill in endpoint, bucket, and credentials first" = "กรอก endpoint, bucket และข้อมูลรับรองก่อน";
 "Testing..." = "กำลังทดสอบ...";
@@ -350,6 +358,8 @@
 "Secret Key:" = "Secret Key:";
 "Public URL:" = "Public URL:";
 "Path Prefix:" = "Path Prefix:";
+"Make uploads publicly readable" = "ทำให้ไฟล์ที่อัปโหลดเป็นสาธารณะ";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "ส่ง ACL แบบ public-read เพื่อให้ไฟล์ที่อัปโหลดสามารถดูได้โดยทุกคนที่มีลิงก์ จำเป็นสำหรับ AWS S3, DigitalOcean Spaces, MinIO และ Backblaze B2 ซึ่งจัดเก็บอ็อบเจกต์แบบส่วนตัวโดยค่าเริ่มต้น ปิดไว้สำหรับ Cloudflare R2 ซึ่งไม่มี ACL และจะปฏิเสธ header";
 "API key:" = "API key:";
 "Upload History" = "ประวัติการอัปโหลด";
 "No uploads yet." = "ยังไม่มีการอัปโหลด";
@@ -467,7 +477,7 @@
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "ต้องการสิทธิ์การตรวจสอบอินพุต";
 "macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot ต้องการสิทธิ์การตรวจสอบอินพุตเพื่อแสดงการกดปุ่มขณะบันทึก กรุณาอนุญาตใน System Settings แล้วลองอีกครั้ง";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot ต้องการสิทธิ์การช่วยการเข้าถึงเพื่อแสดงการกดปุ่มขณะบันทึก กรุณาอนุญาตใน System Settings แล้วลองอีกครั้ง";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot ต้องการสิทธิ์การช่วยการเข้าถึงเพื่อสแนปไปยังองค์ประกอบอินเทอร์เฟซแต่ละรายการ กรุณาให้สิทธิ์ในการตั้งค่าระบบ แล้วลองอีกครั้ง";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "แสดงการกดปุ่ม";
@@ -506,6 +516,7 @@
 "Settings..." = "การตั้งค่า...";
 "macshot Settings" = "การตั้งค่า macshot";
 "Also open in Editor" = "เปิดในตัวแก้ไขด้วย";
+"Close editor after copying" = "ปิดตัวแก้ไขหลังคัดลอก";
 "Hide controls" = "ซ่อนตัวควบคุม";
 "Hide recording controls" = "ซ่อนตัวควบคุมการบันทึก";
 "Stop recording from the menu bar icon instead." = "หยุดบันทึกจากไอคอนแถบเมนูแทน";
@@ -551,12 +562,13 @@
 
 "Same as screenshots" = "เหมือนกับภาพหน้าจอ";
 "  Preview size:" = "  ขนาดตัวอย่าง:";
+"Fit image in preview (letterbox)" = "ปรับภาพให้พอดีกับตัวอย่าง (มีแถบดำ)";
 "(0 = off)" = "(0 = ปิด)";
 "Clear All" = "ล้างทั้งหมด";
 "Clear History?" = "ล้างประวัติ?";
 "This will permanently delete all screenshots from history." = "การดำเนินการนี้จะลบภาพหน้าจอทั้งหมดออกจากประวัติอย่างถาวร";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "คลิก \"ตั้งค่า\" แล้วกดคีย์ผสมที่มีปุ่มตัวแก้ไขอย่างน้อยหนึ่งปุ่ม (⌘, ⌥, ⌃, ⇧) เพื่อตั้งค่าทางลัด";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "ไฟล์จะถูกอัปโหลดไปยังโฟลเดอร์ \"macshot\" ใน Google Drive ของคุณ ทุกอย่างเป็นส่วนตัว — ไม่มีการแชร์สาธารณะ";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused — a new one is created instead. Everything stays private — nothing is shared publicly." = "ไฟล์จะถูกอัปโหลดไปยังโฟลเดอร์นี้ใน Google Drive ของคุณ เว้นว่างไว้เพื่อใช้ \"macshot\" macshot สามารถใช้ได้เฉพาะโฟลเดอร์ที่ตัวเองสร้างขึ้นเท่านั้น ดังนั้นโฟลเดอร์ชื่อเดียวกันที่คุณสร้างเองใน Drive จะไม่ถูกนำมาใช้ซ้ำ — แต่จะสร้างโฟลเดอร์ใหม่แทน ทุกอย่างเป็นส่วนตัว — ไม่มีการแชร์สาธารณะ";
 
 "Pressure" = "แรงกด";
 
@@ -669,3 +681,14 @@
 
 /* URL scheme: edit (PR #272) */
 "Open a history entry in the editor (keeps annotations editable)" = "เปิดรายการประวัติในตัวแก้ไข (ยังแก้ไขคำอธิบายประกอบได้)";
+
+/* Selection edge adjustment */
+"Auto-Adjust Selection" = "ปรับขอบเขตการเลือกอัตโนมัติ";
+"Auto-adjust selection" = "ปรับขอบเขตการเลือกอัตโนมัติ";
+"Could not analyze selection edges" = "ไม่สามารถวิเคราะห์ขอบเขตการเลือกได้";
+"Detecting nearby edges…" = "กำลังตรวจหาขอบที่อยู่ใกล้เคียง…";
+"No nearby edges found" = "ไม่พบขอบที่อยู่ใกล้เคียง";
+"Selection adjusted" = "ปรับขอบเขตการเลือกแล้ว";
+"Selection is already aligned" = "ขอบเขตการเลือกตรงแนวอยู่แล้ว";
+"Space to move. Release to annotate and edit" = "กด Space ค้างไว้เพื่อย้าย ปล่อยเพื่อใส่คำอธิบายประกอบและแก้ไข";
+"Space to move. Release to finish" = "กด Space ค้างไว้เพื่อย้าย ปล่อยเพื่อเสร็จสิ้น";

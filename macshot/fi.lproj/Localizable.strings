@@ -176,6 +176,7 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Napsauta ikkunaa  ·  Vedä valitaksesi alue  ·  F koko ruudulle";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Napsauta elementtiä  ·  Vedä valitaksesi alue  ·  F koko ruudulle";
 "Drag to select  ·  Click for full screen" = "Vedä valitaksesi  ·  Napsauta koko ruudulle";
 "Release to annotate and edit" = "Vapauta merkintoja ja muokkausta varten";
 "Release to finish" = "Vapauta lopettaaksesi";
@@ -183,9 +184,13 @@
 "Hold Space to move. Release to finish" = "Pida valilyontia siirtaaksesi. Vapauta lopettaaksesi";
 "Space" = "V\U00E4lily\U00F6nti";
 "Window snap: " = "Ikkunan tarttuminen: ";
+"Snap mode: " = "Tartuntitila: ";
 "ON" = "PAALLA";
 "OFF" = "POIS";
+"WINDOW" = "IKKUNA";
+"ELEMENT" = "ELEMENTTI";
 "  (Tab to toggle)" = "  (Tab vaihtaaksesi)";
+"  (Tab to switch)" = "  (Tab vaihtaaksesi)";
 "Right-click to copy" = "Kopioi oikealla napsautuksella";
 "Copied %@" = "Kopioitu %@";
 "Set color %@" = "Aseta vari %@";
@@ -222,6 +227,8 @@
 "Launch at login" = "Kaynnista kirjautumisen yhteydessa";
 "Show snap alignment guides" = "Nayta kohdistusoppaat";
 "Snap selection edges to image boundaries" = "Kohdista valinnan reunat kuvan rajoihin";
+"Enhance browser and Electron element snapping" = "Paranna selaimen ja Electronin elementt tartuntaa";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Rakentaa kohdeohjelman saavutettavuuspuun Element-tilassa. Poista tämä käytöstä, jos selain tai Electron-sovellus hidastuu tai sillä on input-ongelmia.";
 "Capture mouse cursor in screenshot" = "Kaappaa hiiren osoitin kuvakaappaukseen";
 "Double-click selection to copy" = "Kopioi kaksoisnapsauttamalla valintaa";
 "Hide capture instructions" = "Piilota kuvakaappausohjeet";
@@ -337,6 +344,7 @@
 "Signed in" = "Kirjautunut sisaan";
 "Not signed in" = "Ei kirjautunut";
 "Account:" = "Tili:";
+"Folder:" = "Kansio:";
 "Test Connection" = "Testaa yhteys";
 "Fill in endpoint, bucket, and credentials first" = "Täytä ensin paatepiste, sailio ja tunnistetiedot";
 "Testing..." = "Testataan...";
@@ -349,6 +357,8 @@
 "Secret Key:" = "Salainen avain:";
 "Public URL:" = "Julkinen URL:";
 "Path Prefix:" = "Polun etuliite:";
+"Make uploads publicly readable" = "Tee latauksista julkisesti luettavia";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "L\U00E4hett\U00E4\U00E4 public-read ACL -otsakkeen, jotta ladatut tiedostot ovat kaikkien n\U00E4ht\U00E4viss\U00E4 linkin kautta. Tarvitaan AWS S3:lle, DigitalOcean Spacesille, MinIO:lle ja Backblaze B2:lle, jotka tallentavat objektit oletuksena yksityisin\U00E4. J\U00E4t\U00E4 pois p\U00E4\U00E4lt\U00E4 Cloudflare R2:lle, joka ei tue ACL-otsakkeita ja hylk\U00E4\U00E4 ne.";
 "API key:" = "API-avain:";
 "Upload History" = "Lataushistoria";
 "No uploads yet." = "Ei latauksia viela.";
@@ -465,7 +475,7 @@
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Syötön seuranta vaaditaan";
 "macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot tarvitsee syötön seurannan luvan näyttääkseen näppäinpainallukset nauhoituksen aikana. Myönnä käyttöoikeus System Settings -asetuksista ja yritä uudelleen.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot tarvitsee esteettömyysoikeuden näyttääkseen näppäinpainallukset nauhoituksen aikana. Myönnä käyttöoikeus System Settings -asetuksista ja yritä uudelleen.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot tarvitsee Esteettömyys-luvan yksittäisiin käyttöliittymäelementteihin kohdistamista varten. Myönnä käyttöoikeus Järjestelmäasetuksista ja yritä uudelleen.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "Näytä näppäinpainallukset";
@@ -504,6 +514,7 @@
 "Settings..." = "Asetukset...";
 "macshot Settings" = "macshot-asetukset";
 "Also open in Editor" = "Avaa my\U00F6s editorissa";
+"Close editor after copying" = "Sulje editori kopioinnin jälkeen";
 "Hide controls" = "Piilota ohjaimet";
 "Hide recording controls" = "Piilota nauhoitusohjaimet";
 "Stop recording from the menu bar icon instead." = "Pys\U00E4yt\U00E4 nauhoitus valikkopalkin kuvakkeesta.";
@@ -549,12 +560,13 @@
 
 "Same as screenshots" = "Sama kuin kuvakaappaukset";
 "  Preview size:" = "  Esikatselukoko:";
+"Fit image in preview (letterbox)" = "Sovita kuva esikatseluun (mustat reunat)";
 "(0 = off)" = "(0 = pois)";
 "Clear All" = "Tyhjennä kaikki";
 "Clear History?" = "Tyhjennetäänkö historia?";
 "This will permanently delete all screenshots from history." = "Tämä poistaa kaikki kuvakaappaukset historiasta pysyvästi.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Napsauta \"Aseta\" ja paina näppäinyhdistelmää, jossa on vähintään yksi muokkausnäppäin (⌘, ⌥, ⌃, ⇧) asettaaksesi pikakuvakkeen.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Tiedostot ladataan \"macshot\"-kansioon Google Drivessasi. Kaikki pysyy yksityisenä — mitään ei jaeta julkisesti.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused — a new one is created instead. Everything stays private — nothing is shared publicly." = "Tiedostot ladataan tähän kansioon Google Drivessasi. Jätä tyhjäksi, jos haluat käyttää kansiota \"macshot\". macshot voi käyttää vain itse luomiaan kansioita, joten Driveen itse tekemääsi samannimistä kansiota ei käytetä uudelleen — sen sijaan luodaan uusi. Kaikki pysyy yksityisenä — mitään ei jaeta julkisesti.";
 
 "Pressure" = "Paine";
 
@@ -669,3 +681,14 @@
 
 /* URL scheme: edit (PR #272) */
 "Open a history entry in the editor (keeps annotations editable)" = "Avaa historian merkintä editorissa (merkinnät pysyvät muokattavina)";
+
+/* Selection auto-adjust and Spacebar movement */
+"Auto-Adjust Selection" = "Säädä valinta automaattisesti";
+"Auto-adjust selection" = "Säädä valinta automaattisesti";
+"Could not analyze selection edges" = "Valinnan reunoja ei voitu analysoida";
+"Detecting nearby edges…" = "Etsitään lähellä olevia reunoja…";
+"No nearby edges found" = "Läheisiä reunoja ei löytynyt";
+"Selection adjusted" = "Valintaa säädettiin";
+"Selection is already aligned" = "Valinta on jo kohdistettu";
+"Space to move. Release to annotate and edit" = "Siirrä pitämällä välilyöntiä painettuna. Vapauta lisätäksesi merkintöjä ja muokataksesi";
+"Space to move. Release to finish" = "Siirrä pitämällä välilyöntiä painettuna. Vapauta lopettaaksesi";

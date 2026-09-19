@@ -171,6 +171,7 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "點按視窗  ·  拖移以自訂區域  ·  F 全螢幕";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "點按元素  ·  拖移以自訂區域  ·  F 全螢幕";
 "Drag to select  ·  Click for full screen" = "拖移以選取  ·  點按以全螢幕";
 "Release to annotate and edit" = "放開以標註與編輯";
 "Release to finish" = "放開以完成";
@@ -178,9 +179,13 @@
 "Hold Space to move. Release to finish" = "按住空白鍵以移動。放開以完成";
 "Space" = "空白鍵";
 "Window snap: " = "視窗吸附：";
+"Snap mode: " = "吸附模式：";
 "ON" = "開";
 "OFF" = "關";
+"WINDOW" = "視窗";
+"ELEMENT" = "元素";
 "  (Tab to toggle)" = "  （Tab 切換）";
+"  (Tab to switch)" = "  （Tab 切換）";
 "Right-click to copy" = "右鍵點按以拷貝";
 "Copied %@" = "已拷貝 %@";
 "Set color %@" = "設定顏色 %@";
@@ -225,6 +230,8 @@
 "Launch at login" = "登入時啟動";
 "Show snap alignment guides" = "顯示對齊輔助線";
 "Snap selection edges to image boundaries" = "將選取範圍邊緣貼齊影像邊界";
+"Enhance browser and Electron element snapping" = "增強瀏覽器與 Electron 元素吸附";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "在元素模式下建立目標應用程式的輔助使用樹狀結構。如果瀏覽器或 Electron 應用程式變慢或出現輸入問題，請關閉此選項。";
 "Capture mouse cursor in screenshot" = "在螢幕截圖中擷取滑鼠游標";
 "Double-click selection to copy" = "雙擊選取範圍以複製";
 "Hide capture instructions" = "隱藏截圖操作提示";
@@ -338,6 +345,7 @@
 "Signed in" = "已登入";
 "Not signed in" = "未登入";
 "Account:" = "帳號：";
+"Folder:" = "資料夾：";
 "Test Connection" = "測試連線";
 "Fill in endpoint, bucket, and credentials first" = "請先填寫端點、儲存貯體及憑證";
 "Testing..." = "測試中⋯";
@@ -350,6 +358,8 @@
 "Secret Key:" = "秘密金鑰：";
 "Public URL:" = "公開 URL：";
 "Path Prefix:" = "路徑前綴：";
+"Make uploads publicly readable" = "將上傳檔案設為公開可讀";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "傳送 public-read ACL，讓上傳的檔案可被任何擁有連結的人檢視。AWS S3、DigitalOcean Spaces、MinIO 和 Backblaze B2 預設以私有方式儲存物件，需要啟用此選項。Cloudflare R2 不支援 ACL 且會拒絕此標頭，請保持關閉。";
 "API key:" = "API 金鑰：";
 "Upload History" = "上傳歷史記錄";
 "No uploads yet." = "尚無上傳記錄。";
@@ -467,7 +477,7 @@
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "需要輸入監控權限";
 "macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot 需要「輸入監控」權限才能在錄製時顯示按鍵。請在 System Settings 中授予權限，然後再試一次。";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot 需要「輔助使用」權限才能在錄製時顯示按鍵。請在 System Settings 中授予權限，然後再試一次。";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot 需要輔助使用權限才能貼齊個別介面元素。請在系統設定中授予存取權限，然後重試。";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "顯示按鍵";
@@ -506,6 +516,7 @@
 "Settings..." = "設定...";
 "macshot Settings" = "macshot 設定";
 "Also open in Editor" = "同時在編輯器中開啟";
+"Close editor after copying" = "複製後關閉編輯器";
 "Hide controls" = "隱藏控制";
 "Hide recording controls" = "隱藏錄製控制";
 "Stop recording from the menu bar icon instead." = "改為從選單列圖像停止錄製。";
@@ -553,12 +564,13 @@
 
 "Same as screenshots" = "與截圖相同";
 "  Preview size:" = "  預覽大小:";
+"Fit image in preview (letterbox)" = "在預覽中完整顯示圖片 (黑邊填充)";
 "(0 = off)" = "(0 = 關閉)";
 "Clear All" = "清除全部";
 "Clear History?" = "清除歷史記錄？";
 "This will permanently delete all screenshots from history." = "這將從歷史記錄中永久刪除所有截圖。";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "點擊\"設定\"，然後按下包含至少一個修飾鍵（⌘、⌥、⌃、⇧）的組合鍵來設定快捷鍵。";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "檔案將上傳至您 Google Drive 中的\"macshot\"資料夾。所有內容均保持私密——不會公開分享任何內容。";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused — a new one is created instead. Everything stays private — nothing is shared publicly." = "檔案將上傳至您 Google Drive 中的此資料夾。留空則使用\"macshot\"。macshot 只能使用由它自己建立的資料夾，因此您在 Drive 中自行建立的同名資料夾不會被重複使用，而是會建立新的資料夾。所有內容均保持私密——不會公開分享任何內容。";
 
 "Pressure" = "壓感";
 
@@ -681,3 +693,17 @@
 "Click Set to record a shortcut." = "點擊「設定」以錄入快捷鍵。";
 "This shortcut is unavailable. It may be used by macOS or another application." = "此快捷鍵無法使用，可能已被 macOS 或其他應用程式佔用。";
 "Shortcut unavailable" = "快捷鍵無法使用";
+/* Selection edge adjustment */
+"Auto-Adjust Selection" = "自動調整選取範圍";
+"Auto-adjust selection" = "自動調整選取範圍";
+"Could not analyze selection edges" = "無法分析選取範圍邊緣";
+"Detecting nearby edges…" = "正在偵測附近邊緣…";
+"No nearby edges found" = "找不到附近的邊緣";
+"Selection adjusted" = "已調整選取範圍";
+"Selection is already aligned" = "選取範圍已對齊";
+"Space to move. Release to annotate and edit" = "按住空白鍵移動。放開後進行標註和編輯";
+"Space to move. Release to finish" = "按住空白鍵移動。放開後完成";
+
+/* Fork clipboard compatibility */
+"Enable Finder clipboard compatibility" = "啟用 Finder 剪貼簿相容模式";
+"Enable to paste screenshots as files in Finder on macOS 26 or earlier. Leave off for image pasting in Teams, websites, and remote desktops." = "啟用後可在 macOS 26 或更早版本的 Finder 中將截圖貼上為檔案。在 Teams、網頁和遠端桌面中貼上圖片時，請保持關閉。";

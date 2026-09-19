@@ -8,6 +8,7 @@ class ToolbarButtonView: NSView {
     var sfSymbol: String?
     var isOn: Bool = false { didSet { if oldValue != isOn { cachedIcon = nil; needsDisplay = true } } }
     var tintColor: NSColor = ToolbarLayout.iconColor { didSet { cachedIcon = nil; cachedIconIsOn = nil; needsDisplay = true } }
+    var selectedTintColor: NSColor? { didSet { cachedIcon = nil; cachedIconIsOn = nil; needsDisplay = true } }
     var swatchColor: NSColor? { didSet { needsDisplay = true } }
     var hasContextMenu: Bool = false
     /// Mic input level (0–1). When > 0, draws a green fill from the bottom of the button.
@@ -54,6 +55,7 @@ class ToolbarButtonView: NSView {
         action = data.action
         isOn = data.isSelected
         tintColor = data.tintColor
+        selectedTintColor = data.selectedTintColor
         swatchColor = data.bgColor
         sfSymbol = data.sfSymbol
         tooltipText = data.tooltip
@@ -117,7 +119,7 @@ class ToolbarButtonView: NSView {
         guard let name = sfSymbol else { return }
         let currentIsOn = isOn
         if cachedIcon == nil || cachedIconIsOn != currentIsOn {
-            let color = currentIsOn ? ToolbarLayout.iconColor : tintColor
+            let color = currentIsOn ? (selectedTintColor ?? ToolbarLayout.iconColor) : tintColor
             let key = Self.cacheKey(name: name, isOn: currentIsOn, color: color)
             if let cached = Self.iconCache[key] {
                 cachedIcon = cached

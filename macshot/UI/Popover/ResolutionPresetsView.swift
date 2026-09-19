@@ -20,6 +20,9 @@ final class ResolutionPresetsView: NSView {
     /// 0 = pixels, 1 = points.
     var unitIndex = 0
     var onPickUnit: ((Int) -> Void)?
+    var showsAutoAdjustButton = false
+    var autoAdjustShortcut: String?
+    var onAutoAdjust: (() -> Void)?
 
     private let rowH: CGFloat = 26
     // Wide enough to fit the longest row labels without crowding the edge,
@@ -83,10 +86,15 @@ final class ResolutionPresetsView: NSView {
     }
 
     private var footerHeight: CGFloat {
-        if showsKeepRatioToggle && showsUnitSelector { return fullFooterH }
-        if showsKeepRatioToggle { return keepRatioFooterH }
-        if showsUnitSelector { return keepRatioFooterH }
-        return 0
+        let baseHeight: CGFloat
+        if showsKeepRatioToggle && showsUnitSelector {
+            baseHeight = fullFooterH
+        } else if showsKeepRatioToggle || showsUnitSelector {
+            baseHeight = keepRatioFooterH
+        } else {
+            baseHeight = 0
+        }
+        return baseHeight + (showsAutoAdjustButton ? 34 : 0)
     }
 
     private func buildFooter(width: CGFloat, height: CGFloat) {
@@ -110,7 +118,10 @@ final class ResolutionPresetsView: NSView {
 
         // Unit selector (px | pt).
         if showsUnitSelector {
-            let unitY: CGFloat = showsKeepRatioToggle ? 10 : height - 32
+            let autoAdjustOffset: CGFloat = showsAutoAdjustButton ? 34 : 0
+            let unitY: CGFloat = showsKeepRatioToggle
+                ? 10 + autoAdjustOffset
+                : height - 32
             let unitLabel = NSTextField(labelWithString: L("Units"))
             unitLabel.font = NSFont.systemFont(ofSize: 11)
             unitLabel.textColor = ToolbarLayout.iconColor
@@ -124,12 +135,30 @@ final class ResolutionPresetsView: NSView {
             seg.frame = NSRect(x: width - segW - 12, y: unitY, width: segW, height: 22)
             addSubview(seg)
         }
+
+        if showsAutoAdjustButton {
+            let button = NSButton(
+                title: L("Auto-adjust selection"),
+                target: self,
+                action: #selector(autoAdjustClicked(_:)))
+            button.bezelStyle = .rounded
+            button.image = NSImage(
+                systemSymbolName: "viewfinder",
+                accessibilityDescription: L("Auto-adjust selection"))
+            button.imagePosition = .imageLeading
+            if let shortcut = autoAdjustShortcut, !shortcut.isEmpty {
+                button.toolTip = "\(L("Auto-adjust selection")) (\(shortcut))"
+            }
+            button.frame = NSRect(x: 12, y: 7, width: width - 24, height: 24)
+            addSubview(button)
+        }
     }
 
     var preferredSize: NSSize { frame.size }
 
     @objc private func keepRatioChanged(_ sender: NSSwitch) { onToggleKeepRatio?(sender.state == .on) }
     @objc private func unitChanged(_ sender: NSSegmentedControl) { onPickUnit?(sender.selectedSegment) }
+    @objc private func autoAdjustClicked(_ sender: NSButton) { onAutoAdjust?() }
 }
 
 /// A single selectable preset row (checkmark + hover bg).

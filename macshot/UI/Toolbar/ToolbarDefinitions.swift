@@ -22,6 +22,7 @@ enum ToolbarButtonAction {
     case beautifyStyle
     case cancel
     case moveSelection
+    case adjustSelection
     case delayCapture
     case upload
     case share
@@ -50,6 +51,7 @@ struct ToolbarButton {
     let tooltip: String
     var isSelected: Bool = false
     var tintColor: NSColor = ToolbarLayout.iconColor
+    var selectedTintColor: NSColor? = nil  // optional status tint that remains visible while selected
     var bgColor: NSColor? = nil  // for color swatches
     var hasContextMenu: Bool = false  // draw small corner triangle to indicate right-click options
 }
@@ -150,7 +152,9 @@ enum ToolbarCustomAction: Int {
         case .beautify:
             var button = ToolbarButton(action: .beautify, sfSymbol: "sparkles", tooltip: L("Beautify"))
             if beautifyEnabled {
-                button.tintColor = NSColor(calibratedRed: 1.0, green: 0.8, blue: 0.2, alpha: 1.0)
+                let enabledColor = NSColor(calibratedRed: 1.0, green: 0.8, blue: 0.2, alpha: 1.0)
+                button.tintColor = enabledColor
+                button.selectedTintColor = enabledColor
             }
             return button
         case .removeBackground:

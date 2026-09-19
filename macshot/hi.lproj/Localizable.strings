@@ -174,6 +174,13 @@
 "ON" = "चालू";
 "OFF" = "बंद";
 "  (Tab to toggle)" = "  (टॉगल के लिए Tab)";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "किसी तत्व पर क्लिक करें  ·  कस्टम क्षेत्र के लिए खींचें  ·  पूर्ण स्क्रीन के लिए F";
+"Snap mode: " = "स्नैप मोड: ";
+"WINDOW" = "विंडो";
+"ELEMENT" = "तत्व";
+"  (Tab to switch)" = "  (स्विच करने के लिए Tab)";
+"Enhance browser and Electron element snapping" = "ब्राउज़र और इलेक्ट्रॉन तत्व स्नैपिंग को बेहतर करें";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "तत्व मोड में लक्ष्य ऐप की ऐक्सेसिबिलिटी ट्री बनाता है। यदि कोई ब्राउज़र या इलेक्ट्रॉन ऐप धीमा हो जाता है या इनपुट समस्याएं होती हैं, तो इसे अक्षम करें।";
 "Right-click to copy" = "कॉपी करने के लिए राइट-क्लिक करें";
 "Copied %@" = "%@ कॉपी किया";
 "Set color %@" = "रंग सेट किया %@";
@@ -337,6 +344,7 @@
 "Signed in" = "साइन इन किया हुआ";
 "Not signed in" = "साइन इन नहीं किया";
 "Account:" = "खाता:";
+"Folder:" = "फ़ोल्डर:";
 "Test Connection" = "कनेक्शन परीक्षण";
 "Fill in endpoint, bucket, and credentials first" = "पहले एंडपॉइंट, बकेट और क्रेडेंशियल भरें";
 "Testing..." = "परीक्षण हो रहा है...";
@@ -349,6 +357,8 @@
 "Secret Key:" = "सीक्रेट कुंजी:";
 "Public URL:" = "सार्वजनिक URL:";
 "Path Prefix:" = "पथ उपसर्ग:";
+"Make uploads publicly readable" = "अपलोड को सार्वजनिक रूप से पठनीय बनाएं";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "public-read ACL भेजता है ताकि अपलोड की गई फ़ाइलें लिंक रखने वाले किसी भी व्यक्ति को दिखाई दें। AWS S3, DigitalOcean Spaces, MinIO और Backblaze B2 के लिए आवश्यक है जो डिफ़ॉल्ट रूप से ऑब्जेक्ट्स को निजी रखते हैं। Cloudflare R2 के लिए बंद रखें जो ACLs का समर्थन नहीं करता और हेडर अस्वीकार करता है।";
 "API key:" = "API कुंजी:";
 "Upload History" = "अपलोड इतिहास";
 "No uploads yet." = "अभी तक कोई अपलोड नहीं।";
@@ -468,7 +478,7 @@
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "इनपुट मॉनिटरिंग आवश्यक";
 "macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot को रिकॉर्डिंग के दौरान कीस्ट्रोक दिखाने के लिए इनपुट मॉनिटरिंग अनुमति चाहिए। कृपया System Settings में पहुँच प्रदान करें, फिर पुनः प्रयास करें।";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot को रिकॉर्डिंग के दौरान कीस्ट्रोक दिखाने के लिए सुलभता अनुमति चाहिए। कृपया System Settings में पहुँच प्रदान करें, फिर पुनः प्रयास करें।";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "अलग-अलग इंटरफ़ेस तत्वों पर स्नैप करने के लिए macshot को एक्सेसिबिलिटी अनुमति चाहिए। कृपया सिस्टम सेटिंग्स में एक्सेस दें, फिर पुनः प्रयास करें।";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "कीस्ट्रोक दिखाएँ";
@@ -506,6 +516,7 @@
 "Settings..." = "सेटिंग्स...";
 "macshot Settings" = "macshot सेटिंग्स";
 "Also open in Editor" = "संपादक में भी खोलें";
+"Close editor after copying" = "कॉपी करने के बाद संपादक बंद करें";
 "Hide controls" = "नियंत्रण छिपाएँ";
 "Hide recording controls" = "रिकॉर्डिंग नियंत्रण छिपाएँ";
 "Stop recording from the menu bar icon instead." = "इसके बजाय मेनू बार आइकन से रिकॉर्डिंग बंद करें।";
@@ -551,12 +562,13 @@
 
 "Same as screenshots" = "स्क्रीनशॉट के समान";
 "  Preview size:" = "  पूर्वावलोकन आकार:";
+"Fit image in preview (letterbox)" = "पूर्वावलोकन में पूरी छवि फ़िट करें (लेटरबॉक्स)";
 "(0 = off)" = "(0 = बंद)";
 "Clear All" = "सब साफ़ करें";
 "Clear History?" = "इतिहास साफ़ करें?";
 "This will permanently delete all screenshots from history." = "यह इतिहास से सभी स्क्रीनशॉट स्थायी रूप से हटा देगा।";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "\"सेट\" पर क्लिक करें और कम से कम एक मॉडिफ़ायर (⌘, ⌥, ⌃, ⇧) के साथ एक कुंजी संयोजन दबाएं।";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "फ़ाइलें आपके Google Drive में एक \"macshot\" फ़ोल्डर में अपलोड की जाती हैं। सब कुछ निजी रहता है — कुछ भी सार्वजनिक रूप से साझा नहीं किया जाता।";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused — a new one is created instead. Everything stays private — nothing is shared publicly." = "फ़ाइलें आपके Google Drive में इस फ़ोल्डर में अपलोड की जाती हैं। \"macshot\" का उपयोग करने के लिए खाली छोड़ें। macshot केवल उन्हीं फ़ोल्डरों का उपयोग कर सकता है जिन्हें उसने स्वयं बनाया है, इसलिए Drive में आपके द्वारा उसी नाम से बनाया गया फ़ोल्डर दोबारा उपयोग नहीं किया जाएगा — इसके बजाय एक नया फ़ोल्डर बनाया जाता है। सब कुछ निजी रहता है — कुछ भी सार्वजनिक रूप से साझा नहीं किया जाता।";
 
 "Pressure" = "दबाव";
 
@@ -671,3 +683,14 @@
 
 /* URL scheme: edit (PR #272) */
 "Open a history entry in the editor (keeps annotations editable)" = "किसी हिस्ट्री एंट्री को एडिटर में खोलें (एनोटेशन संपादन योग्य रहते हैं)";
+
+/* Selection auto-adjust and Spacebar movement */
+"Auto-Adjust Selection" = "चयन को अपने-आप समायोजित करें";
+"Auto-adjust selection" = "चयन को अपने-आप समायोजित करें";
+"Could not analyze selection edges" = "चयन के किनारों का विश्लेषण नहीं किया जा सका";
+"Detecting nearby edges…" = "आस-पास के किनारों का पता लगाया जा रहा है…";
+"No nearby edges found" = "आस-पास कोई किनारा नहीं मिला";
+"Selection adjusted" = "चयन समायोजित किया गया";
+"Selection is already aligned" = "चयन पहले से संरेखित है";
+"Space to move. Release to annotate and edit" = "स्थानांतरित करने के लिए Spacebar दबाए रखें। एनोटेट और संपादित करने के लिए छोड़ें";
+"Space to move. Release to finish" = "स्थानांतरित करने के लिए Spacebar दबाए रखें। समाप्त करने के लिए छोड़ें";

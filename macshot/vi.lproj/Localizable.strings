@@ -171,6 +171,7 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Nhấp vào cửa sổ  ·  Kéo để chọn vùng  ·  F để toàn màn hình";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Nhấp vào phần tử  ·  Kéo để chọn vùng  ·  F để toàn màn hình";
 "Drag to select  ·  Click for full screen" = "Kéo để chọn  ·  Nhấp để toàn màn hình";
 "Release to annotate and edit" = "Thả chuột để chú thích và chỉnh sửa";
 "Release to finish" = "Thả chuột để hoàn tất";
@@ -178,9 +179,13 @@
 "Hold Space to move. Release to finish" = "Giữ Space để di chuyển. Thả chuột để hoàn tất";
 "Space" = "Space";
 "Window snap: " = "Bắt cửa sổ: ";
+"Snap mode: " = "Chế độ bắt: ";
 "ON" = "BẬT";
 "OFF" = "TẮT";
+"WINDOW" = "CỬA SỔ";
+"ELEMENT" = "PHẦN TỬ";
 "  (Tab to toggle)" = "  (Tab để chuyển)";
+"  (Tab to switch)" = "  (Tab để chuyển đổi)";
 "Right-click to copy" = "Nhấp chuột phải để sao chép";
 "Copied %@" = "Đã sao chép %@";
 "Set color %@" = "Đặt màu %@";
@@ -225,6 +230,8 @@
 "Launch at login" = "Khởi chạy khi đăng nhập";
 "Show snap alignment guides" = "Hiển thị đường căn chỉnh bắt dính";
 "Snap selection edges to image boundaries" = "Bắt dính cạnh vùng chọn vào ranh giới ảnh";
+"Enhance browser and Electron element snapping" = "Nâng cao bắt dính phần tử trình duyệt và Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Xây dựng cây khả năng truy cập của ứng dụng đích trong Chế độ phần tử. Tắt tính năng này nếu trình duyệt hoặc ứng dụng Electron trở nên chậm hoặc gặp sự cố nhập liệu.";
 "Capture mouse cursor in screenshot" = "Chụp con trỏ chuột trong ảnh";
 "Double-click selection to copy" = "Nhấp đúp vào vùng chọn để sao chép";
 "Hide capture instructions" = "Ẩn hướng dẫn chụp màn hình";
@@ -338,6 +345,7 @@
 "Signed in" = "Đã đăng nhập";
 "Not signed in" = "Chưa đăng nhập";
 "Account:" = "Tài khoản:";
+"Folder:" = "Thư mục:";
 "Test Connection" = "Kiểm tra kết nối";
 "Fill in endpoint, bucket, and credentials first" = "Điền endpoint, bucket và thông tin xác thực trước";
 "Testing..." = "Đang kiểm tra...";
@@ -350,6 +358,8 @@
 "Secret Key:" = "Khóa bí mật:";
 "Public URL:" = "URL công khai:";
 "Path Prefix:" = "Tiền tố đường dẫn:";
+"Make uploads publicly readable" = "Cho phép đọc công khai các tệp tải lên";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "Gửi ACL public-read để các tệp đã tải lên có thể xem được bởi bất kỳ ai có liên kết. Cần thiết cho AWS S3, DigitalOcean Spaces, MinIO và Backblaze B2 vì các dịch vụ này lưu trữ đối tượng ở chế độ riêng tư theo mặc định. Tắt cho Cloudflare R2 vì không hỗ trợ ACL và sẽ từ chối header.";
 "API key:" = "Khóa API:";
 "Upload History" = "Lịch sử tải lên";
 "No uploads yet." = "Chưa có tải lên nào.";
@@ -467,7 +477,7 @@
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Yêu cầu quyền Giám sát đầu vào";
 "macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot cần quyền Giám sát đầu vào để hiển thị phím bấm trong khi quay. Vui lòng cấp quyền trong System Settings, rồi thử lại.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot cần quyền Trợ năng để hiển thị phím bấm trong khi quay. Vui lòng cấp quyền trong System Settings, rồi thử lại.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot cần quyền Trợ năng để bám vào từng thành phần giao diện. Vui lòng cấp quyền trong Cài đặt Hệ thống, rồi thử lại.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "Hiển thị phím bấm";
@@ -506,6 +516,7 @@
 "Settings..." = "Cài đặt...";
 "macshot Settings" = "Cài đặt macshot";
 "Also open in Editor" = "Đồng thời mở trong trình chỉnh sửa";
+"Close editor after copying" = "Đóng trình chỉnh sửa sau khi sao chép";
 "Hide controls" = "Ẩn điều khiển";
 "Hide recording controls" = "Ẩn điều khiển quay";
 "Stop recording from the menu bar icon instead." = "Dừng quay từ biểu tượng thanh menu thay thế.";
@@ -551,12 +562,13 @@
 
 "Same as screenshots" = "Giống như ảnh chụp màn hình";
 "  Preview size:" = "  Kích thước xem trước:";
+"Fit image in preview (letterbox)" = "Hiển thị trọn ảnh trong xem trước (có viền đen)";
 "(0 = off)" = "(0 = tắt)";
 "Clear All" = "Xóa tất cả";
 "Clear History?" = "Xóa lịch sử?";
 "This will permanently delete all screenshots from history." = "Thao tác này sẽ xóa vĩnh viễn tất cả ảnh chụp màn hình khỏi lịch sử.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Nhấp vào \"Đặt\" và nhấn tổ hợp phím có ít nhất một phím bổ trợ (⌘, ⌥, ⌃, ⇧) để đặt phím tắt.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Các tệp được tải lên thư mục \"macshot\" trong Google Drive của bạn. Mọi thứ đều được giữ bí mật — không có gì được chia sẻ công khai.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused — a new one is created instead. Everything stays private — nothing is shared publicly." = "Các tệp được tải lên thư mục này trong Google Drive của bạn. Để trống để dùng \"macshot\". macshot chỉ có thể dùng các thư mục do chính nó tạo ra, vì vậy thư mục cùng tên mà bạn tự tạo trong Drive sẽ không được dùng lại — thay vào đó một thư mục mới sẽ được tạo. Mọi thứ đều được giữ bí mật — không có gì được chia sẻ công khai.";
 
 "Pressure" = "Lực nhấn";
 
@@ -669,3 +681,14 @@
 
 /* URL scheme: edit (PR #272) */
 "Open a history entry in the editor (keeps annotations editable)" = "Mở một mục lịch sử trong trình chỉnh sửa (giữ chú thích có thể chỉnh sửa)";
+
+/* Selection edge adjustment */
+"Auto-Adjust Selection" = "Tự động điều chỉnh vùng chọn";
+"Auto-adjust selection" = "Tự động điều chỉnh vùng chọn";
+"Could not analyze selection edges" = "Không thể phân tích các cạnh của vùng chọn";
+"Detecting nearby edges…" = "Đang dò các cạnh gần đó…";
+"No nearby edges found" = "Không tìm thấy cạnh nào gần đó";
+"Selection adjusted" = "Đã điều chỉnh vùng chọn";
+"Selection is already aligned" = "Vùng chọn đã được căn chỉnh";
+"Space to move. Release to annotate and edit" = "Giữ phím cách để di chuyển. Thả ra để chú thích và chỉnh sửa";
+"Space to move. Release to finish" = "Giữ phím cách để di chuyển. Thả ra để hoàn tất";

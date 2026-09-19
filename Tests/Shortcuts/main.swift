@@ -77,6 +77,7 @@ check(Manager.conflictingBinding(for: Binding(slot: .recordArea), keyCode: UInt3
 let menu = NSMenuItem(title: "Capture", action: nil, keyEquivalent: "")
 Manager.applyMenuShortcut(for: .captureArea, to: menu)
 check(menu.keyEquivalent == "x", "menu still prefers primary")
+check(!menu.allowsAutomaticKeyEquivalentLocalization, "physical global shortcut is not remapped twice")
 check(menu.toolTip?.contains("F19") == true, "menu exposes alternative in tooltip")
 disable(primary)
 Manager.applyMenuShortcut(for: .captureArea, to: menu)
@@ -116,6 +117,32 @@ for (key, value) in [(alternative.keyCodeKey, -1), (alternative.keyCodeKey, 6553
 
 // Exercise real Carbon registration and its installed event handler for all 24 IDs.
 clearPreferences()
+
+// Semantic editor commands stay distinct from physical global bindings.
+func keyEvent(_ character: String, modifiers: NSEvent.ModifierFlags, keyCode: Int = kVK_ANSI_Z) -> NSEvent {
+    NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: modifiers,
+                    timestamp: 0, windowNumber: 0, context: nil, characters: character,
+                    charactersIgnoringModifiers: character, isARepeat: false, keyCode: UInt16(keyCode))!
+}
+check(KeyboardShortcutMatcher.matches(keyEvent("y", modifiers: [.command]), character: "y", modifiers: .command), "semantic character wins over physical Z key")
+check(KeyboardShortcutMatcher.matches(keyEvent("Z", modifiers: [.command, .capsLock]), character: "z", modifiers: .command), "caps lock does not break command matching")
+check(!KeyboardShortcutMatcher.matches(keyEvent("z", modifiers: [.command, .shift]), character: "z", modifiers: .command), "shift distinguishes redo from undo")
+check(EditorCommandShortcutManager.action(for: keyEvent("z", modifiers: .command)) == .undo, "default undo")
+check(EditorCommandShortcutManager.action(for: keyEvent("z", modifiers: [.command, .shift])) == .redo, "default redo")
+EditorCommandShortcutManager.setShortcut(.init(character: "y", modifiers: .command), for: .undo)
+check(EditorCommandShortcutManager.action(for: keyEvent("y", modifiers: .command)) == .undo, "assignment removes other command's conflicting default")
+EditorCommandShortcutManager.reset(.redo)
+check(EditorCommandShortcutManager.action(for: keyEvent("y", modifiers: .command)) == .redo, "reset also resolves cross-command collisions")
+check(EditorCommandShortcutManager.shortcuts(for: .undo).isEmpty, "reset cannot leave a duplicate undo binding")
+let invalid = EditorCommandShortcutManager.Shortcut(character: "zz", modifiers: .command)
+EditorCommandShortcutManager.setShortcut(invalid, for: .redo)
+check(EditorCommandShortcutManager.shortcuts(for: .redo).count == 2, "invalid assignment leaves valid bindings intact")
+defaults.set(try JSONEncoder().encode([invalid]), forKey: "editorCommandShortcuts.redo")
+check(EditorCommandShortcutManager.shortcuts(for: .redo).isEmpty, "malformed imported characters never become menu equivalents")
+EditorCommandShortcutManager.disable(.undo)
+check(EditorCommandShortcutManager.action(for: keyEvent("z", modifiers: .command)) == nil, "command can be disabled independently")
+clearPreferences()
+
 let keys: [UInt32] = [kVK_ANSI_A, kVK_ANSI_B, kVK_ANSI_C, kVK_ANSI_D,
                      kVK_ANSI_E, kVK_ANSI_F, kVK_ANSI_G, kVK_ANSI_H,
                      kVK_ANSI_I, kVK_ANSI_J, kVK_ANSI_K, kVK_ANSI_L,

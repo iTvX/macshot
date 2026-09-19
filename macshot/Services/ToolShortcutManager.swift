@@ -22,6 +22,7 @@ enum ToolShortcutManager {
         case measure
         case loupe
         case moveSelection
+        case adjustSelection
         case openInEditor
         case pin
         #if !OFFLINE
@@ -35,8 +36,6 @@ enum ToolShortcutManager {
         case invertColors
         case removeBackground
         case translate
-        case undo
-        case redo
 
         var label: String {
             switch self {
@@ -55,6 +54,7 @@ enum ToolShortcutManager {
             case .measure: return L("Measure")
             case .loupe: return L("Loupe")
             case .moveSelection: return L("Move Selection")
+            case .adjustSelection: return L("Auto-Adjust Selection")
             case .openInEditor: return L("Open in Editor")
             case .pin: return L("Pin")
             #if !OFFLINE
@@ -68,8 +68,6 @@ enum ToolShortcutManager {
             case .invertColors: return L("Invert Colors")
             case .removeBackground: return L("Remove Background")
             case .translate: return L("Translate")
-            case .undo: return L("Undo")
-            case .redo: return L("Redo")
             }
         }
 
@@ -90,6 +88,7 @@ enum ToolShortcutManager {
             case .measure: return ""
             case .loupe: return ""
             case .moveSelection: return " "
+            case .adjustSelection: return "s"
             case .openInEditor: return "e"
             case .pin: return "f"
             #if !OFFLINE
@@ -103,8 +102,6 @@ enum ToolShortcutManager {
             case .invertColors: return ""
             case .removeBackground: return ""
             case .translate: return ""
-            case .undo: return ""
-            case .redo: return ""
             }
         }
     }
@@ -159,6 +156,7 @@ enum ToolShortcutManager {
             case .measure: lookup[k] = .tool(.measure)
             case .loupe: lookup[k] = .tool(.loupe)
             case .moveSelection: lookup[k] = .moveSelection
+            case .adjustSelection: lookup[k] = .adjustSelection
             case .openInEditor: lookup[k] = .detach
             case .pin: lookup[k] = .pin
             #if !OFFLINE
@@ -172,8 +170,6 @@ enum ToolShortcutManager {
             case .invertColors: lookup[k] = .invertColors
             case .removeBackground: lookup[k] = .removeBackground
             case .translate: lookup[k] = .translate
-            case .undo: lookup[k] = .undo
-            case .redo: lookup[k] = .redo
             }
         }
         _cachedLookup = lookup
@@ -222,10 +218,11 @@ enum ToolShortcutManager {
         case .invertColors: action = .invertColors
         case .removeBackground: action = .removeBackground
         case .translate: action = .translate
-        case .undo: action = .undo
-        case .redo: action = .redo
+        case .undo: return EditorCommandShortcutManager.displayString(for: .undo)
+        case .redo: return EditorCommandShortcutManager.displayString(for: .redo)
         case .loupe: action = .loupe
         case .moveSelection: action = .moveSelection
+        case .adjustSelection: action = .adjustSelection
         default: action = nil
         }
 

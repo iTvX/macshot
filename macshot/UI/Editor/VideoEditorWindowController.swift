@@ -147,11 +147,29 @@ private final class VideoEditorView: NSView {
     // Export dimensions
     private var originalWidth: Int = 0
     private var originalHeight: Int = 0
-    private var exportScale: CGFloat = 1.0  // 1.0 = original, 0.5 = 50%, etc.
+    // Persisted across exports: defaults to 1.0/.high on first use, then remembers
+    // whatever the user picked last via dimensionSelected/qualitySelected below.
+    private var exportScale: CGFloat = VideoEditorView.loadExportScale()
     private var dimensionsBtnRect: NSRect = .zero
 
     // Export quality (controls bitrate when re-encoding for MP4 export)
-    private var exportQuality: VideoQuality = .high
+    private var exportQuality: VideoQuality = VideoEditorView.loadExportQuality()
+
+    private static let exportScaleDefaultsKey = "lastExportScale"
+    private static let exportQualityDefaultsKey = "lastExportQuality"
+
+    private static func loadExportScale() -> CGFloat {
+        let stored = UserDefaults.standard.object(forKey: exportScaleDefaultsKey) as? Double ?? 1.0
+        return VideoExportPreferences.validatedScale(stored)
+    }
+
+    private static func loadExportQuality() -> VideoQuality {
+        guard let raw = UserDefaults.standard.string(forKey: exportQualityDefaultsKey),
+              let quality = VideoQuality(rawValue: raw) else {
+            return .high
+        }
+        return quality
+    }
     private var qualityBtnRect: NSRect = .zero
 
     // GIF export frame rate (5-30 fps), persisted across sessions
@@ -1645,23 +1663,20 @@ private final class VideoEditorView: NSView {
                     self.showStatus(L("Export failed"), isError: true)
                     return
                 }
-                let pasteboard = NSPasteboard.general
-                pasteboard.clearContents()
-                pasteboard.writeObjects([url as NSURL])
-                self.showStatus(L("Copied to clipboard!"))
+                // exportEditedTemp always re-encodes to an MP4 container
+                // (AVAssetWriter/AVAssetExportSession hardcode fileType .mp4),
+                // so the exported bytes are MP4 regardless of the source name.
+                self.copyMP4Data(from: url, contentIsMP4: true)
             }
             return
         }
 
         let url = savedURL ?? videoURL
-        let pasteboard = NSPasteboard.general
-        pasteboard.clearContents()
 
         if isGIF || url.pathExtension.lowercased() == "gif" {
             copyGIFData(from: url)
         } else {
-            pasteboard.writeObjects([url as NSURL])
-            showStatus(L("Copied to clipboard!"))
+            copyMP4Data(from: url)
         }
     }
 
@@ -1697,6 +1712,34 @@ private final class VideoEditorView: NSView {
             item.setData(data, forType: NSPasteboard.PasteboardType("com.compuserve.gif"))
             item.setString(url.absoluteString, forType: .fileURL)
             pasteboard.writeObjects([item])
+        }
+        showStatus(L("Copied to clipboard!"))
+    }
+
+    /// Copy video as playable pasteboard data. Inline bytes are advertised as
+    /// `public.mpeg-4` ONLY when they really are MP4: either the export pipeline
+    /// re-encoded them (`contentIsMP4`, used by the edited branch), or the source
+    /// file's extension conforms to mpeg4Movie (direct source copy). A `.mov`
+    /// source opened in the editor would otherwise have its QuickTime bytes
+    /// mislabeled as MP4 and rejected by Mail/Notes/Preview — regressing #329.
+    /// Non-MP4 sources, oversized recordings, and read errors fall back to the
+    /// file URL (the pre-#329 behaviour) instead of an empty/mislabeled paste.
+    private func copyMP4Data(from url: URL, contentIsMP4: Bool = false) {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        let isMP4 = contentIsMP4
+            || (UTType(filenameExtension: url.pathExtension)?.conforms(to: .mpeg4Movie) ?? false)
+        let byteCount = (try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? UInt64) ?? 0
+        // Data(contentsOf:) allocates the full buffer up front and can be
+        // jetsam-killed before `try?` catches, so skip inline data for non-MP4
+        // sources or recordings over ~150 MB and land the file URL instead.
+        if isMP4, byteCount <= 150_000_000, let data = try? Data(contentsOf: url) {
+            let item = NSPasteboardItem()
+            item.setData(data, forType: NSPasteboard.PasteboardType(UTType.mpeg4Movie.identifier))
+            item.setString(url.absoluteString, forType: .fileURL)
+            pasteboard.writeObjects([item])
+        } else {
+            pasteboard.writeObjects([url as NSURL])
         }
         showStatus(L("Copied to clipboard!"))
     }
@@ -1846,6 +1889,7 @@ private final class VideoEditorView: NSView {
 
     @objc private func dimensionSelected(_ sender: NSMenuItem) {
         exportScale = CGFloat(sender.tag) / 100.0
+        UserDefaults.standard.set(Double(exportScale), forKey: Self.exportScaleDefaultsKey)
         savedURL = nil
         needsDisplay = true
     }
@@ -1965,6 +2009,7 @@ private final class VideoEditorView: NSView {
     @objc private func qualitySelected(_ sender: NSMenuItem) {
         if let raw = sender.representedObject as? String, let q = VideoQuality(rawValue: raw) {
             exportQuality = q
+            UserDefaults.standard.set(raw, forKey: Self.exportQualityDefaultsKey)
             savedURL = nil
             needsDisplay = true
         }

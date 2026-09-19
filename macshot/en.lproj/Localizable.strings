@@ -177,15 +177,20 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Click a window  ·  Drag for custom area  ·  F for full screen";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Click an element  ·  Drag for custom area  ·  F for full screen";
 "Drag to select  ·  Click for full screen" = "Drag to select  ·  Click for full screen";
 "Release to annotate and edit" = "Release to annotate and edit";
 "Release to finish" = "Release to finish";
 "Space to move. Release to annotate and edit" = "Space to move. Release to annotate and edit";
 "Space to move. Release to finish" = "Space to move. Release to finish";
 "Window snap: " = "Window snap: ";
+"Snap mode: " = "Snap mode: ";
 "ON" = "ON";
 "OFF" = "OFF";
+"WINDOW" = "WINDOW";
+"ELEMENT" = "ELEMENT";
 "  (Tab to toggle)" = "  (Tab to toggle)";
+"  (Tab to switch)" = "  (Tab to switch)";
 "Right-click to copy" = "Right-click to copy";
 "Copied %@" = "Copied %@";
 "Set color %@" = "Set color %@";
@@ -218,6 +223,8 @@
 "Launch at login" = "Launch at login";
 "Show snap alignment guides" = "Show snap alignment guides";
 "Snap selection edges to image boundaries" = "Snap selection edges to image boundaries";
+"Enhance browser and Electron element snapping" = "Enhance browser and Electron element snapping";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues.";
 "Capture mouse cursor in screenshot" = "Capture mouse cursor in screenshot";
 "Double-click selection to copy" = "Double-click selection to copy";
 "Hide capture instructions" = "Hide capture instructions";
@@ -347,6 +354,7 @@
 "Sign Out" = "Sign Out";
 "Signed in" = "Signed in";
 "Not signed in" = "Not signed in";
+"Folder:" = "Folder:";
 "Account:" = "Account:";
 "Test Connection" = "Test Connection";
 "Fill in endpoint, bucket, and credentials first" = "Fill in endpoint, bucket, and credentials first";
@@ -360,10 +368,12 @@
 "Secret Key:" = "Secret Key:";
 "Public URL:" = "Public URL:";
 "Path Prefix:" = "Path Prefix:";
+"Make uploads publicly readable" = "Make uploads publicly readable";
 "API key:" = "API key:";
 "Upload History" = "Upload History";
 "No uploads yet." = "No uploads yet.";
 "Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible).";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header.";
 "A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support).";
 "Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos.";
 "Configure S3 in Preferences" = "Configure S3 in Preferences";
@@ -481,7 +491,7 @@
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Input Monitoring Required";
 "macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "Show Keystrokes";
@@ -498,6 +508,7 @@
 "Settings..." = "Settings...";
 "macshot Settings" = "macshot Settings";
 "Also open in Editor" = "Also open in Editor";
+"Close editor after copying" = "Close editor after copying";
 "Hide controls" = "Hide controls";
 "Hide recording controls" = "Hide recording controls";
 "Stop recording from the menu bar icon instead." = "Stop recording from the menu bar icon instead.";
@@ -543,12 +554,13 @@
 "Shape:" = "Shape:";
 "Same as screenshots" = "Same as screenshots";
 "  Preview size:" = "  Preview size:";
+"Fit image in preview (letterbox)" = "Fit image in preview (letterbox)";
 "(0 = off)" = "(0 = off)";
 "Clear All" = "Clear All";
 "Clear History?" = "Clear History?";
 "This will permanently delete all screenshots from history." = "This will permanently delete all screenshots from history.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused — a new one is created instead. Everything stays private — nothing is shared publicly." = "Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused — a new one is created instead. Everything stays private — nothing is shared publicly.";
 
 "Pressure" = "Pressure";
 
@@ -683,3 +695,15 @@
 "Click Set to record a shortcut." = "Click Set to record a shortcut.";
 "This shortcut is unavailable. It may be used by macOS or another application." = "This shortcut is unavailable. It may be used by macOS or another application.";
 "Shortcut unavailable" = "Shortcut unavailable";
+/* Auto-adjust selection (#317) */
+"Auto-Adjust Selection" = "Auto-Adjust Selection";
+"Auto-adjust selection" = "Auto-adjust selection";
+"Could not analyze selection edges" = "Could not analyze selection edges";
+"Detecting nearby edges…" = "Detecting nearby edges…";
+"No nearby edges found" = "No nearby edges found";
+"Selection adjusted" = "Selection adjusted";
+"Selection is already aligned" = "Selection is already aligned";
+
+/* Fork clipboard compatibility */
+"Enable Finder clipboard compatibility" = "Enable Finder clipboard compatibility";
+"Enable to paste screenshots as files in Finder on macOS 26 or earlier. Leave off for image pasting in Teams, websites, and remote desktops." = "Enable to paste screenshots as files in Finder on macOS 26 or earlier. Leave off for image pasting in Teams, websites, and remote desktops.";

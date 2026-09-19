@@ -172,6 +172,7 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Klik jendela  ·  Seret untuk area kustom  ·  F untuk layar penuh";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Klik elemen  ·  Seret untuk area kustom  ·  F untuk layar penuh";
 "Drag to select  ·  Click for full screen" = "Seret untuk memilih  ·  Klik untuk layar penuh";
 "Release to annotate and edit" = "Lepaskan untuk menganotasi dan mengedit";
 "Release to finish" = "Lepaskan untuk menyelesaikan";
@@ -179,9 +180,13 @@
 "Hold Space to move. Release to finish" = "Tahan Spasi untuk memindahkan. Lepaskan untuk menyelesaikan";
 "Space" = "Spasi";
 "Window snap: " = "Jepret jendela: ";
+"Snap mode: " = "Mode jepret: ";
 "ON" = "AKTIF";
 "OFF" = "NONAKTIF";
+"WINDOW" = "JENDELA";
+"ELEMENT" = "ELEMEN";
 "  (Tab to toggle)" = "  (Tab untuk beralih)";
+"  (Tab to switch)" = "  (Tab untuk berpindah)";
 "Right-click to copy" = "Klik kanan untuk menyalin";
 "Copied %@" = "Disalin %@";
 "Set color %@" = "Atur warna %@";
@@ -226,6 +231,8 @@
 "Launch at login" = "Jalankan saat masuk";
 "Show snap alignment guides" = "Tampilkan panduan perataan jepret";
 "Snap selection edges to image boundaries" = "Jepretkan tepi pilihan ke batas gambar";
+"Enhance browser and Electron element snapping" = "Tingkatkan penjepretan elemen browser dan Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Membangun pohon aksesibilitas aplikasi target dalam Mode Elemen. Nonaktifkan ini jika browser atau aplikasi Electron menjadi lambat atau memiliki masalah input.";
 "Capture mouse cursor in screenshot" = "Tangkap kursor mouse di tangkapan layar";
 "Double-click selection to copy" = "Klik dua kali pilihan untuk menyalin";
 "Hide capture instructions" = "Sembunyikan petunjuk pengambilan tangkapan layar";
@@ -339,6 +346,7 @@
 "Signed in" = "Sudah masuk";
 "Not signed in" = "Belum masuk";
 "Account:" = "Akun:";
+"Folder:" = "Folder:";
 "Test Connection" = "Tes Koneksi";
 "Fill in endpoint, bucket, and credentials first" = "Isi endpoint, bucket, dan kredensial terlebih dahulu";
 "Testing..." = "Menguji...";
@@ -351,6 +359,8 @@
 "Secret Key:" = "Secret Key:";
 "Public URL:" = "URL Publik:";
 "Path Prefix:" = "Prefiks Path:";
+"Make uploads publicly readable" = "Jadikan unggahan dapat dibaca publik";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "Mengirim ACL public-read agar file yang diunggah dapat dilihat oleh siapa saja yang memiliki tautan. Diperlukan untuk AWS S3, DigitalOcean Spaces, MinIO, dan Backblaze B2 yang menyimpan objek secara pribadi secara default. Nonaktifkan untuk Cloudflare R2 yang tidak memiliki ACL dan menolak header ini.";
 "API key:" = "Kunci API:";
 "Upload History" = "Riwayat Unggahan";
 "No uploads yet." = "Belum ada unggahan.";
@@ -467,7 +477,7 @@
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Pemantauan Input Diperlukan";
 "macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot memerlukan izin Pemantauan Input untuk menampilkan ketukan tombol selama perekaman. Berikan akses di System Settings, lalu coba lagi.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot memerlukan izin Aksesibilitas untuk menampilkan ketukan tombol selama perekaman. Berikan akses di System Settings, lalu coba lagi.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot memerlukan izin Aksesibilitas untuk menempel ke elemen antarmuka individual. Berikan akses di Pengaturan Sistem, lalu coba lagi.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "Tampilkan Ketukan Tombol";
@@ -507,6 +517,7 @@
 "Settings..." = "Pengaturan...";
 "macshot Settings" = "Pengaturan macshot";
 "Also open in Editor" = "Buka juga di Editor";
+"Close editor after copying" = "Tutup editor setelah menyalin";
 "Hide controls" = "Sembunyikan kontrol";
 "Hide recording controls" = "Sembunyikan kontrol rekaman";
 "Stop recording from the menu bar icon instead." = "Hentikan rekaman dari ikon bilah menu.";
@@ -551,12 +562,13 @@
 
 "Same as screenshots" = "Sama seperti tangkapan layar";
 "  Preview size:" = "  Ukuran pratinjau:";
+"Fit image in preview (letterbox)" = "Paskan gambar di pratinjau (letterbox)";
 "(0 = off)" = "(0 = nonaktif)";
 "Clear All" = "Hapus Semua";
 "Clear History?" = "Hapus Riwayat?";
 "This will permanently delete all screenshots from history." = "Ini akan menghapus semua tangkapan layar dari riwayat secara permanen.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Klik \"Atur\" dan tekan kombinasi tombol dengan setidaknya satu modifier (⌘, ⌥, ⌃, ⇧) untuk menetapkan pintasan.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "File diunggah ke folder \"macshot\" di Google Drive Anda. Semuanya tetap privat — tidak ada yang dibagikan secara publik.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused — a new one is created instead. Everything stays private — nothing is shared publicly." = "File diunggah ke folder ini di Google Drive Anda. Biarkan kosong untuk menggunakan \"macshot\". macshot hanya dapat menggunakan folder yang dibuatnya sendiri, jadi folder dengan nama yang sama yang Anda buat di Drive tidak akan digunakan — folder baru akan dibuat sebagai gantinya. Semuanya tetap privat — tidak ada yang dibagikan secara publik.";
 
 "Pressure" = "Tekanan";
 
@@ -669,3 +681,14 @@
 
 /* URL scheme: edit (PR #272) */
 "Open a history entry in the editor (keeps annotations editable)" = "Buka entri riwayat di editor (anotasi tetap dapat diedit)";
+
+/* Selection auto-adjust and Spacebar movement */
+"Auto-Adjust Selection" = "Sesuaikan Pilihan Secara Otomatis";
+"Auto-adjust selection" = "Sesuaikan pilihan secara otomatis";
+"Could not analyze selection edges" = "Tidak dapat menganalisis tepi pilihan";
+"Detecting nearby edges…" = "Mendeteksi tepi di sekitar…";
+"No nearby edges found" = "Tidak ada tepi di sekitar yang ditemukan";
+"Selection adjusted" = "Pilihan disesuaikan";
+"Selection is already aligned" = "Pilihan sudah sejajar";
+"Space to move. Release to annotate and edit" = "Tahan Spacebar untuk memindahkan. Lepaskan untuk membuat anotasi dan mengedit";
+"Space to move. Release to finish" = "Tahan Spacebar untuk memindahkan. Lepaskan untuk selesai";

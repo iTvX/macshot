@@ -63,6 +63,7 @@ class ToolbarStripView: NSView {
             let bv = ToolbarButtonView(action: data.action, sfSymbol: data.sfSymbol, tooltip: data.tooltip)
             bv.isOn = data.isSelected
             bv.tintColor = data.tintColor
+            bv.selectedTintColor = data.selectedTintColor
             bv.swatchColor = data.bgColor
             bv.hasContextMenu = data.hasContextMenu
             bv.onClick = { [weak self] action in self?.onClick?(action) }

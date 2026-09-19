@@ -185,15 +185,20 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Klikněte na okno  ·  Tažením vyberte oblast  ·  F pro celou obrazovku";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Klikněte na prvek  ·  Tažením vyberte oblast  ·  F pro celou obrazovku";
 "Drag to select  ·  Click for full screen" = "Tažením vyberte  ·  Kliknutím celá obrazovka";
 "Release to annotate and edit" = "Uvolněte pro anotaci a úpravy";
 "Release to finish" = "Uvolněte pro dokončení";
 "Hold Space to move. Release to annotate and edit" = "Podržte Mezerník pro přesun. Uvolněte pro anotaci a úpravy";
 "Hold Space to move. Release to finish" = "Podržte Mezerník pro přesun. Uvolněte pro dokončení";
 "Window snap: " = "Přichycení k oknu: ";
+"Snap mode: " = "Režim přichycení: ";
 "ON" = "ZAP";
 "OFF" = "VYP";
+"WINDOW" = "OKNO";
+"ELEMENT" = "PRVEK";
 "  (Tab to toggle)" = "  (Tab pro přepnutí)";
+"  (Tab to switch)" = "  (Tab pro přepnutí)";
 "Space" = "Mezerník";
 "Right-click to copy" = "Pravým tlačítkem kopírovat";
 "Copied %@" = "Zkopírováno %@";
@@ -228,6 +233,8 @@
 "Launch at login" = "Spustit při přihlášení";
 "Show snap alignment guides" = "Zobrazit vodítka zarovnání";
 "Snap selection edges to image boundaries" = "Přichytit okraje výběru k hranicím obrázku";
+"Enhance browser and Electron element snapping" = "Zlepšit přichycování prvků v prohlížeči a Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Sestavuje strom usnadnění cílové aplikace v režimu prvků. Zakažte, pokud se prohlížeč nebo Electron aplikace stane pomalým nebo má problémy s vstupem.";
 "Capture mouse cursor in screenshot" = "Zachytit kurzor myši na snímku";
 "Double-click selection to copy" = "Kopírovat dvojklikem na výběr";
 "Hide capture instructions" = "Skrýt pokyny při snímání";
@@ -339,6 +346,7 @@
 "Signed in" = "Přihlášen";
 "Not signed in" = "Nepřihlášen";
 "Account:" = "Účet:";
+"Folder:" = "Složka:";
 "Test Connection" = "Test připojení";
 "Fill in endpoint, bucket, and credentials first" = "Nejprve vyplňte endpoint, bucket a přihlašovací údaje";
 "Testing..." = "Testování...";
@@ -351,6 +359,8 @@
 "Secret Key:" = "Tajný klíč:";
 "Public URL:" = "Veřejná URL:";
 "Path Prefix:" = "Předpona cesty:";
+"Make uploads publicly readable" = "Zpřístupnit nahrávání veřejně ke čtení";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "Odesílá ACL public-read, aby nahrané soubory byly přístupné komukoliv s odkazem. Nutné pro AWS S3, DigitalOcean Spaces, MinIO a Backblaze B2, které ve výchozím nastavení ukládají objekty jako soukromé. Ponechte vypnuté pro Cloudflare R2, které nepodporuje ACL a tento hlavičkový údaj odmítne.";
 "API key:" = "API klíč:";
 "Upload History" = "Historie nahrávání";
 "No uploads yet." = "Zatím žádná nahrávání.";
@@ -467,7 +477,7 @@
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Vyžadováno monitorování vstupu";
 "macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot potřebuje oprávnění Monitorování vstupu pro zobrazení stisknutých kláves během nahrávání. Udělte přístup v System Settings a zkuste to znovu.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot potřebuje oprávnění Usnadnění pro zobrazení stisknutých kláves během nahrávání. Udělte přístup v System Settings a zkuste to znovu.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot potřebuje oprávnění Zpřístupnění pro přichytávání k jednotlivým prvkům rozhraní. Povolte přístup v Nastavení systému a zkuste to znovu.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "Zobrazit stisknuté klávesy";
@@ -506,6 +516,7 @@
 "Settings..." = "Nastavení...";
 "macshot Settings" = "Nastavení macshot";
 "Also open in Editor" = "Otevřít také v editoru";
+"Close editor after copying" = "Zavřít editor po zkopírování";
 "Hide controls" = "Skrýt ovládací prvky";
 "Hide recording controls" = "Skrýt ovládací prvky nahrávání";
 "Stop recording from the menu bar icon instead." = "Zastavte nahrávání pomocí ikony v liště.";
@@ -551,12 +562,13 @@
 
 "Same as screenshots" = "Stejné jako snímky obrazovky";
 "  Preview size:" = "  Velikost náhledu:";
+"Fit image in preview (letterbox)" = "Přizpůsobit obrázek náhledu (s pruhy)";
 "(0 = off)" = "(0 = vypnuto)";
 "Clear All" = "Vymazat vše";
 "Clear History?" = "Vymazat historii?";
 "This will permanently delete all screenshots from history." = "Tím se trvale odstraní všechny snímky obrazovky z historie.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Klikněte na \"Nastavit\" a stiskněte kombinaci kláves s alespoň jedním modifikátorem (⌘, ⌥, ⌃, ⇧) pro nastavení zkratky.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Soubory jsou nahrávány do složky \"macshot\" na vašem Disku Google. Vše zůstává soukromé — nic není veřejně sdíleno.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused — a new one is created instead. Everything stays private — nothing is shared publicly." = "Soubory jsou nahrávány do této složky na vašem Disku Google. Ponecháte-li pole prázdné, použije se \"macshot\". macshot může používat pouze složky, které sám vytvořil, takže složka se stejným názvem, kterou jste vytvořili na Disku, nebude použita — místo ní se vytvoří nová. Vše zůstává soukromé — nic není veřejně sdíleno.";
 
 "Pressure" = "Přítlak";
 
@@ -669,3 +681,14 @@
 
 /* URL scheme: edit (PR #272) */
 "Open a history entry in the editor (keeps annotations editable)" = "Otevřít položku historie v editoru (anotace zůstanou upravitelné)";
+
+/* Selection auto-adjust and Spacebar movement */
+"Auto-Adjust Selection" = "Automatická úprava výběru";
+"Auto-adjust selection" = "Automaticky upravit výběr";
+"Could not analyze selection edges" = "Nepodařilo se analyzovat okraje výběru";
+"Detecting nearby edges…" = "Hledání blízkých okrajů…";
+"No nearby edges found" = "Nebyly nalezeny žádné blízké okraje";
+"Selection adjusted" = "Výběr byl upraven";
+"Selection is already aligned" = "Výběr je již zarovnán";
+"Space to move. Release to annotate and edit" = "Podržením mezerníku přesunete. Uvolněním můžete přidávat anotace a upravovat";
+"Space to move. Release to finish" = "Podržením mezerníku přesunete. Uvolněním dokončíte";

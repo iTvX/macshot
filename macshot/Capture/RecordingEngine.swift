@@ -25,6 +25,7 @@ final class RecordingEngine: NSObject {
 
     private var stream: SCStream?
     private var streamOutput: RecordingStreamOutput?
+    private var captureSetupTask: Task<Void, Never>?
 
     // MARK: - MP4 writer
 
@@ -67,6 +68,7 @@ final class RecordingEngine: NSObject {
         self.excludeWindowNumbers = excludeWindowNumbers
         guard state == .idle else { return }
         state = .recording
+        outputURL = nil
 
         self.screen = screen
         // Convert AppKit rect (bottom-left origin) → screen coords (top-left origin)
@@ -82,7 +84,8 @@ final class RecordingEngine: NSObject {
         let defaultFPS = UserDefaults.standard.integer(forKey: "recordingFPS") > 0
             ? UserDefaults.standard.integer(forKey: "recordingFPS") : 30
         self.fps = fpsOverride ?? defaultFPS
-        Task {
+        captureSetupTask = Task {
+            guard !Task.isCancelled else { return }
             // Resolve mic permission before starting capture so the prompt
             // doesn't block the UI while frames are already being recorded.
             if UserDefaults.standard.bool(forKey: "recordMicAudio") {
@@ -96,6 +99,7 @@ final class RecordingEngine: NSObject {
                     UserDefaults.standard.set(false, forKey: "recordMicAudio")
                 }
             }
+            guard !Task.isCancelled else { return }
             await self.beginCapture(rect: rect)
         }
     }
@@ -131,15 +135,25 @@ final class RecordingEngine: NSObject {
         writerSession?.requestStop()
         progressTimer?.invalidate()
         progressTimer = nil
-        Task { await self.finalizeCapture() }
+        let setupTask = captureSetupTask
+        setupTask?.cancel()
+        Task {
+            // Startup may be suspended in ScreenCaptureKit. Wait for it to stop
+            // before finalizing; otherwise it can start a stream after teardown.
+            await setupTask?.value
+            self.captureSetupTask = nil
+            await self.finalizeCapture()
+        }
     }
 
     // MARK: - Setup
 
     private func beginCapture(rect: NSRect) async {
         do {
+            try Task.checkCancellation()
             // Find the SCDisplay matching our screen by display ID
             let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
+            try Task.checkCancellation()
             let screenID = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID
             guard let display = content.displays.first(where: { d in
                 screenID != nil && d.displayID == screenID!
@@ -219,6 +233,15 @@ final class RecordingEngine: NSObject {
             self.streamOutput = output
 
             let stream = SCStream(filter: filter, configuration: config, delegate: output)
+            // Take ownership before the stream can go live. Everything below can
+            // throw, and the task can be cancelled — both `finalizeCapture()` and
+            // the `catch` need a handle to call `stopCapture()` on. Assigning only
+            // after `startCapture()` leaves a window where the local `stream`
+            // deallocates while the daemon is already capturing. replayd then
+            // pushes frames into a dead queue for the lifetime of the login
+            // session (err=-16665 "Client terminated the queue"), once per frame
+            // interval, with no way to stop it short of killing replayd.
+            self.stream = stream
             try stream.addStreamOutput(output, type: .screen, sampleHandlerQueue: recordingQueue)
             if #available(macOS 13.0, *) {
                 let recordAudio = UserDefaults.standard.bool(forKey: "recordSystemAudio")
@@ -227,29 +250,41 @@ final class RecordingEngine: NSObject {
                 }
             }
             try await stream.startCapture()
-            self.stream = stream
+            try Task.checkCancellation()
 
             // Start mic capture if enabled and authorized (permission resolved before capture started)
             if UserDefaults.standard.bool(forKey: "recordMicAudio") &&
                AVCaptureDevice.authorizationStatus(for: .audio) == .authorized {
-                await MainActor.run { self.startMicCapture() }
+                startMicCapture()
             }
 
-            await MainActor.run {
-                self.elapsedSeconds = 0
-                self.progressTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-                    guard let self = self else { return }
+            // Already on MainActor: do not yield between cancellation checking
+            // and timer/microphone setup, or Stop could race this final stage.
+            elapsedSeconds = 0
+            progressTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    guard let self, self.state == .recording else { return }
                     self.elapsedSeconds += 1
                     self.onProgress?(self.elapsedSeconds)
                 }
             }
 
         } catch {
-            await MainActor.run { self.fail(error) }
+            // Never leave a started stream running behind a failed setup.
+            if let stream = self.stream {
+                try? await stream.stopCapture()
+                self.stream = nil
+            }
+            self.streamOutput = nil
+            if state != .stopping {
+                await MainActor.run { self.fail(error) }
+            }
         }
     }
 
     private func finalizeCapture() async {
+        progressTimer?.invalidate()
+        progressTimer = nil
         if let stream = stream {
             try? await stream.stopCapture()
             self.stream = nil

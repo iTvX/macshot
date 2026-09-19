@@ -220,6 +220,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     private var statusBarMenu: NSMenu?
     private var captureSessionID: UInt = 0
     private var captureTimingTrace: CaptureTimingTrace?
+    /// Launch Services can deliver file/URL open requests before
+    /// `applicationDidFinishLaunching`. Defer them until launch setup and the
+    /// initial overlay-pool prewarm have completed; otherwise a cold-launch
+    /// capture can be torn down by `rebuildOverlayPool()` later in startup.
+    private var isReadyForOpenRequests = false
+    private var pendingOpenURLs: [URL] = []
+    /// Capture/record URL actions additionally wait for Screen Recording
+    /// permission. Non-capture actions (settings, history, file opens, etc.)
+    /// remain usable while the onboarding window is shown.
+    private var isReadyForScreenCaptureURLs = false
+    private var pendingScreenCaptureURLs: [URL] = []
     /// App Nap suppression assertion. Held for the app's lifetime so global
     /// hotkeys respond instantly instead of paying a wake-up penalty when
     /// macshot has been idle. Use the idle-sleep-safe variant: plain
@@ -268,10 +279,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
         migrateFilenameTemplateIfNeeded()
 
-        // Touch the retained clipboard backing directory before cleanup so it
-        // exists for both the sweeper and the first screenshot copy.
-        _ = ClipboardBackingStore.directory
-
         // Reclaim disk from stale tmp leftovers (cancelled recordings,
         // legacy clipboard PNGs, share-sheet scratch). Runs off the main
         // thread so it can't delay launch.
@@ -290,6 +297,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         updaterController.updater.automaticallyDownloadsUpdates = false
         setupMainMenu()
         setupStatusBar()
+        DistributedNotificationCenter.default().addObserver(
+            self,
+            selector: #selector(keyboardInputSourceDidChange),
+            name: Notification.Name(kTISNotifySelectedKeyboardInputSourceChanged as String),
+            object: nil)
         if UserDefaults.standard.bool(forKey: "hideMenuBarIcon") {
             setMenuBarIconVisible(false)
         }
@@ -333,10 +345,22 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         PermissionOnboardingController.checkPermissionSync { [weak self] granted in
             guard let self = self else { return }
             if granted {
-                self.prewarmCapturePath()
+                self.markScreenCaptureURLsReady()
             } else {
                 self.showOnboarding()
             }
+        }
+
+        // Replay requests on the next run-loop turn so AppKit has completely
+        // finished its launch lifecycle before an action presents UI or starts
+        // a capture. Keep accepting requests into the queue until this runs so
+        // their delivery order is preserved.
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.isReadyForOpenRequests = true
+            let urls = self.pendingOpenURLs
+            self.pendingOpenURLs.removeAll()
+            self.handleOpenURLs(urls)
         }
     }
 
@@ -348,11 +372,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         }
         let oc = PermissionOnboardingController()
         oc.onPermissionGranted = { [weak self] in
-            self?.onboardingController = nil
-            self?.prewarmCapturePath()
+            guard let self = self else { return }
+            self.onboardingController = nil
+            self.markScreenCaptureURLsReady()
         }
         oc.onClose = { [weak self, weak oc] in
-            if self?.onboardingController === oc { self?.onboardingController = nil }
+            guard let self = self, self.onboardingController === oc else { return }
+            self.onboardingController = nil
+            // Closing onboarding abandons any action that was waiting for its
+            // permission; never surprise the user by replaying it much later.
+            self.pendingScreenCaptureURLs.removeAll()
         }
         onboardingController = oc
         oc.show()
@@ -366,6 +395,20 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         // than creating fresh. This is what keeps captures fast — WindowServer
         // caches composition state per-window, and reused windows stay hot.
         rebuildOverlayPool()
+    }
+
+    private func markScreenCaptureURLsReady() {
+        guard !isReadyForScreenCaptureURLs else { return }
+        // Do not rebuild underneath a capture started through another entry
+        // point. A later capture can create any missing pooled controller on
+        // demand.
+        if !isCapturing && recordingEngine == nil {
+            prewarmCapturePath()
+        }
+        isReadyForScreenCaptureURLs = true
+        let urls = pendingScreenCaptureURLs
+        pendingScreenCaptureURLs.removeAll()
+        handleOpenURLs(urls)
     }
 
     /// Persistent per-screen overlay controller pool. Held for the app's
@@ -535,7 +578,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             // Relaunch from /Applications
             let task = Process()
             task.executableURL = URL(fileURLWithPath: "/usr/bin/open")
-            task.arguments = ["-n", dest.path]
+            // Preserve any cold-launch request that arrived before the user
+            // accepted this move prompt. `-a` makes the copied bundle the
+            // explicit recipient of both custom URLs and file URLs.
+            task.arguments = ["-n", "-a", dest.path]
+                + pendingOpenURLs.map(\.absoluteString)
             try task.run()
             NSApp.terminate(nil)
         } catch {
@@ -553,6 +600,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         }
         overlayControllerPool.removeAll()
         HotkeyManager.shared.unregister()
+        DistributedNotificationCenter.default().removeObserver(self)
         if macshotSignalLogFd >= 0 {
             close(macshotSignalLogFd)
             macshotSignalLogFd = -1
@@ -590,12 +638,26 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         appMenu.addItem(withTitle: "Quit macshot", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         appMenuItem.submenu = appMenu
 
+        let fileMenuItem = NSMenuItem()
+        mainMenu.addItem(fileMenuItem)
+
+        let fileMenu = NSMenu(title: "File")
+        // Standard Close Window (Cmd+W) — routes to NSWindow.performClose(_:) via the
+        // responder chain, so it closes whichever window is key (editor, settings, etc.)
+        // without any window-specific handling.
+        fileMenu.addItem(withTitle: "Close Window", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
+        fileMenuItem.submenu = fileMenu
+
         let editMenuItem = NSMenuItem()
         mainMenu.addItem(editMenuItem)
 
         let editMenu = NSMenu(title: "Edit")
-        editMenu.addItem(withTitle: "Undo", action: Selector(("undo:")), keyEquivalent: "z")
-        editMenu.addItem(withTitle: "Redo", action: Selector(("redo:")), keyEquivalent: "Z")
+        let undoItem = NSMenuItem(title: L("Undo"), action: Selector(("undo:")), keyEquivalent: "")
+        EditorCommandShortcutManager.applyPrimaryMenuShortcut(for: .undo, to: undoItem)
+        editMenu.addItem(undoItem)
+        let redoItem = NSMenuItem(title: L("Redo"), action: Selector(("redo:")), keyEquivalent: "")
+        EditorCommandShortcutManager.applyPrimaryMenuShortcut(for: .redo, to: redoItem)
+        editMenu.addItem(redoItem)
         editMenu.addItem(NSMenuItem.separator())
         editMenu.addItem(withTitle: "Cut", action: #selector(NSText.cut(_:)), keyEquivalent: "x")
         editMenu.addItem(withTitle: "Copy", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
@@ -674,6 +736,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         // Hotkeys: re-register every slot with the imported keycodes/modifiers.
         HotkeyManager.shared.unregisterAll()
         registerHotkey()
+        // Imported editor chords must update AppKit's menu equivalents too;
+        // otherwise an old Undo/Redo shortcut can remain active until relaunch.
+        setupMainMenu()
+        settingsController?.refreshShortcutDisplaysForKeyboardLayout()
 
         // Launch-at-login: sync the login item to the imported value.
         if #available(macOS 13.0, *) {
@@ -1500,6 +1566,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         openSettings()
     }
 
+    @objc private func keyboardInputSourceDidChange() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.rebuildStatusBarMenu()
+            self.settingsController?.refreshShortcutDisplaysForKeyboardLayout()
+        }
+    }
+
     @objc private func spaceDidChange() {
         guard !overlayControllers.isEmpty else { return }
         dismissOverlays()
@@ -2179,12 +2253,31 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
     /// Handle files opened via Finder "Open With", drag-to-dock, or command line.
     func application(_ application: NSApplication, open urls: [URL]) {
+        guard isReadyForOpenRequests else {
+            pendingOpenURLs.append(contentsOf: urls)
+            return
+        }
+        handleOpenURLs(urls)
+    }
+
+    private func handleOpenURLs(_ urls: [URL]) {
         let imageExtensions: Set<String> = ["png", "jpg", "jpeg", "tiff", "tif", "bmp", "gif", "heic", "heif", "webp", "icns"]
         let videoExtensions: Set<String> = ["mp4", "mov", "m4v"]
         for url in urls {
             if url.scheme == "macshot" {
                 let urlSchemeEnabled = UserDefaults.standard.object(forKey: "urlSchemeEnabled") as? Bool ?? true
                 guard urlSchemeEnabled else { continue }
+                if Self.screenCaptureURLActions.contains(url.host ?? "") {
+                    if !isReadyForScreenCaptureURLs,
+                       PermissionOnboardingController.hasScreenRecordingPermission() {
+                        markScreenCaptureURLsReady()
+                    }
+                    if !isReadyForScreenCaptureURLs {
+                        pendingScreenCaptureURLs.append(url)
+                        showOnboarding()
+                        continue
+                    }
+                }
                 handleURLSchemeAction(url)
                 continue
             }
@@ -2202,6 +2295,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
     /// Handle macshot:// URL scheme actions from external tools (Raycast, Alfred, etc.).
     /// Usage: `open macshot://capture`, `open macshot://ocr`, etc.
+    private static let screenCaptureURLActions: Set<String> = [
+        "capture", "capture-fullscreen", "capture-last", "quick-capture",
+        "ocr", "ocr-translate", "record", "record-fullscreen", "scroll-capture",
+    ]
+
     private func handleURLSchemeAction(_ url: URL) {
         guard let action = url.host else { return }
         switch action {
@@ -2244,6 +2342,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             settingsController?.onHotkeyChanged = { [weak self] in
                 self?.registerHotkey()
                 self?.rebuildStatusBarMenu()
+            }
+            settingsController?.onEditorCommandShortcutChanged = { [weak self] in
+                self?.setupMainMenu()
             }
         }
         settingsController?.showWindow()
@@ -2670,9 +2771,10 @@ extension AppDelegate: OverlayWindowControllerDelegate {
             } else {
                 let overlay = WebcamOverlay(screen: screen)
                 let position = WebcamPosition(rawValue: UserDefaults.standard.string(forKey: "webcamPosition") ?? "bottomRight") ?? .bottomRight
-                let wcSize = WebcamSize(rawValue: UserDefaults.standard.string(forKey: "webcamSize") ?? "medium") ?? .medium
                 let shape = WebcamShape(rawValue: UserDefaults.standard.string(forKey: "webcamShape") ?? "circle") ?? .circle
-                overlay.configure(position: position, size: wcSize, shape: shape, recordingRect: rect)
+                overlay.configure(
+                    position: position, size: WebcamSize.savedPoints,
+                    shape: shape, recordingRect: rect)
                 overlay.startPreview(deviceUID: UserDefaults.standard.string(forKey: "selectedCameraDeviceUID"))
                 overlay.setDraggable(false)
                 overlay.orderFrontRegardless()
@@ -2975,7 +3077,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         AXIsProcessTrustedWithOptions(opts)
         let alert = NSAlert()
         alert.messageText = L("Accessibility Access Required")
-        alert.informativeText = L("macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again.")
+        alert.informativeText = L("macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again.")
         alert.alertStyle = .warning
         alert.addButton(withTitle: L("Open Settings"))
         alert.addButton(withTitle: L("Cancel"))
@@ -3120,12 +3222,11 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         return stitchCrossScreenCapture(primary: controller, others: others)
     }
 
-    func overlayDidChangeWindowSnapState(_ controller: OverlayWindowController) {
+    func overlayDidChangeSnapMode(_ controller: OverlayWindowController) {
         // Notify all other overlays to redraw (for multi-monitor setups)
-        // When window snap state changes via Tab key, all overlays need to update
-        // their helper text to show the new ON/OFF state
+        // When snap mode changes via Tab, all overlays need to update their helper text.
         for other in overlayControllers where other !== controller {
-            other.triggerRedraw()
+            other.refreshSnapMode()
         }
     }
 
@@ -3221,7 +3322,7 @@ extension AppDelegate: NSMenuDelegate {
         let entry = entries[index]
         guard let image = ScreenshotHistory.shared.loadImage(for: entry) else { return }
 
-        ImageEncoder.copyToClipboard(image, sourceFileURL: ScreenshotHistory.shared.fileURL(for: entry))
+        ImageEncoder.copyToClipboard(image)
         showFloatingThumbnail(image: image, historyEntryID: entry.id)
 
         let soundEnabled = UserDefaults.standard.object(forKey: "playCopySound") as? Bool ?? true

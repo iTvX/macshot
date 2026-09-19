@@ -176,6 +176,7 @@
 
 /* Overlay / Canvas */
 "Click a window  \U00B7  Drag for custom area  \U00B7  F for full screen" = "Klik p\U00E5 et vindue  \U00B7  Tr\U00E6k for tilpasset omr\U00E5de  \U00B7  F for fuld sk\U00E6rm";
+"Click an element  \U00B7  Drag for custom area  \U00B7  F for full screen" = "Klik p\U00E5 et element  \U00B7  Tr\U00E6k for tilpasset omr\U00E5de  \U00B7  F for fuld sk\U00E6rm";
 "Drag to select  \U00B7  Click for full screen" = "Tr\U00E6k for at v\U00E6lge  \U00B7  Klik for fuld sk\U00E6rm";
 "Release to annotate and edit" = "Slip for at annotere og redigere";
 "Release to finish" = "Slip for at afslutte";
@@ -183,9 +184,13 @@
 "Hold Space to move. Release to finish" = "Hold mellemrum for at flytte. Slip for at afslutte";
 "Space" = "Mellemrum";
 "Window snap: " = "Vinduesfang: ";
+"Snap mode: " = "Snapp-tilstand: ";
 "ON" = "TIL";
 "OFF" = "FRA";
+"WINDOW" = "VINDUE";
+"ELEMENT" = "ELEMENT";
 "  (Tab to toggle)" = "  (Tab for at skifte)";
+"  (Tab to switch)" = "  (Tab for at skifte)";
 "Right-click to copy" = "H\U00F8jreklik for at kopiere";
 "Copied %@" = "Kopieret %@";
 "Set color %@" = "Indstil farve %@";
@@ -222,6 +227,8 @@
 "Launch at login" = "Start ved login";
 "Show snap alignment guides" = "Vis fastg\U00F8relses-hj\U00E6lpelinjer";
 "Snap selection edges to image boundaries" = "Fastg\U00F8r markeringskanter til billedgr\U00E6nser";
+"Enhance browser and Electron element snapping" = "Forbedr browser- og Electron-elementfangst";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Opbygger m\U00E5lappens tilg\U00E6ngelighedstr\U00E6 i Element-tilstand. Deaktiv\U00E9r dette, hvis en browser- eller Electron-app bliver langsom eller har input-problemer.";
 "Capture mouse cursor in screenshot" = "Inkluder musemark\U00F8r i sk\U00E6rmbillede";
 "Double-click selection to copy" = "Dobbeltklik p\U00E5 markeringen for at kopiere";
 "Hide capture instructions" = "Skjul vejledning ved optagelse";
@@ -337,6 +344,7 @@
 "Signed in" = "Logget ind";
 "Not signed in" = "Ikke logget ind";
 "Account:" = "Konto:";
+"Folder:" = "Mappe:";
 "Test Connection" = "Test forbindelse";
 "Fill in endpoint, bucket, and credentials first" = "Udfyld endpoint, bucket og legitimationsoplysninger f\U00F8rst";
 "Testing..." = "Tester...";
@@ -349,6 +357,8 @@
 "Secret Key:" = "Hemmelig n\U00F8gle:";
 "Public URL:" = "Offentlig URL:";
 "Path Prefix:" = "Stipr\U00E6fiks:";
+"Make uploads publicly readable" = "G\U00F8r uploads offentligt l\U00E6sbare";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "Sender public-read ACL, s\U00E5 uploadede filer kan ses af alle med linket. N\U00F8dvendigt for AWS S3, DigitalOcean Spaces, MinIO og Backblaze B2, som gemmer objekter privat som standard. Lad v\U00E6re sl\U00E5et fra for Cloudflare R2, som ikke har ACL og afviser headeren.";
 "API key:" = "API-n\U00F8gle:";
 "Upload History" = "Uploadhistorik";
 "No uploads yet." = "Ingen uploads endnu.";
@@ -465,7 +475,7 @@
 /* Recording \U2014 Input Monitoring Permission */
 "Input Monitoring Required" = "Inputoverv\U00E5gning kr\U00E6ves";
 "macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot kr\U00E6ver tilladelse til inputoverv\U00E5gning for at vise tastetryk under optagelse. Giv adgang i System Settings, og pr\U00F8v derefter igen.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot kr\U00E6ver tilg\U00E6ngelighedstilladelse for at vise tastetryk under optagelse. Giv adgang i System Settings, og pr\U00F8v derefter igen.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot har brug for tilgængelighedstilladelse til at justere efter enkelte grænsefladeelementer. Giv adgang i Systemindstillinger, og prøv igen.";
 
 /* Recording \U2014 Keystroke Overlay */
 "Show Keystrokes" = "Vis tastetryk";
@@ -505,6 +515,7 @@
 "Settings..." = "Indstillinger...";
 "macshot Settings" = "macshot Indstillinger";
 "Also open in Editor" = "\U00C5bn ogs\U00E5 i redigering";
+"Close editor after copying" = "Luk editoren efter kopiering";
 "Hide controls" = "Skjul kontroller";
 "Hide recording controls" = "Skjul optagelseskontroller";
 "Stop recording from the menu bar icon instead." = "Stop optagelsen fra menulinjeikonen i stedet.";
@@ -551,12 +562,13 @@
 
 "Same as screenshots" = "Samme som skærmbilleder";
 "  Preview size:" = "  Forhåndsvisningsstørrelse:";
+"Fit image in preview (letterbox)" = "Tilpas billedet i forhåndsvisningen (letterbox)";
 "(0 = off)" = "(0 = fra)";
 "Clear All" = "Ryd alt";
 "Clear History?" = "Ryd historik?";
 "This will permanently delete all screenshots from history." = "Dette vil permanent slette alle skærmbilleder fra historikken.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Klik på \"Indstil\" og tryk på en tastekombination med mindst én modifikator (⌘, ⌥, ⌃, ⇧) for at angive en genvej.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Filer uploades til en \"macshot\"-mappe på dit Google Drev. Alt forbliver privat — intet deles offentligt.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused — a new one is created instead. Everything stays private — nothing is shared publicly." = "Filer uploades til denne mappe på dit Google Drev. Lad feltet være tomt for at bruge \"macshot\". macshot kan kun bruge mapper, som det selv har oprettet, så en mappe med samme navn, som du har lavet i Drev, genbruges ikke — i stedet oprettes en ny. Alt forbliver privat — intet deles offentligt.";
 
 "Pressure" = "Tryk";
 
@@ -669,3 +681,14 @@
 
 /* URL scheme: edit (PR #272) */
 "Open a history entry in the editor (keeps annotations editable)" = "Åbn et historikpunkt i editoren (bevarer annoteringer redigerbare)";
+
+/* Selection auto-adjust and Spacebar movement */
+"Auto-Adjust Selection" = "Automatisk justering af markering";
+"Auto-adjust selection" = "Juster markering automatisk";
+"Could not analyze selection edges" = "Markeringskanterne kunne ikke analyseres";
+"Detecting nearby edges…" = "Finder kanter i nærheden…";
+"No nearby edges found" = "Der blev ikke fundet nogen kanter i nærheden";
+"Selection adjusted" = "Markeringen blev justeret";
+"Selection is already aligned" = "Markeringen flugter allerede med kanterne";
+"Space to move. Release to annotate and edit" = "Hold mellemrumstasten nede for at flytte. Slip for at annotere og redigere";
+"Space to move. Release to finish" = "Hold mellemrumstasten nede for at flytte. Slip for at afslutte";

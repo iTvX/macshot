@@ -256,6 +256,9 @@ class ScreenCaptureManager {
                     config.width = Int(rect.width * screen.backingScaleFactor)
                     config.height = Int(rect.height * screen.backingScaleFactor)
                     config.showsCursor = showsCursor
+                    // Rectangle screenshots omit window framing by default on
+                    // macOS 26. Preserve the shadows visible on the desktop.
+                    config.ignoreShadows = false
                     config.displayIntent = .local
                     config.dynamicRange = .sdr
                     timing?("SCK rect capture begin screen=\(index) rect=\(Int(rect.origin.x)),\(Int(rect.origin.y)) \(Int(rect.width))x\(Int(rect.height))")

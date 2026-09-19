@@ -185,15 +185,20 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Kliknite na okno  ·  Potiahnite pre vlastnu oblast  ·  F pre celu obrazovku";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Kliknite na prvok  ·  Potiahnite pre vlastnu oblast  ·  F pre celu obrazovku";
 "Drag to select  ·  Click for full screen" = "Potiahnite pre vyber  ·  Kliknite pre celu obrazovku";
 "Release to annotate and edit" = "Pustite pre anotaciu a upravu";
 "Release to finish" = "Pustite pre dokončenie";
 "Hold Space to move. Release to annotate and edit" = "Podržte Medzerník pre presun. Pustite pre anotáciu a úpravu";
 "Hold Space to move. Release to finish" = "Podržte Medzerník pre presun. Pustite pre dokončenie";
 "Window snap: " = "Prichytenie okna: ";
+"Snap mode: " = "Režim prichytenia: ";
 "ON" = "ZAP";
 "OFF" = "VYP";
+"WINDOW" = "OKNO";
+"ELEMENT" = "PRVOK";
 "  (Tab to toggle)" = "  (Tab pre prepnutie)";
+"  (Tab to switch)" = "  (Tab pre prepnutie)";
 "Space" = "Medzerník";
 "Right-click to copy" = "Kliknite pravym tlacidlom pre kopirovanie";
 "Copied %@" = "Skopirovane %@";
@@ -228,6 +233,8 @@
 "Launch at login" = "Spustit pri prihlaseni";
 "Show snap alignment guides" = "Zobrazit vodiace ciary zarovnania";
 "Snap selection edges to image boundaries" = "Prichytit okraje vyberu k hraniciam obrazka";
+"Enhance browser and Electron element snapping" = "Zlepšiť prichytenie prvkov v prehliadači a Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Vytvára strom dostupnosti cieľovej aplikácie v režime prvkov. Zakážte, ak sa prehliadač alebo Electron aplikácia stane pomalým alebo má problémy s vstupom.";
 "Capture mouse cursor in screenshot" = "Zachytit kurzor mysi na snimke obrazovky";
 "Double-click selection to copy" = "Kopirovat dvojklikom na vyber";
 "Hide capture instructions" = "Skryt pokyny pri snimani";
@@ -338,7 +345,8 @@
 "Sign Out" = "Odhlasit sa";
 "Signed in" = "Prihlaseny";
 "Not signed in" = "Neprihlaseny";
-"Account:" = "Ucet:";
+"Account:" = "Účet:";
+"Folder:" = "Priečinok:";
 "Test Connection" = "Otestovat pripojenie";
 "Fill in endpoint, bucket, and credentials first" = "Najprv vyplnte endpoint, bucket a prihlasovacie udaje";
 "Testing..." = "Testovanie...";
@@ -351,6 +359,8 @@
 "Secret Key:" = "Tajny kluc:";
 "Public URL:" = "Verejna URL:";
 "Path Prefix:" = "Prefix cesty:";
+"Make uploads publicly readable" = "Spristupnit nahravania verejne na citanie";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "Odosle ACL public-read, aby nahrane subory boli pristupne komukoIvek s odkazom. Potrebne pre AWS S3, DigitalOcean Spaces, MinIO a Backblaze B2, ktore predvolene ukladaju objekty ako sukromne. Ponechajte vypnute pre Cloudflare R2, ktore nepodporuje ACL a tuto hlavicku odmietne.";
 "API key:" = "API kluc:";
 "Upload History" = "Historia nahravani";
 "No uploads yet." = "Zatial ziadne nahravania.";
@@ -467,7 +477,7 @@
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Vyzaduje sa monitorovanie vstupu";
 "macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot potrebuje povolenie na monitorovanie vstupu pre zobrazenie stlaceni klaves pocas nahravania. Udelite pristup v System Settings a skuste to znova.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot potrebuje povolenie pristupnosti pre zobrazenie stlaceni klaves pocas nahravania. Udelite pristup v System Settings a skuste to znova.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot potrebuje povolenie Prístupnosti pre prichytávanie k jednotlivým prvkom rozhrania. Udeľte prístup v Nastaveniach systému a skúste to znova.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "Zobrazit stlacenia klaves";
@@ -505,7 +515,8 @@
 "Settings..." = "Nastavenia...";
 "Settings" = "Nastavenia";
 "macshot Settings" = "Nastavenia macshot";
-"Also open in Editor" = "Otvorit aj v editore";
+"Also open in Editor" = "Otvoriť aj v editore";
+"Close editor after copying" = "Zavrieť editor po skopírovaní";
 "Hide controls" = "Skryt ovladacie prvky";
 "Hide recording controls" = "Skryt ovladacie prvky nahravania";
 "Stop recording from the menu bar icon instead." = "Zastavte nahravanie pomocou ikony v liste menu.";
@@ -551,12 +562,13 @@
 
 "Same as screenshots" = "Rovnaké ako snímky obrazovky";
 "  Preview size:" = "  Veľkosť náhľadu:";
+"Fit image in preview (letterbox)" = "Prispôsobiť obrázok náhľadu (s pruhmi)";
 "(0 = off)" = "(0 = vypnuté)";
 "Clear All" = "Vymazať všetko";
 "Clear History?" = "Vymazať históriu?";
 "This will permanently delete all screenshots from history." = "Týmto sa natrvalo odstránia všetky snímky obrazovky z histórie.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Kliknite na \"Nastaviť\" a stlačte kombináciu klávesov s aspoň jedným modifikátorom (⌘, ⌥, ⌃, ⇧) na nastavenie skratky.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Súbory sa nahrajú do priečinka \"macshot\" na vašom Google Drive. Všetko zostáva súkromné — nič nie je verejne zdieľané.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused — a new one is created instead. Everything stays private — nothing is shared publicly." = "Súbory sa nahrajú do tohto priečinka na vašom Google Drive. Ak pole necháte prázdne, použije sa \"macshot\". macshot môže používať iba priečinky, ktoré sám vytvoril, takže priečinok s rovnakým názvom, ktorý ste vytvorili na Disku, sa nepoužije — namiesto neho sa vytvorí nový. Všetko zostáva súkromné — nič nie je verejne zdieľané.";
 
 "Pressure" = "Tlak";
 
@@ -669,3 +681,14 @@
 
 /* URL scheme: edit (PR #272) */
 "Open a history entry in the editor (keeps annotations editable)" = "Otvoriť položku histórie v editore (anotácie zostanú upraviteľné)";
+
+/* Auto-adjust selection (#317) */
+"Auto-Adjust Selection" = "Automatické prispôsobenie výberu";
+"Auto-adjust selection" = "Automaticky prispôsobiť výber";
+"Could not analyze selection edges" = "Nepodarilo sa analyzovať okraje výberu";
+"Detecting nearby edges…" = "Zisťujú sa blízke okraje…";
+"No nearby edges found" = "Nenašli sa žiadne blízke okraje";
+"Selection adjusted" = "Výber bol prispôsobený";
+"Selection is already aligned" = "Výber je už zarovnaný";
+"Space to move. Release to annotate and edit" = "Medzerník na presun. Pustite pre anotovanie a úpravy";
+"Space to move. Release to finish" = "Medzerník na presun. Pustite pre dokončenie";

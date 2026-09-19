@@ -1,5 +1,23 @@
 # Changelog
 
+## 4.2.2 — upstream beta.5 integration (fork, 2026-09-19)
+
+### Added and updated
+
+- Integrate upstream through `43d5ae4852ec5b991a577a3dd0f254cbda93ae51`, including beta.3–beta.5 and the post-release accessibility-state restoration fix. Original upstream commit attribution is retained.
+- Include recording-stream cleanup, cold-launch URL handling, keyboard-layout matching, window shadows, composited color sampling, standard Close Window, playable MP4 copying, automatic selection adjustment, element snapping, upload options, and editor/thumbnail/export preferences.
+- Preserve all 12 primary/alternative global shortcuts, application exclusions, and the fork's signing, update feed, and local release pipeline.
+- Default screenshot copying to image data for app compatibility; provide an opt-in Finder clipboard compatibility setting for pasting files on macOS 26 and earlier.
+
+### Additional fixes
+
+- Suspend and restore global hotkeys consistently across global, editor-command, and tool shortcut recorders. Cancel the correct recorder on tab changes, close, or focus loss.
+- Resolve Undo/Redo collisions on reset as well as assignment; reject malformed imported command shortcuts.
+- Cancel and await in-flight recording startup before finalization to prevent a late stream from starting after Stop.
+- Ignore stale asynchronous snap results after an overlay is reset or dismissed.
+- Validate remembered video export scales before converting dimensions to integers.
+- Give retained clipboard files unique names so concurrent copies cannot overwrite each other.
+
 ## 4.2.2 — alternative keyboard shortcuts (fork)
 
 ### Added
@@ -27,6 +45,52 @@
 ### Changed
 
 - The fork uses an independent bundle identifier, update-signing key, and update feed so it never installs updates from the upstream project.
+
+## [4.2.2-beta.5] - 2026-09-17
+
+### Added
+
+- **Element snapping** — press Tab on the capture screen to cycle Window → Off → Element snapping. Element mode highlights individual buttons, panels, and fields under the pointer, including Chromium and Electron apps (can be turned off in Settings). Requires Accessibility permission, which macshot asks for the first time you switch to it. (#360)
+- **Google Drive destination folder** — choose which Drive folder uploads go to. (#372)
+- **Letterbox thumbnail preview** — optional setting to fit very wide or tall captures inside the floating thumbnail instead of cropping them. (#366)
+- **Close editor after copying** — optional setting to close the editor window after copying. (#394, #395)
+
+### Changed
+
+- The video editor remembers the last export scale and quality. (#363, #376)
+
+### Fixed
+
+- Missing accents in several Slovak, Croatian, Romanian, and Catalan labels.
+
+## [4.2.2-beta.4] - 2026-09-17
+
+### Added
+
+- **S3 public-read uploads** — opt-in "Make uploads publicly readable" setting sends the `public-read` ACL so links work on AWS S3, DigitalOcean Spaces, MinIO, and Backblaze B2. (#352)
+
+### Fixed
+
+- **Clipboard compatibility** — copied screenshots now contain image data only, matching the macOS screenshot tool. Pasting works in Microsoft Teams, Photopea, and remote desktop clients without granting Full Disk Access, and Teams embeds the image inline instead of uploading it as a file. On macOS 27, Finder can still paste screenshots as files. On earlier macOS versions, use Save instead. (#309, #393)
+
+## [4.2.2-beta.3] - 2026-08-29
+
+### Added
+
+- **Auto-adjust selection** — refine all four sides of a rough selection to nearby visual edges from the size presets panel or a configurable shortcut. (#317)
+- **Configurable Undo/Redo shortcuts** — customize, disable, or reset editor command shortcuts in Settings, with semantic key matching across keyboard layouts.
+
+### Changed
+
+- **Beautify controls** — the effect toggle is clearer, disabled controls reflect the current state, and webcam sizing now uses a continuous 80–480 px slider that stays within the recording area.
+
+### Fixed
+
+- Window captures preserve their native shadows.
+- The color sampler reads from the composited canvas and keeps its cursor stable over annotations.
+- Recording setup failures now stop their active ScreenCaptureKit stream instead of leaking work in `replayd`. (#367)
+- **Close Window** (Command-W) now routes through the standard File menu to the active window. (#364)
+- **Video editor Copy** writes playable MP4 data for Mail, Notes, and other paste targets while retaining safe fallbacks for MOV and large files. (#329, #337)
 
 ## [4.2.2-beta.2] - 2026-08-12
 
@@ -60,6 +124,10 @@
 
 - **GIF export uses gifski when available** (app bundle, `/opt/homebrew/bin`, or `/usr/local/bin`) — encodes on all cores and streams frames to disk, so memory stays flat and long recordings no longer crash at finalize. Smaller, better-looking GIFs; falls back to the built-in encoder when gifski is absent. Thanks @anten-ka! (#295, #296)
 - GIF conversion runs at user-initiated priority instead of background — several times faster on Apple Silicon, where background QoS is confined to efficiency cores. (#296)
+
+### Fixed
+
+- **Video editor Copy** — copying an MP4 recording now writes playable video data to the clipboard instead of a sandboxed file URL that many apps reject. (#329)
 
 ## [4.2.1] - 2026-07-10
 

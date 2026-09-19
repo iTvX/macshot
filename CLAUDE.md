@@ -7,26 +7,21 @@ Native macOS screenshot & annotation tool inspired by Flameshot. Built with Swif
 - **Language:** Swift 5.0
 - **UI:** AppKit (all windows created in code, storyboard is minimal — just app entry + main menu)
 - **Min Target:** macOS 12.3+ (Monterey)
-- **Bundle ID:** com.sw33tlie.macshot.macshot
+- **Bundle ID:** com.itvx.macshot
 - **Sandbox:** Enabled (entitlements: network.client, files.user-selected.read-write, files.bookmarks.app-scope)
 - **LSUIElement:** YES (menu bar only app, no dock icon — switches to `.regular` when editor windows are open)
 - **Permissions:** Screen Recording (Info.plist has Privacy - Screen Capture Usage Description)
 - **Xcode:** File system synchronized groups — just create .swift files in `macshot/` and Xcode picks them up automatically
 
-## Build Variants
+## Fork integration and variants
 
-macshot has two release variants:
+This fork uses `com.itvx.macshot`, its own Sparkle key/feed, and the local release
+runner in `.github/workflows/release.yml`. Preserve application exclusions and
+both global shortcut bindings when syncing upstream. Overlay tool and editor
+command recorders remain separate from those two global bindings.
 
-- **Normal:** product name `macshot`, bundle id `com.sw33tlie.macshot.macshot`, Sparkle feed `appcast.xml`, release asset `MacShot.dmg`.
-- **Offline:** product name `macshot Offline`, bundle id `com.sw33tlie.macshot.offline`, Sparkle feed `appcast-offline.xml`, release asset `MacShot-Offline.dmg`.
-
-The offline build is selected with the `OFFLINE` Swift compilation condition. Use `BuildVariant.isOffline` / `BuildVariant.displayName` for runtime variant checks and display names. Upload and cloud storage integrations must be compiled out of the offline build with `#if !OFFLINE`, including upload UI, upload shortcuts, upload settings, upload context menu items, and uploader implementations.
-
-The release workflow builds both variants from the same tag. It patches the offline app's `SUFeedURL` to `appcast-offline.xml`, removes the Google OAuth URL scheme from the offline app, signs both apps, packages both DMGs, notarizes both DMGs, and writes both appcasts. Do not point the offline app at the normal appcast or vice versa; Sparkle updates must stay variant-specific so offline users never update into the normal app.
-
-Beta handling is shared: beta items get `<sparkle:channel>beta</sparkle:channel>`, and users opt in through the existing "Check for beta updates" setting. Stable offline releases will appear to offline users through `appcast-offline.xml` once a stable offline item exists.
-
-Homebrew status: beta releases skip Homebrew. Stable releases update the normal cask and generate `macshot-offline` in the personal tap. The official Homebrew cask remains normal-only unless a separate `macshot-offline` cask is submitted later.
+Upstream also supports `OFFLINE`; keep upload features inside `#if !OFFLINE`.
+The fork currently publishes the normal app as `MacShot.zip`.
 
 ## Architecture
 
@@ -232,7 +227,7 @@ TextEditingCanvas                — Coordinate transforms + annotation storage 
 - Tools: `enabledTools`, `knownToolRawValues`
 - Features: `imgbbAPIKey`, `beautifyEnabled`, `beautifyStyleIndex`, `beautifyMode`, `beautifyPadding`, `beautifyCornerRadius`, `beautifyShadowRadius`, `pencilSmoothEnabled`, `loupeSize`, `stampSize`, `translateTargetLang`
 - Styles: `currentLineStyle`, `currentArrowStyle`, `currentRectFillStyle`, `currentRectCornerRadius`
-- Upload: `uploadProvider` (imgbb/gdrive), `googleDriveRefreshToken`, `uploadConfirmEnabled`
+- Upload: `uploadProvider` (imgbb/gdrive), `googleDriveRefreshToken`, `gdriveFolderName` (Drive destination folder, defaults to "macshot"), `uploadConfirmEnabled`
 
 ### Threading Model
 - **Capture:** Async/await TaskGroup for concurrent multi-display capture
@@ -292,7 +287,7 @@ Copy to clipboard, Save to file (PNG/JPEG/HEIC/WebP), Pin (floating always-on-to
 - Tear down overlay windows and images promptly after capture
 - UserDefaults for all preferences (no Core Data, no plist files)
 - Annotation is a class (reference type) for mutation during drag/resize — use `clone()` for safe copies. **When adding new properties to Annotation, update three places:** the property declaration, `clone()`, and `CodableAnnotation` in `AnnotationCodable.swift` (`toCodable` + `fromCodable`). The compiler won't catch missing fields — annotations will silently lose data on clone or history reload.
-- **Keyboard shortcuts:** Always use `event.keyCode` (hardware-based, layout-independent) for Cmd+letter shortcuts — never `event.charactersIgnoringModifiers`, which returns localized characters and breaks on non-Latin layouts (Russian, Arabic, etc.). `charactersIgnoringModifiers` is only appropriate for user-configurable shortcut recording or number/symbol keys (`0`, `=`, `-`, etc.) that don't change across layouts. Common key codes: A=0, S=1, D=2, F=3, H=4, G=5, Z=6, X=7, C=8, V=9, B=11, Q=12, W=13, E=14, R=15, Y=16, T=17.
+- **Keyboard shortcuts:** Character-based commands must go through `KeyboardShortcutMatcher`; do not compare raw letter key codes or read `charactersIgnoringModifiers` directly. The matcher follows the character produced by rearranged Latin layouts such as QWERTZ, AZERTY, and Dvorak, while falling back through the user's ASCII-capable layout for non-Latin input sources such as Russian or Arabic. Use `EditorCommandShortcutManager` for configurable Undo/Redo chords and `ToolShortcutManager` plus `KeyboardShortcutMatcher.toolCharacters(for:)` for single-key overlay tools. Raw `event.keyCode` checks are appropriate only for layout-independent non-character keys such as Escape, Return, Tab, Space, Delete, arrows, and function keys. Global Carbon hotkeys remain physical key-code bindings; translate them only for display with `KeyboardShortcutMatcher.currentLayoutCharacter(for:)`, and disable `NSMenuItem` automatic key-equivalent localization after applying an already-translated physical binding.
 - `autoreleasepool` for overlay teardown to prevent memory spikes
 - Extension files (`OverlayView+Feature.swift`) for self-contained feature code that accesses OverlayView state but is logically separate (recording overlays, scroll capture HUD, window snapping, popovers)
 - **Light/dark mode:** The toolbar and popovers always use a dark background regardless of system appearance. `ToolOptionsRowView` and `PopoverHelper` force `NSAppearance(named: .darkAqua)` so system controls render with light text. Never use system-adaptive colors (`.labelColor`, `.secondaryLabelColor`) for text in toolbar/popover contexts without verifying contrast against the dark background. Always test new toolbar UI elements in both light and dark system appearance.
@@ -316,53 +311,18 @@ Copy to clipboard, Save to file (PNG/JPEG/HEIC/WebP), Pin (floating always-on-to
 
 ## Releasing
 
-### Workflow: `.github/workflows/build-release.yml`
+A merged PR to `main` triggers `.github/workflows/release.yml` on the dedicated
+local Mac runner. Run `Scripts/test.sh` and `Scripts/privacy_check.sh` before
+merging. The runner builds arm64/x86_64, signs with its local Developer ID,
+notarizes/staples, then publishes `MacShot.zip` and its SHA-256 checksum.
 
-CI triggers on tag push (`v*.*.*` or `v*.*.*-beta.*`) or manual `workflow_dispatch`. The workflow builds, signs, notarizes, creates a DMG, updates Sparkle appcast, creates a GitHub Release, and (for stable only) updates Homebrew.
+Build numbers are the project base plus the workflow run number; never replace
+them with upstream's smaller build numbers. The signed Sparkle feed is the
+`appcast.xml` asset of this fork's `appcast` release, generated locally by
+`Scripts/generate_appcast.sh`. Root appcast XML files are upstream reference
+material, not this fork's update endpoint. Never import upstream identity,
+Sparkle keys, feed URLs, or release workflows over the fork configuration.
 
-### Stable release
-
-1. **Add a CHANGELOG.md entry** for the new version — CI extracts it for GitHub Release notes.
-2. **Tag and push:** `git tag v3.8.0 && git push origin main --tags`
-3. CI handles the rest: DMG, GitHub Release, appcast update (replaces all items with just the new stable), website version bump, Homebrew cask update.
-4. Make sure tool version in the website page is updated too.
-
-### Beta release
-
-1. **Add a CHANGELOG.md entry** (e.g. `## [3.8.0-beta.3] - 2026-04-06`).
-2. **Tag with `-beta.N` suffix:** `git tag v3.8.0-beta.3 && git push origin v3.8.0-beta.3`
-3. CI auto-detects beta from the tag and:
-   - Adds `<sparkle:channel>beta</sparkle:channel>` to the appcast item (invisible to stable users)
-   - Preserves the existing stable item in the appcast
-   - Marks the GitHub Release as **pre-release**
-   - **Skips** Homebrew tap and cask updates
-   - **Skips** website version update
-
-Beta users opt in via Preferences > "Check for beta updates". This sets `allowedChannels(for:)` to `["beta"]` in `SPUUpdaterDelegate`.
-
-### Sparkle versioning
-
-- `sparkle:version` (what Sparkle compares) = `github.run_number` — a monotonically increasing integer per CI build. This avoids all semver/pre-release comparison issues.
-- `sparkle:shortVersionString` (what the user sees) = the human-readable version from the tag (e.g. `3.8.0-beta.3`).
-- `MARKETING_VERSION` = tag version (display). `CURRENT_PROJECT_VERSION` = run number (build number).
-- The stable appcast item from older builds still uses the old version string (e.g. `3.7.0`) for `sparkle:version`. Sparkle's comparator parses `3.7.0` as `3` when compared to a plain integer, so any run number > 3 is seen as newer. This works.
-
-### Appcast safety
-
-- CI validates the generated appcast XML with `python3 ET.parse()` before committing. If invalid, the build fails and the broken XML never reaches users.
-- Appcast is served from `https://raw.githubusercontent.com/sw33tLie/macshot/main/appcast.xml` (CDN-cached, ~5 min TTL).
-- Stable item extraction uses `python3 xml.etree.ElementTree` with `ET.register_namespace('sparkle', ...)` to preserve the `sparkle:` prefix.
-
-### Manual trigger (fallback)
-
-If tag push doesn't trigger CI (e.g. after rapid tag create/delete), use:
-```
-gh workflow run build-release.yml --ref main -f tag=v3.8.0-beta.3
-```
-This dispatches from main (which has `workflow_dispatch` support) and reads the tag from the input parameter. The tag must already exist on the remote.
-
-### Notes
-
-- `MARKETING_VERSION` in `project.pbxproj` is only used for local dev builds. CI always overrides it.
-- Never rapidly create/delete tags — GitHub throttles tag push events and may suppress triggers for 15-30 minutes.
-- The workflow was renamed from `release.yml` to `build-release.yml`.
+When syncing upstream, advance the reviewed upstream SHA in the privacy check
+only to an audited official revision. Preserve upstream commit authors; fork
+commits continue to use the existing privacy-preserving maintainer identity.

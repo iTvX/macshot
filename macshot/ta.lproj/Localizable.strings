@@ -178,6 +178,13 @@
 "ON" = "இயக்கு";
 "OFF" = "நிறுத்து";
 "  (Tab to toggle)" = "  (மாற்ற Tab)";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "ஒரு உறுப்பொருளைக் கிளிக் செய்  ·  தனிப்பயன் பகுதிக்கு இழு  ·  முழுத்திரைக்கு F";
+"Snap mode: " = "ஒட்டு முறை: ";
+"WINDOW" = "சாளரம்";
+"ELEMENT" = "உறுப்பொருள்";
+"  (Tab to switch)" = "  (மாற்ற Tab)";
+"Enhance browser and Electron element snapping" = "உலாவி மற்றும் எலக்ட்ரான் உறுப்பொருள் ஒட்டுதலை மேம்படுத்து";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "உறுப்பொருள் பயன்முறையில் இலக்கு செயலியின் அணுகல்தன்மை மரத்தை உருவாக்குகிறது. உலாவி அல்லது எலக்ட்ரான் செயலி மெதுவாகும் அல்லது உள்ளீட்டுச் சிக்கல்கள் இருந்தால் இதை முடக்கவும்.";
 "Right-click to copy" = "நகலெடுக்க வலது கிளிக் செய்";
 "Copied %@" = "%@ நகலெடுக்கப்பட்டது";
 "Set color %@" = "நிறம் %@ அமைக்கப்பட்டது";
@@ -337,6 +344,7 @@
 "Signed in" = "உள்நுழைந்துள்ளீர்கள்";
 "Not signed in" = "உள்நுழையவில்லை";
 "Account:" = "கணக்கு:";
+"Folder:" = "கோப்புறை:";
 "Test Connection" = "இணைப்பைச் சோதி";
 "Fill in endpoint, bucket, and credentials first" = "முதலில் முனைப்புள்ளி, பக்கெட் மற்றும் சான்றுகளை நிரப்புங்கள்";
 "Testing..." = "சோதிக்கிறது...";
@@ -349,6 +357,8 @@
 "Secret Key:" = "ரகசிய விசை:";
 "Public URL:" = "பொது URL:";
 "Path Prefix:" = "பாதை முன்னொட்டு:";
+"Make uploads publicly readable" = "பதிவேற்றங்களை பொதுவில் படிக்கக்கூடியதாக்கு";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "public-read ACL அனுப்புகிறது, இதனால் பதிவேற்றிய கோப்புகள் இணைப்பு உள்ள எவரும் பார்க்கக்கூடியதாக இருக்கும். இயல்பாக பொருட்களை தனிப்பட்டதாக சேமிக்கும் AWS S3, DigitalOcean Spaces, MinIO மற்றும் Backblaze B2 க்கு தேவை. ACLs இல்லாத மற்றும் தலைப்பை நிராகரிக்கும் Cloudflare R2 க்கு அணைத்து வைக்கவும்.";
 "API key:" = "API விசை:";
 "Upload History" = "பதிவேற்ற வரலாறு";
 "No uploads yet." = "இதுவரை பதிவேற்றங்கள் இல்லை.";
@@ -468,7 +478,7 @@
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "உள்ளீட்டு கண்காணிப்பு தேவை";
 "macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "பதிவின் போது விசை அழுத்தங்களைக் காட்ட macshot க்கு உள்ளீட்டு கண்காணிப்பு அனுமதி தேவை. System Settings இல் அணுகலை வழங்கி, மீண்டும் முயற்சிக்கவும்.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "பதிவின் போது விசை அழுத்தங்களைக் காட்ட macshot க்கு அணுகல்தன்மை அனுமதி தேவை. System Settings இல் அணுகலை வழங்கி, மீண்டும் முயற்சிக்கவும்.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "தனித்தனி இடைமுக உறுப்புகளுடன் ஸ்நாப் செய்ய macshot-க்கு அணுகல்தன்மை அனுமதி தேவை. கணினி அமைப்புகளில் அணுகலை வழங்கி, மீண்டும் முயற்சிக்கவும்.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "விசை அழுத்தங்களைக் காட்டு";
@@ -507,6 +517,7 @@
 "Settings..." = "அமைப்புகள்...";
 "macshot Settings" = "macshot அமைப்புகள்";
 "Also open in Editor" = "எடிட்டரிலும் திற";
+"Close editor after copying" = "நகலெடுத்த பிறகு எடிட்டரை மூடு";
 "Hide controls" = "கட்டுப்பாடுகளை மறை";
 "Hide recording controls" = "பதிவு கட்டுப்பாடுகளை மறை";
 "Stop recording from the menu bar icon instead." = "அதற்குப் பதிலாக மெனு பட்டை ஐகானிலிருந்து பதிவை நிறுத்தவும்.";
@@ -553,12 +564,13 @@
 
 "Same as screenshots" = "ஸ்கிரீன்ஷாட்களைப் போலவே";
 "  Preview size:" = "  முன்னோட்ட அளவு:";
+"Fit image in preview (letterbox)" = "முன்னோட்டத்தில் படத்தைப் பொருத்து (லெட்டர்பாக்ஸ்)";
 "(0 = off)" = "(0 = அணைப்பு)";
 "Clear All" = "அனைத்தையும் அழி";
 "Clear History?" = "வரலாற்றை அழிக்கவா?";
 "This will permanently delete all screenshots from history." = "இது வரலாற்றில் உள்ள அனைத்து ஸ்கிரீன்ஷாட்களையும் நிரந்தரமாக நீக்கும்.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "\"அமை\" என்பதை கிளிக் செய்து, குறுக்குவழியை அமைக்க குறைந்தது ஒரு மாற்றி (⌘, ⌥, ⌃, ⇧) கொண்ட விசை சேர்க்கையை அழுத்தவும்.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "கோப்புகள் உங்கள் Google Drive-ல் உள்ள \"macshot\" கோப்புறையில் பதிவேற்றப்படும். அனைத்தும் தனிப்பட்டதாக இருக்கும் — எதுவும் பொதுவில் பகிரப்படாது.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused — a new one is created instead. Everything stays private — nothing is shared publicly." = "கோப்புகள் உங்கள் Google Drive-ல் உள்ள இந்தக் கோப்புறையில் பதிவேற்றப்படும். \"macshot\"-ஐப் பயன்படுத்த காலியாக விடவும். macshot தானே உருவாக்கிய கோப்புறைகளை மட்டுமே பயன்படுத்த முடியும், எனவே Drive-ல் நீங்கள் அதே பெயரில் உருவாக்கிய கோப்புறை மீண்டும் பயன்படுத்தப்படாது — அதற்குப் பதிலாக புதிய கோப்புறை உருவாக்கப்படும். அனைத்தும் தனிப்பட்டதாக இருக்கும் — எதுவும் பொதுவில் பகிரப்படாது.";
 
 "Pressure" = "அழுத்தம்";
 
@@ -671,3 +683,14 @@
 
 /* URL scheme: edit (PR #272) */
 "Open a history entry in the editor (keeps annotations editable)" = "வரலாற்று உள்ளீட்டைத் தொகுப்பாளரில் திற (எழுத்துக்குறிப்புகளைத் திருத்தக்கூடியதாக வைத்திருக்கும்)";
+
+/* Selection edge adjustment */
+"Auto-Adjust Selection" = "தேர்வைத் தானாகச் சரிசெய்";
+"Auto-adjust selection" = "தேர்வைத் தானாகச் சரிசெய்";
+"Could not analyze selection edges" = "தேர்வின் விளிம்புகளைப் பகுப்பாய்வு செய்ய முடியவில்லை";
+"Detecting nearby edges…" = "அருகிலுள்ள விளிம்புகளைக் கண்டறிகிறது…";
+"No nearby edges found" = "அருகிலுள்ள விளிம்புகள் எதுவும் காணப்படவில்லை";
+"Selection adjusted" = "தேர்வு சரிசெய்யப்பட்டது";
+"Selection is already aligned" = "தேர்வு ஏற்கனவே சீரமைக்கப்பட்டுள்ளது";
+"Space to move. Release to annotate and edit" = "நகர்த்த ஸ்பேஸ் விசையைப் பிடிக்கவும். குறிப்புரையிட்டு திருத்த விடுவிக்கவும்";
+"Space to move. Release to finish" = "நகர்த்த ஸ்பேஸ் விசையைப் பிடிக்கவும். முடிக்க விடுவிக்கவும்";

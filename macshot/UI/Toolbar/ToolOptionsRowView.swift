@@ -1281,12 +1281,34 @@ class ToolOptionsRowView: NSView {
     private func addBeautifyOptions(at x: CGFloat, ov: OverlayView) -> CGFloat {
         var curX = x
         let isSnap = ov.selectionIsWindowSnap
+        let controlsEnabled = ov.beautifyEnabled
+
+        // Keep the effect switch first so its enabled state and escape hatch are immediately visible.
+        let toggleBtn = NSButton(
+            checkboxWithTitle: L("Beautify"), target: self,
+            action: #selector(beautifyToggleChanged(_:)))
+        toggleBtn.state = controlsEnabled ? .on : .off
+        toggleBtn.font = NSFont.systemFont(ofSize: 10, weight: .medium)
+        if let cell = toggleBtn.cell as? NSButtonCell {
+            cell.attributedTitle = NSAttributedString(string: L("Beautify"), attributes: [
+                .foregroundColor: ToolbarLayout.iconColor.withAlphaComponent(0.85),
+                .font: NSFont.systemFont(ofSize: 10, weight: .medium)
+            ])
+        }
+        toggleBtn.sizeToFit()
+        toggleBtn.frame.origin = NSPoint(
+            x: curX, y: (rowHeight - toggleBtn.frame.height) / 2)
+        addSubview(toggleBtn)
+        curX += toggleBtn.frame.width + 4
+
+        curX = addSeparator(at: curX)
 
         // Mode toggle: Window / Rounded — hidden for snapped windows (always uses native chrome)
         if !isSnap {
             let modeSeg = NSSegmentedControl(labels: ["W", "R"], trackingMode: .selectOne,
                                              target: self, action: #selector(beautifyModeChanged(_:)))
             modeSeg.selectedSegment = ov.beautifyMode == .window ? 0 : 1
+            modeSeg.isEnabled = controlsEnabled
             modeSeg.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: 56, height: 22)
             (modeSeg.cell as? NSSegmentedCell)?.segmentStyle = .roundRect
             addSubview(modeSeg)
@@ -1296,19 +1318,19 @@ class ToolOptionsRowView: NSView {
         }
 
         // Padding slider
-        curX = addBeautifySlider(at: curX, label: L("Padding"), value: ov.beautifyPadding, min: 16, max: 96, action: #selector(beautifyPaddingChanged(_:)))
+        curX = addBeautifySlider(at: curX, label: L("Padding"), value: ov.beautifyPadding, min: 16, max: 96, isEnabled: controlsEnabled, action: #selector(beautifyPaddingChanged(_:)))
 
         // Corner radius slider — hidden for snapped windows (native corners are baked in)
         if !isSnap {
-            curX = addBeautifySlider(at: curX, label: L("Radius"), value: ov.beautifyCornerRadius, min: 0, max: 30, action: #selector(beautifyCornerChanged(_:)))
+            curX = addBeautifySlider(at: curX, label: L("Radius"), value: ov.beautifyCornerRadius, min: 0, max: 30, isEnabled: controlsEnabled, action: #selector(beautifyCornerChanged(_:)))
         }
 
         // Shadow slider
-        curX = addBeautifySlider(at: curX, label: L("Shadow"), value: ov.beautifyShadowRadius, min: 0, max: 100, action: #selector(beautifyShadowChanged(_:)))
+        curX = addBeautifySlider(at: curX, label: L("Shadow"), value: ov.beautifyShadowRadius, min: 0, max: 100, isEnabled: controlsEnabled, action: #selector(beautifyShadowChanged(_:)))
 
         // Blur slider — only shown for custom image backgrounds
         if ov.beautifyStyleIndex == -1 {
-            curX = addBeautifySlider(at: curX, label: L("Blur"), value: ov.beautifyBackgroundBlur, min: 0, max: 50, action: #selector(beautifyBlurChanged(_:)))
+            curX = addBeautifySlider(at: curX, label: L("Blur"), value: ov.beautifyBackgroundBlur, min: 0, max: 50, isEnabled: controlsEnabled, action: #selector(beautifyBlurChanged(_:)))
         }
 
         curX = addSeparator(at: curX)
@@ -1323,6 +1345,7 @@ class ToolOptionsRowView: NSView {
         swatchBtn.imageScaling = .scaleProportionallyUpOrDown
         swatchBtn.target = self
         swatchBtn.action = #selector(beautifyGradientClicked(_:))
+        swatchBtn.isEnabled = controlsEnabled
         swatchBtn.toolTip = L("Gradient Style")
         swatchBtn.tag = 995
         addSubview(swatchBtn)
@@ -1335,35 +1358,19 @@ class ToolOptionsRowView: NSView {
             .withSymbolConfiguration(.init(pointSize: 9, weight: .semibold))
         arrowBtn.target = self
         arrowBtn.action = #selector(beautifyGradientClicked(_:))
+        arrowBtn.isEnabled = controlsEnabled
         addSubview(arrowBtn)
         arrowBtn.contentTintColor = ToolbarLayout.iconColor.withAlphaComponent(0.6)
         curX += 18
 
-        curX = addSeparator(at: curX)
-
-        // On/off toggle
-        let toggleBtn = NSButton(checkboxWithTitle: L("On"), target: self, action: #selector(beautifyToggleChanged(_:)))
-        toggleBtn.state = ov.beautifyEnabled ? .on : .off
-        toggleBtn.font = NSFont.systemFont(ofSize: 10, weight: .medium)
-        if let cell = toggleBtn.cell as? NSButtonCell {
-            cell.attributedTitle = NSAttributedString(string: L("On"), attributes: [
-                .foregroundColor: ToolbarLayout.iconColor.withAlphaComponent(0.7),
-                .font: NSFont.systemFont(ofSize: 10, weight: .medium)
-            ])
-        }
-        toggleBtn.sizeToFit()
-        toggleBtn.frame.origin = NSPoint(x: curX, y: (rowHeight - toggleBtn.frame.height) / 2)
-        addSubview(toggleBtn)
-        curX += toggleBtn.frame.width + 4
-
         return curX
     }
 
-    private func addBeautifySlider(at x: CGFloat, label: String, value: CGFloat, min: CGFloat, max: CGFloat, action: Selector) -> CGFloat {
+    private func addBeautifySlider(at x: CGFloat, label: String, value: CGFloat, min: CGFloat, max: CGFloat, isEnabled: Bool, action: Selector) -> CGFloat {
         var curX = x
         let lbl = NSTextField(labelWithString: label)
         lbl.font = NSFont.systemFont(ofSize: 9, weight: .medium)
-        lbl.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.5)
+        lbl.textColor = ToolbarLayout.iconColor.withAlphaComponent(isEnabled ? 0.5 : 0.22)
         lbl.sizeToFit()
         lbl.frame.origin = NSPoint(x: curX, y: (rowHeight - lbl.frame.height) / 2)
         addSubview(lbl)
@@ -1371,6 +1378,7 @@ class ToolOptionsRowView: NSView {
 
         let slider = NSSlider(value: Double(value), minValue: Double(min), maxValue: Double(max),
                               target: self, action: action)
+        slider.isEnabled = isEnabled
         slider.frame = NSRect(x: curX, y: (rowHeight - 18) / 2, width: 60, height: 18)
         slider.isContinuous = true
         addSubview(slider)
@@ -1436,10 +1444,8 @@ class ToolOptionsRowView: NSView {
 
     @objc private func beautifyToggleChanged(_ sender: NSButton) {
         guard let ov = overlayView else { return }
-        ov.beautifyEnabled = sender.state == .on
-        UserDefaults.standard.set(ov.beautifyEnabled, forKey: "beautifyEnabled")
-        ov.needsDisplay = true
-        ov.onContentChanged?()
+        ov.setBeautifyEnabled(sender.state == .on)
+        ov.rebuildToolbarLayout()
     }
 
     private func addHintLabel(at x: CGFloat, text: String) -> CGFloat {

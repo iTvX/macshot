@@ -174,6 +174,13 @@
 "ON" = "تشغيل";
 "OFF" = "إيقاف";
 "  (Tab to toggle)" = "  (Tab للتبديل)";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "انقر على عنصر  ·  اسحب لتحديد منطقة  ·  F لملء الشاشة";
+"Snap mode: " = "وضع التقاط: ";
+"WINDOW" = "نافذة";
+"ELEMENT" = "عنصر";
+"  (Tab to switch)" = "  (Tab للتبديل)";
+"Enhance browser and Electron element snapping" = "تحسين التقاط عناصر المتصفح وتطبيقات Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "يبني شجرة إمكانية الوصول لتطبيق الهدف في وضع العنصر. قم بإيقاف تشغيله إذا أصبح المتصفح أو تطبيق Electron بطيئًا أو كانت لديه مشاكل في الإدخال.";
 "Right-click to copy" = "انقر بزر الفأرة الأيمن للنسخ";
 "Copied %@" = "تم نسخ %@";
 "Set color %@" = "تعيين اللون %@";
@@ -332,6 +339,7 @@
 "Signed in" = "تم تسجيل الدخول";
 "Not signed in" = "لم يتم تسجيل الدخول";
 "Account:" = "الحساب:";
+"Folder:" = "المجلد:";
 "Test Connection" = "اختبار الاتصال";
 "Fill in endpoint, bucket, and credentials first" = "أدخل نقطة النهاية والحاوية وبيانات الاعتماد أولًا";
 "Testing..." = "جارٍ الاختبار...";
@@ -344,6 +352,8 @@
 "Secret Key:" = "المفتاح السري:";
 "Public URL:" = "الرابط العام:";
 "Path Prefix:" = "بادئة المسار:";
+"Make uploads publicly readable" = "جعل الملفات المرفوعة قابلة للقراءة العامة";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "يرسل ACL بقيمة public-read ليتمكن أي شخص لديه الرابط من عرض الملفات المرفوعة. مطلوب لـ AWS S3 وDigitalOcean Spaces وMinIO وBackblaze B2 التي تخزّن الكائنات بشكل خاص افتراضيًا. اتركه معطلًا لـ Cloudflare R2 الذي لا يدعم ACLs ويرفض الترويسة.";
 "API key:" = "مفتاح API:";
 "Upload History" = "سجل الرفع";
 "No uploads yet." = "لا توجد عمليات رفع بعد.";
@@ -460,7 +470,7 @@
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "مطلوب إذن مراقبة الإدخال";
 "macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "يحتاج macshot إلى إذن مراقبة الإدخال لعرض ضغطات المفاتيح أثناء التسجيل. يرجى منح الإذن في System Settings، ثم المحاولة مجددًا.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "يحتاج macshot إلى إذن تسهيلات الاستخدام لعرض ضغطات المفاتيح أثناء التسجيل. يرجى منح الإذن في System Settings، ثم المحاولة مجددًا.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "يحتاج macshot إلى إذن إمكانية الوصول للمحاذاة إلى عناصر الواجهة الفردية. يرجى منح الوصول في إعدادات النظام، ثم حاول مرة أخرى.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "عرض ضغطات المفاتيح";
@@ -499,6 +509,7 @@
 "Settings..." = "الإعدادات...";
 "macshot Settings" = "إعدادات macshot";
 "Also open in Editor" = "فتح في المحرر أيضًا";
+"Close editor after copying" = "إغلاق المحرر بعد النسخ";
 "Hide controls" = "إخفاء عناصر التحكم";
 "Hide recording controls" = "إخفاء عناصر تحكم التسجيل";
 "Stop recording from the menu bar icon instead." = "أوقف التسجيل من أيقونة شريط القوائم بدلًا من ذلك.";
@@ -545,12 +556,13 @@
 
 "Same as screenshots" = "نفس لقطات الشاشة";
 "  Preview size:" = "  حجم المعاينة:";
+"Fit image in preview (letterbox)" = "ملاءمة الصورة داخل المعاينة (مع أشرطة)";
 "(0 = off)" = "(0 = إيقاف)";
 "Clear All" = "مسح الكل";
 "Clear History?" = "مسح السجل؟";
 "This will permanently delete all screenshots from history." = "سيؤدي هذا إلى حذف جميع لقطات الشاشة من السجل نهائيًا.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "انقر على \"تعيين\" واضغط على مجموعة مفاتيح تحتوي على معدِّل واحد على الأقل (⌘, ⌥, ⌃, ⇧) لتعيين اختصار.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "يتم تحميل الملفات إلى مجلد \"macshot\" في Google Drive الخاص بك. كل شيء يبقى خاصًا — لا يُشارك أي شيء بشكل عام.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused — a new one is created instead. Everything stays private — nothing is shared publicly." = "يتم تحميل الملفات إلى هذا المجلد في Google Drive الخاص بك. اتركه فارغًا لاستخدام \"macshot\". لا يمكن لـ macshot استخدام سوى المجلدات التي أنشأها بنفسه، لذلك لن يُعاد استخدام مجلد أنشأته في Drive بالاسم نفسه — بل سيُنشأ مجلد جديد بدلًا منه. كل شيء يبقى خاصًا — لا يُشارك أي شيء بشكل عام.";
 
 "Pressure" = "الضغط";
 
@@ -671,3 +683,14 @@
 
 /* URL scheme: edit (PR #272) */
 "Open a history entry in the editor (keeps annotations editable)" = "فتح إدخال من السجل في المحرّر (يُبقي التعليقات التوضيحية قابلة للتحرير)";
+
+/* Selection auto-adjust and Spacebar movement */
+"Auto-Adjust Selection" = "الضبط التلقائي للتحديد";
+"Auto-adjust selection" = "ضبط التحديد تلقائيًا";
+"Could not analyze selection edges" = "تعذّر تحليل حواف التحديد";
+"Detecting nearby edges…" = "جارٍ اكتشاف الحواف القريبة…";
+"No nearby edges found" = "لم يتم العثور على حواف قريبة";
+"Selection adjusted" = "تم ضبط التحديد";
+"Selection is already aligned" = "التحديد محاذى بالفعل";
+"Space to move. Release to annotate and edit" = "اضغط على مفتاح المسافة للتحريك. حرّره لإضافة التعليقات التوضيحية والتحرير";
+"Space to move. Release to finish" = "اضغط على مفتاح المسافة للتحريك. حرّره للإنهاء";

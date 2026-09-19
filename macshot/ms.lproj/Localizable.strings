@@ -172,6 +172,7 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Klik tetingkap  ·  Seret untuk kawasan tersuai  ·  F untuk skrin penuh";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Klik elemen  ·  Seret untuk kawasan tersuai  ·  F untuk skrin penuh";
 "Drag to select  ·  Click for full screen" = "Seret untuk memilih  ·  Klik untuk skrin penuh";
 "Release to annotate and edit" = "Lepaskan untuk anotasi dan sunting";
 "Release to finish" = "Lepaskan untuk selesai";
@@ -179,9 +180,13 @@
 "Hold Space to move. Release to finish" = "Tahan Space untuk alih. Lepaskan untuk selesai";
 "Space" = "Space";
 "Window snap: " = "Lekat tetingkap: ";
+"Snap mode: " = "Mod lekat: ";
 "ON" = "HIDUP";
 "OFF" = "MATI";
+"WINDOW" = "TINGKAP";
+"ELEMENT" = "ELEMEN";
 "  (Tab to toggle)" = "  (Tab untuk togol)";
+"  (Tab to switch)" = "  (Tab untuk tukar)";
 "Right-click to copy" = "Klik kanan untuk salin";
 "Copied %@" = "Disalin %@";
 "Set color %@" = "Tetapkan warna %@";
@@ -226,6 +231,8 @@
 "Launch at login" = "Lancar semasa log masuk";
 "Show snap alignment guides" = "Tunjuk panduan penjajaran lekat";
 "Snap selection edges to image boundaries" = "Lekatkan tepi pilihan pada sempadan imej";
+"Enhance browser and Electron element snapping" = "Tingkatkan penjerapan elemen penyegerak dan Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Membina pokok aksesibilitas aplikasi sasaran dalam Mod Elemen. Lumpuhkan ini jika penyegerak atau aplikasi Electron menjadi perlahan atau mempunyai masukan input.";
 "Capture mouse cursor in screenshot" = "Tangkap kursor tetikus dalam tangkapan skrin";
 "Double-click selection to copy" = "Dwiklik pilihan untuk menyalin";
 "Hide capture instructions" = "Sembunyikan arahan tangkapan skrin";
@@ -339,6 +346,7 @@
 "Signed in" = "Sudah log masuk";
 "Not signed in" = "Belum log masuk";
 "Account:" = "Akaun:";
+"Folder:" = "Folder:";
 "Test Connection" = "Uji Sambungan";
 "Fill in endpoint, bucket, and credentials first" = "Isi endpoint, bucket, dan kelayakan dahulu";
 "Testing..." = "Menguji...";
@@ -351,6 +359,8 @@
 "Secret Key:" = "Kunci Rahsia:";
 "Public URL:" = "URL Awam:";
 "Path Prefix:" = "Awalan Laluan:";
+"Make uploads publicly readable" = "Jadikan muat naik boleh dibaca secara awam";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "Menghantar ACL public-read supaya fail yang dimuat naik boleh dilihat oleh sesiapa yang mempunyai pautan. Diperlukan untuk AWS S3, DigitalOcean Spaces, MinIO dan Backblaze B2 yang menyimpan objek secara peribadi secara lalai. Matikan untuk Cloudflare R2 yang tiada ACL dan menolak header ini.";
 "API key:" = "Kunci API:";
 "Upload History" = "Sejarah Muat Naik";
 "No uploads yet." = "Belum ada muat naik.";
@@ -467,7 +477,7 @@
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Pemantauan Input Diperlukan";
 "macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot memerlukan kebenaran Pemantauan Input untuk menunjukkan ketukan kekunci semasa rakaman. Sila berikan akses dalam System Settings, kemudian cuba lagi.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot memerlukan kebenaran Kebolehcapaian untuk menunjukkan ketukan kekunci semasa rakaman. Sila berikan akses dalam System Settings, kemudian cuba lagi.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot memerlukan kebenaran Kebolehcapaian untuk melekap pada elemen antara muka individu. Sila berikan akses dalam Tetapan Sistem, kemudian cuba lagi.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "Tunjuk Ketukan Kekunci";
@@ -507,6 +517,7 @@
 "Settings..." = "Tetapan...";
 "macshot Settings" = "Tetapan macshot";
 "Also open in Editor" = "Buka juga dalam Editor";
+"Close editor after copying" = "Tutup editor selepas menyalin";
 "Hide controls" = "Sembunyikan kawalan";
 "Hide recording controls" = "Sembunyikan kawalan rakaman";
 "Stop recording from the menu bar icon instead." = "Hentikan rakaman dari ikon bar menu sebaliknya.";
@@ -553,12 +564,13 @@
 
 "Same as screenshots" = "Sama seperti tangkapan skrin";
 "  Preview size:" = "  Saiz pratonton:";
+"Fit image in preview (letterbox)" = "Muatkan imej dalam pratonton (letterbox)";
 "(0 = off)" = "(0 = mati)";
 "Clear All" = "Kosongkan Semua";
 "Clear History?" = "Kosongkan Sejarah?";
 "This will permanently delete all screenshots from history." = "Ini akan memadamkan semua tangkapan skrin daripada sejarah secara kekal.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Klik \"Tetapkan\" dan tekan kombinasi kekunci dengan sekurang-kurangnya satu pengubah suai (⌘, ⌥, ⌃, ⇧) untuk menetapkan pintasan.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Fail dimuat naik ke folder \"macshot\" dalam Google Drive anda. Semua maklumat kekal peribadi — tiada apa yang dikongsi secara awam.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused — a new one is created instead. Everything stays private — nothing is shared publicly." = "Fail dimuat naik ke folder ini dalam Google Drive anda. Biarkan kosong untuk menggunakan \"macshot\". macshot hanya boleh menggunakan folder yang diciptakannya sendiri, jadi folder dengan nama yang sama yang anda cipta dalam Drive tidak akan digunakan semula — folder baharu akan dicipta sebaliknya. Semua maklumat kekal peribadi — tiada apa yang dikongsi secara awam.";
 
 "Pressure" = "Tekanan";
 
@@ -671,3 +683,14 @@
 
 /* URL scheme: edit (PR #272) */
 "Open a history entry in the editor (keeps annotations editable)" = "Buka entri sejarah dalam editor (mengekalkan anotasi boleh diedit)";
+
+/* Auto-adjust selection (#317) */
+"Auto-Adjust Selection" = "Laras Pilihan Secara Automatik";
+"Auto-adjust selection" = "Laras pilihan secara automatik";
+"Could not analyze selection edges" = "Tidak dapat menganalisis tepi pilihan";
+"Detecting nearby edges…" = "Mengesan tepi berdekatan…";
+"No nearby edges found" = "Tiada tepi berdekatan ditemui";
+"Selection adjusted" = "Pilihan dilaraskan";
+"Selection is already aligned" = "Pilihan sudah sejajar";
+"Space to move. Release to annotate and edit" = "Space untuk alih. Lepaskan untuk anotasi dan sunting";
+"Space to move. Release to finish" = "Space untuk alih. Lepaskan untuk selesai";

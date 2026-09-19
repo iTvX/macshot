@@ -178,6 +178,13 @@
 "ON" = "BE";
 "OFF" = "KI";
 "  (Tab to toggle)" = "  (Tab a váltáshoz)";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Kattintson egy elemre  ·  Húzzon egyéni területhez  ·  F a teljes képernyőhöz";
+"Snap mode: " = "Illesztés mód: ";
+"WINDOW" = "ABLAK";
+"ELEMENT" = "ELEM";
+"  (Tab to switch)" = "  (Tab a váltáshoz)";
+"Enhance browser and Electron element snapping" = "Böngésző és Electron elem illesztésének javítása";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Építi a célalkalmazás akadálymentesítési fastruktúráját Elem módban. Tiltsa le, ha egy böngésző vagy Electron alkalmazás lassúvá válik vagy bemeneti problémái vannak.";
 "Right-click to copy" = "Jobb kattintás a másoláshoz";
 "Copied %@" = "%@ másolva";
 "Set color %@" = "Szín beállítva: %@";
@@ -338,6 +345,7 @@
 "Signed in" = "Bejelentkezve";
 "Not signed in" = "Nincs bejelentkezve";
 "Account:" = "Fiók:";
+"Folder:" = "Mappa:";
 "Test Connection" = "Kapcsolat tesztelése";
 "Fill in endpoint, bucket, and credentials first" = "Előbb add meg a végpontot, a tárolót és a hitelesítési adatokat";
 "Testing..." = "Tesztelés...";
@@ -350,6 +358,8 @@
 "Secret Key:" = "Titkos kulcs:";
 "Public URL:" = "Nyilvános URL:";
 "Path Prefix:" = "Útvonal előtag:";
+"Make uploads publicly readable" = "Feltöltések nyilvánosan olvashatóvá tétele";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "A public-read ACL-t küldi, így a feltöltött fájlok bárki számára megtekinthetők a linkkel. Szükséges az AWS S3, DigitalOcean Spaces, MinIO és Backblaze B2 számára, amelyek alapértelmezetten privát módon tárolják az objektumokat. Hagyja kikapcsolva a Cloudflare R2-nél, amely nem támogatja az ACL-eket és elutasítja a fejlécet.";
 "API key:" = "API kulcs:";
 "Upload History" = "Feltöltési előzmények";
 "No uploads yet." = "Még nincsenek feltöltések.";
@@ -468,7 +478,7 @@
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Bevitelfigyelés szükséges";
 "macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "A macshot-nak Bevitelfigyelés engedélyre van szüksége a billentyűleütések megjelenítéséhez felvétel közben. Kérlek, adj hozzáférést a System Settings-ben, majd próbáld újra.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "A macshot-nak Akadálymentesítési engedélyre van szüksége a billentyűleütések megjelenítéséhez felvétel közben. Kérlek, adj hozzáférést a System Settings-ben, majd próbáld újra.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "A macshot alkalmazásnak Kisegítő lehetőségek engedélyre van szüksége az egyes felületelemekhez való illesztéshez. Kérjük, engedélyezze a hozzáférést a Rendszerbeállításokban, majd próbálja újra.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "Billentyűleütések megjelenítése";
@@ -508,6 +518,7 @@
 "Settings..." = "Beállítások...";
 "macshot Settings" = "macshot beállítások";
 "Also open in Editor" = "Megnyitás a szerkesztőben is";
+"Close editor after copying" = "Szerkesztő bezárása másolás után";
 "Hide controls" = "Vezérlők elrejtése";
 "Hide recording controls" = "Felvételi vezérlők elrejtése";
 "Stop recording from the menu bar icon instead." = "Állítsd le a felvételt a menüsor ikonjából.";
@@ -551,12 +562,13 @@
 
 "Same as screenshots" = "Megegyezik a képernyőképekkel";
 "  Preview size:" = "  Előnézet mérete:";
+"Fit image in preview (letterbox)" = "Kép igazítása az előnézetbe (sávokkal)";
 "(0 = off)" = "(0 = ki)";
 "Clear All" = "Összes törlése";
 "Clear History?" = "Törli az előzményeket?";
 "This will permanently delete all screenshots from history." = "Ez véglegesen törli az összes képernyőképet az előzményekből.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Kattintson a \"Beállítás\" gombra, majd nyomjon meg egy billentyűkombinációt legalább egy módosítóbillentyűvel (⌘, ⌥, ⌃, ⇧) a gyorsbillentyű beállításához.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "A fájlok a Google Drive-on lévő \"macshot\" mappába töltődnek fel. Minden privát marad — semmi nem kerül nyilvános megosztásra.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused — a new one is created instead. Everything stays private — nothing is shared publicly." = "A fájlok ebbe a mappába töltődnek fel a Google Drive-on. Hagyd üresen a \"macshot\" használatához. A macshot csak az általa létrehozott mappákat tudja használni, ezért a Drive-ban általad létrehozott, azonos nevű mappát nem használja újra — helyette új mappát hoz létre. Minden privát marad — semmi nem kerül nyilvános megosztásra.";
 
 "Pressure" = "Nyomás";
 
@@ -669,3 +681,14 @@
 
 /* URL scheme: edit (PR #272) */
 "Open a history entry in the editor (keeps annotations editable)" = "Előzményelem megnyitása a szerkesztőben (a jegyzetek szerkeszthetők maradnak)";
+
+/* Selection auto-adjust and Spacebar movement */
+"Auto-Adjust Selection" = "Kijelölés automatikus igazítása";
+"Auto-adjust selection" = "Kijelölés automatikus igazítása";
+"Could not analyze selection edges" = "Nem sikerült elemezni a kijelölés széleit";
+"Detecting nearby edges…" = "Közeli szélek keresése…";
+"No nearby edges found" = "Nem találhatók közeli szélek";
+"Selection adjusted" = "Kijelölés igazítva";
+"Selection is already aligned" = "A kijelölés már igazítva van";
+"Space to move. Release to annotate and edit" = "Tartsd lenyomva a szóközt a mozgatáshoz. Engedd fel a jegyzeteléshez és szerkesztéshez";
+"Space to move. Release to finish" = "Tartsd lenyomva a szóközt a mozgatáshoz. Engedd fel a befejezéshez";

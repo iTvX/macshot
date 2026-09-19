@@ -127,6 +127,18 @@ func runTests() throws {
     click("recordShortcut:", 1001)
     selectTab("capture")
     check(!manager.isRecordingShortcut && !manager.registeredBindings.isEmpty, "switching tabs cancels recorder")
+    let finderCheckbox = descendants(window.contentView!).compactMap { $0 as? NSButton }.first {
+        $0.action == NSSelectorFromString("finderClipboardChanged:")
+    }!
+    check(finderCheckbox.state == .off, "Finder compatibility is opt in")
+    finderCheckbox.performClick(nil)
+    check(defaults.bool(forKey: ImageEncoder.finderClipboardCompatibilityKey), "Finder compatibility control saves preference")
+    finderCheckbox.performClick(nil)
+    if let path = ProcessInfo.processInfo.environment["MACSHOT_UI_TEST_SNAPSHOT"],
+       let view = window.contentView, let bitmap = view.bitmapImageRepForCachingDisplay(in: view.bounds) {
+        view.cacheDisplay(in: view.bounds, to: bitmap)
+        try bitmap.representation(using: .png, properties: [:])!.write(to: URL(fileURLWithPath: path + ".capture.png"))
+    }
     selectTab("shortcuts")
     click("recordShortcut:", 1001)
     controller.windowDidResignKey(Notification(name: NSWindow.didResignKeyNotification, object: window))
@@ -135,7 +147,7 @@ func runTests() throws {
     // Switching between the two types must not orphan their shared event monitor.
     click("recordShortcut:", 1001)
     click("recordToolShortcut:", 0)
-    check(!manager.isRecordingShortcut, "tool recorder restores globals")
+    check(manager.isRecordingShortcut && manager.registeredBindings.isEmpty, "tool recorder keeps globals suspended")
     press(kVK_ANSI_J, characters: "j")
     check(ToolShortcutManager.key(for: .pencil) == "j", "single tool shortcut still records")
     click("recordToolShortcut:", 0)
@@ -143,10 +155,109 @@ func runTests() throws {
     press(kVK_F18, characters: "\u{F715}")
     check(HotkeyManager.readHotkey(for: .captureArea, kind: .alternative) == (UInt32(kVK_F18), 0), "global recorder works after tool recorder")
     check(ToolShortcutManager.key(for: .pencil) == "j", "switching recorders preserves tool binding")
+
+    click("recordCommandShortcut:", 0)
+    check(manager.isRecordingShortcut && manager.registeredBindings.isEmpty, "command recorder suspends both global bindings")
+    press(kVK_ANSI_Z, characters: "z", modifiers: [.command, .option])
+    check(EditorCommandShortcutManager.shortcuts(for: .undo) == [.init(character: "z", modifiers: [.command, .option])], "command recorder saves semantic chord")
+    check(!manager.isRecordingShortcut, "command completion restores globals")
+    click("recordCommandShortcut:", 0)
+    selectTab("capture")
+    check(!manager.isRecordingShortcut, "tab switch cancels command recording")
+    selectTab("shortcuts")
+    click("recordCommandShortcut:", 0)
+    click("recordShortcut:", 1001)
+    press(kVK_Escape, characters: "\u{1B}")
+    check(!manager.isRecordingShortcut, "global recorder can replace command recorder without leaking monitor")
+    click("recordCommandShortcut:", 0)
+    click("recordToolShortcut:", 0)
+    press(kVK_ANSI_J, characters: "j")
+    check(!manager.isRecordingShortcut && ToolShortcutManager.key(for: .pencil) == "j", "tool recorder can replace command recorder")
+    click("recordCommandShortcut:", 0)
+    controller.windowDidResignKey(Notification(name: NSWindow.didResignKeyNotification, object: window))
+    check(!manager.isRecordingShortcut, "focus loss cancels command recorder")
+    click("recordCommandShortcut:", 0)
+    click("clearShortcut:", 1001)
+    check(!manager.isRecordingShortcut, "clearing a global binding cancels command recorder")
     click("recordShortcut:", 1001)
     window.close()
     check(!manager.isRecordingShortcut && !manager.registeredBindings.isEmpty, "closing settings resumes hotkeys")
     check(fired == 0, "no action triggered by any recorder test")
+
+    // Editor command changes must not regress the scoped NSTextView undo lifetime.
+    let textWindow = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 240, height: 120),
+                              styleMask: .titled, backing: .buffered, defer: false)
+    let textView = ScopedUndoTextView(frame: textWindow.contentView!.bounds)
+    textView.allowsUndo = true
+    textWindow.contentView!.addSubview(textView)
+    textWindow.makeFirstResponder(textView)
+    textView.insertText("abc", replacementRange: NSRange(location: 0, length: 0))
+    check(textView.undoManager?.canUndo == true, "text editing registers scoped undo")
+    check(textWindow.undoManager?.canUndo != true, "text edit never enters the window's undo manager")
+    textView.undoManager?.undo()
+    check(textView.string.isEmpty, "text undo still works")
+    textView.undoManager?.redo()
+    check(textView.string == "abc", "text redo still works")
+    textView.discardUndoHistory()
+    textView.removeFromSuperview()
+    check(textView.undoManager?.canUndo != true && textWindow.undoManager?.canUndo != true, "disposing text editor leaves no stale undo target")
+
+    func waitUntil(_ condition: () -> Bool) {
+        let deadline = Date().addingTimeInterval(5)
+        while !condition() && Date() < deadline { drainEvents() }
+        check(condition(), "asynchronous operation completes")
+    }
+
+    // Exercise the actual image encoder using a private pasteboard, never the user's clipboard.
+    let pasteboard = NSPasteboard.withUniqueName()
+    defer { pasteboard.releaseGlobally() }
+    let sample = NSImage(size: NSSize(width: 16, height: 16))
+    sample.lockFocus()
+    NSColor.red.setFill()
+    NSBezierPath(rect: NSRect(x: 0, y: 0, width: 16, height: 16)).fill()
+    sample.unlockFocus()
+    defaults.removeObject(forKey: ImageEncoder.finderClipboardCompatibilityKey)
+    ImageEncoder.copyToClipboard(sample, pasteboard: pasteboard)
+    waitUntil { pasteboard.data(forType: .png) != nil }
+    check(pasteboard.data(forType: .tiff) != nil, "default clipboard includes TIFF fallback")
+    check(pasteboard.string(forType: .fileURL) == nil, "default image copy has no sandbox URL")
+    let png = pasteboard.data(forType: .png)!
+    check(NSImage(data: png) != nil, "copied PNG decodes")
+    defaults.set(true, forKey: ImageEncoder.finderClipboardCompatibilityKey)
+    pasteboard.clearContents()
+    ImageEncoder.copyToClipboard(sample, pasteboard: pasteboard)
+    waitUntil { pasteboard.string(forType: .fileURL) != nil }
+    let fileURL = URL(string: pasteboard.string(forType: .fileURL)!)!
+    defer { try? FileManager.default.removeItem(at: fileURL) }
+    check(fileURL.path.contains("com.itvx.macshot/clipboard/"), "Finder mode uses the fork's retained clipboard directory")
+    check(try Data(contentsOf: fileURL) == pasteboard.data(forType: .png), "Finder file and image bytes match")
+    check(pasteboard.data(forType: .tiff) != nil, "Finder mode retains image paste fallback")
+
+    for value in [Double.nan, Double.infinity, -1, 0, 100] {
+        check(VideoExportPreferences.validatedScale(value) == 1, "invalid imported export scale resets safely")
+    }
+    for value in [0.25, 0.33, 0.5, 0.75, 1] {
+        check(VideoExportPreferences.validatedScale(value) == CGFloat(value), "valid export scale preserved")
+    }
+    check(OverlayView.SnapMode.window.next == .off && OverlayView.SnapMode.off.next == .element
+          && OverlayView.SnapMode.element.next == .window, "three snap modes cycle as documented")
+
+    // Stop before the startup task gets its first turn: no capture/permission request
+    // should begin later, and completion must fire exactly once.
+    defaults.set(false, forKey: "recordMicAudio")
+    if let screen = NSScreen.main {
+        let engine = RecordingEngine()
+        var completions = 0
+        engine.onCompletion = { url, error in
+            check(url == nil && error == nil, "cancelled startup has no phantom output")
+            completions += 1
+        }
+        engine.startRecording(rect: NSRect(x: screen.frame.minX, y: screen.frame.minY, width: 32, height: 32), screen: screen)
+        engine.stopRecording()
+        waitUntil { engine.state == .idle }
+        drainEvents()
+        check(completions == 1, "immediate stop completes once after startup cancellation")
+    }
     print("Shortcut AppKit UI tests passed (\(assertions) assertions).")
 }
 
