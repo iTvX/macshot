@@ -688,7 +688,7 @@
 "Primary" = "主要快捷鍵";
 "Alternative" = "備用快捷鍵";
 "Each action can have a primary and an alternative shortcut. Both trigger the same action; either can be cleared independently." = "每個操作均可設定主要快捷鍵和備用快捷鍵。兩者執行相同操作，也可分別清除。";
-"Click Set and press a key with a modifier (⌘, ⌥, ⌃, ⇧), or an F1–F20 key. Press Esc to cancel. Alternatives are empty by default." = "點擊「設定」，按下帶修飾鍵（⌘、⌥、⌃、⇧）的組合鍵，或 F1–F20 功能鍵。按 Esc 取消。備用快捷鍵預設為空。";
+"Click Set and press a key with a modifier (⌘, ⌥, ⌃, ⇧), or an F1–F20 key. Press Esc to cancel." = "點擊「設定」，按下帶修飾鍵（⌘、⌥、⌃、⇧）的組合鍵，或 F1–F20 功能鍵。按 Esc 取消。";
 "This shortcut is already assigned to %@." = "此快捷鍵已指派給 %@。";
 "Click Set to record a shortcut." = "點擊「設定」以錄入快捷鍵。";
 "This shortcut is unavailable. It may be used by macOS or another application." = "此快捷鍵無法使用，可能已被 macOS 或其他應用程式佔用。";

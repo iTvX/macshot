@@ -120,7 +120,7 @@ func runTests() throws {
     click("clearShortcut:", 1)
     check(field(1).stringValue == "None" && field(1001).stringValue.contains("F19"), "clear primary leaves alternative")
     click("resetShortcut:", 1)
-    check(HotkeyManager.readHotkey(for: .captureArea) == originalPrimary, "reset primary restores original default")
+    check(HotkeyManager.readHotkey(for: .captureArea) == (UInt32(kVK_ANSI_5), UInt32(cmdKey | shiftKey)), "reset primary restores fork factory default")
     click("resetShortcut:", 1001)
     check(field(1001).stringValue == "None", "reset alternative returns to empty")
 
@@ -258,6 +258,37 @@ func runTests() throws {
         drainEvents()
         check(completions == 1, "immediate stop completes once after startup cancellation")
     }
+    // A separate settings controller must display the shipped profile correctly,
+    // including a nonempty alternative and default-disabled primary bindings.
+    window.close()
+    manager.unregisterAll()
+    defaults.removePersistentDomain(forName: domain)
+    check(FactorySettings.installIfNeeded(defaults: defaults, domainName: domain), "seed fresh settings UI")
+    let factoryController = SettingsWindowController()
+    factoryController.showWindow()
+    let factoryWindow = factoryController.window!
+    let shortcutsItem = factoryWindow.toolbar!.items.first { $0.itemIdentifier.rawValue == "shortcuts" }!
+    check(app.sendAction(shortcutsItem.action!, to: shortcutsItem.target, from: shortcutsItem), "open factory shortcuts UI")
+    factoryWindow.contentView!.layoutSubtreeIfNeeded()
+    let factoryViews = descendants(factoryWindow.contentView!)
+    func factoryField(_ id: Int) -> NSTextField {
+        factoryViews.compactMap { $0 as? NSTextField }.first { $0.identifier?.rawValue == "hotkey.\(id)" }!
+    }
+    check(factoryField(1).stringValue == "⇧⌘5", "fresh UI shows capture area default")
+    check(factoryField(2).stringValue == "None" && factoryField(3).stringValue == "None", "fresh UI shows disabled defaults")
+    check(factoryField(7).stringValue == "⌥S" && factoryField(1007).stringValue == "⇧⌘4", "fresh UI shows both quick capture defaults")
+    for id in [2, 1007] {
+        let binding = HotkeyManager.Binding(id: id)!
+        HotkeyManager.saveHotkey(for: binding.slot, kind: binding.kind, keyCode: UInt32(kVK_F19), modifiers: 0)
+        let reset = factoryViews.compactMap { $0 as? NSButton }.first {
+            $0.action == NSSelectorFromString("resetShortcut:") && $0.tag == id
+        }!
+        reset.performClick(nil)
+        drainEvents()
+        check(factoryWindow.attachedSheet == nil, "factory reset succeeds without conflict")
+        check(HotkeyManager.readHotkey(for: binding.slot, kind: binding.kind) == FactorySettings.hotkey(for: binding), "reset restores disabled/nonempty alternative defaults")
+    }
+    factoryWindow.close()
     print("Shortcut AppKit UI tests passed (\(assertions) assertions).")
 }
 

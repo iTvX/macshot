@@ -277,6 +277,22 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         // Offer to move to /Applications if running from a DMG or translocated path
         promptToMoveToApplicationsIfNeeded()
 
+        // A fresh installation should apply the shipped launch-at-login preference,
+        // rather than merely showing a checked checkbox. Never re-enable it on upgrades.
+        if UserDefaults.standard.bool(forKey: FactorySettings.pendingLoginItemKey) {
+            if #available(macOS 13.0, *), UserDefaults.standard.bool(forKey: "launchAtLogin") {
+                do {
+                    try SMAppService.mainApp.register()
+                } catch {
+                    UserDefaults.standard.set(false, forKey: "launchAtLogin")
+                    NSLog("Could not enable the default login item: %@", error.localizedDescription)
+                }
+            } else {
+                UserDefaults.standard.set(false, forKey: "launchAtLogin")
+            }
+            UserDefaults.standard.removeObject(forKey: FactorySettings.pendingLoginItemKey)
+        }
+
         migrateFilenameTemplateIfNeeded()
 
         // Reclaim disk from stale tmp leftovers (cancelled recordings,

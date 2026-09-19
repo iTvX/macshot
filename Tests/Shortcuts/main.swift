@@ -26,6 +26,53 @@ func check(_ condition: @autoclosure () -> Bool, _ message: String) {
 func read(_ binding: Binding) -> (UInt32, UInt32) {
     Manager.readHotkey(for: binding.slot, kind: binding.kind)
 }
+
+// Factory settings are first-install state, not a migration that overwrites users.
+check(FactorySettings.installIfNeeded(defaults: defaults, domainName: domain), "fresh install receives factory profile")
+check(read(.init(slot: .captureArea)) == (UInt32(kVK_ANSI_5), UInt32(cmdKey | shiftKey)), "factory area shortcut")
+check(read(.init(slot: .captureOCR)) == (UInt32(kVK_ANSI_3), UInt32(cmdKey | shiftKey)), "factory OCR shortcut")
+check(read(.init(slot: .quickCapture)) == (UInt32(kVK_ANSI_S), UInt32(optionKey)), "factory quick capture primary")
+check(read(.init(slot: .quickCapture, kind: .alternative)) == (UInt32(kVK_ANSI_4), UInt32(cmdKey | shiftKey)), "factory quick capture alternative")
+check(read(.init(slot: .captureFullScreen)) == (0, 0) && read(.init(slot: .recordArea)) == (0, 0), "factory disabled bindings stay disabled")
+var factoryChords = Set<String>()
+for binding in Binding.all {
+    let chord = read(binding)
+    check(chord == FactorySettings.hotkey(for: binding), "seeded binding agrees with reset target")
+    if chord != (0, 0) {
+        check(factoryChords.insert("\(chord.0):\(chord.1)").inserted, "no duplicate factory shortcuts")
+    }
+}
+check(CaptureExclusionStore.applications.map(\.bundleIdentifier) == ["com.itvx.lotus"], "factory Lotus exclusion")
+check(!defaults.bool(forKey: "playCopySound") && defaults.integer(forKey: "ocrAction") == 2, "factory capture behavior")
+check(defaults.bool(forKey: "launchAtLogin") && defaults.bool(forKey: "disableSelectionOutsideShadow"), "factory application and selection preferences")
+check(FactorySettings.preferences.keys.allSatisfy(SettingsPortability.isPortable), "factory profile contains only portable preferences")
+check(!SettingsPortability.isPortable(FactorySettings.installationKey), "installation marker is never exported or imported")
+check(!SettingsPortability.isPortable(FactorySettings.pendingLoginItemKey), "login registration marker stays local")
+check(defaults.bool(forKey: FactorySettings.pendingLoginItemKey), "first launch schedules login registration")
+check(defaults.bool(forKey: "SUEnableAutomaticChecks"), "factory automatic update preference is applied")
+defaults.set(true, forKey: "playCopySound")
+defaults.removeObject(forKey: "captureExcludedApplications")
+let customizedFactoryDomain = defaults.persistentDomain(forName: domain)! as NSDictionary
+check(!FactorySettings.installIfNeeded(defaults: defaults, domainName: domain), "factory profile is installed once")
+check(customizedFactoryDomain.isEqual(to: defaults.persistentDomain(forName: domain)!), "relaunch preserves changes and removed keys")
+
+for oldDomain: [String: Any] in [
+    ["NSViewUsesAutomaticLayerBackingStores": false],
+    ["SUHasLaunchedBefore": true],
+    ["hotkeyKeyCode": 40, "hotkeyModifiers": 768, "playCopySound": true],
+    ["saveDirectory": "/tmp/screenshots"],
+] {
+    defaults.setPersistentDomain(oldDomain, forName: domain)
+    check(!FactorySettings.installIfNeeded(defaults: defaults, domainName: domain), "existing installation is not seeded")
+    var after = defaults.persistentDomain(forName: domain)!
+    after.removeValue(forKey: FactorySettings.installationKey)
+    check((oldDomain as NSDictionary).isEqual(to: after), "upgrade preserves sparse settings and implicit legacy defaults")
+}
+// Framework-only preferences should not hide a genuinely fresh installation.
+defaults.setPersistentDomain(["NSNavPanelExpandedSizeForOpenMode": "{800, 500}"], forName: domain)
+check(FactorySettings.installIfNeeded(defaults: defaults, domainName: domain), "unrelated OS state does not block first-run defaults")
+check(defaults.string(forKey: "NSNavPanelExpandedSizeForOpenMode") == "{800, 500}", "first-run seed preserves OS state")
+defaults.removePersistentDomain(forName: domain)
 func save(_ binding: Binding, _ key: UInt32, _ mods: UInt32) {
     Manager.saveHotkey(for: binding.slot, kind: binding.kind, keyCode: key, modifiers: mods)
 }

@@ -72,7 +72,7 @@ the upstream edition and does not contain this fork's capture-exclusion feature.
 ## Quick Start
 
 1. Launch macshot — it appears in your menu bar
-2. Press `Cmd+Shift+X` to capture
+2. Press `Cmd+Shift+5` to capture
 3. Drag to select, annotate with the toolbar, press `Cmd+C` to copy
 4. Press `Esc` to cancel
 
@@ -177,19 +177,21 @@ filtered capture cannot be produced.
 
 In **Settings → Shortcuts → Keyboard Shortcuts**, every action supports a primary
 shortcut and an optional **Alternative**. Either combination triggers the same action,
-and each can be set or cleared independently. Existing shortcuts are preserved;
-alternatives start empty. Reset restores the primary default or clears the alternative.
+and each can be set or cleared independently. Existing users' shortcuts are preserved.
+New installations use the defaults below; Reset restores the shipped binding,
+including Quick Capture's alternative. See [factory settings](FACTORY_SETTINGS.md)
+for the full initial configuration and upgrade behavior.
 Duplicate assignments are rejected without replacing the previous shortcut. Press **Esc**
 to cancel recording. The menu displays the primary shortcut, or the alternative when the
 primary is empty. Overlay / Editor shortcuts continue to use one binding per action.
 
 | Shortcut | Action |
 |---|---|
-| `Cmd+Shift+X` | Capture Area |
-| `Cmd+Shift+F` | Capture Full Screen |
-| `Cmd+Shift+S` | Quick Capture (instant save) |
-| `Cmd+Shift+T` | Capture OCR (instant text extraction) |
-| `Cmd+Shift+R` | Record Area |
+| `Cmd+Shift+5` | Capture Area |
+| Unassigned | Capture Full Screen |
+| `Option+S` or `Cmd+Shift+4` | Quick Capture (instant save) |
+| `Cmd+Shift+3` | Capture OCR (copy text to clipboard) |
+| Unassigned | Record Area |
 | `Cmd+Shift+H` | Show History Panel |
 
 **General** (during capture)
