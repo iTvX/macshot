@@ -1426,6 +1426,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
                 controller.timingMark = { label in trace.mark(label) }
             }
             controller.capturedWindowTitle = capturedWindowTitle
+            controller.capturedAppName = FilenameFormatter.appNameForTemplate(previousApp?.localizedName)
             if pendingRecordMode { controller.setAutoRecordMode() }
             if pendingOCRMode { controller.setAutoOCRMode() }
             if pendingTranslateOverlayMode { controller.setAutoTranslateOverlayMode(targetLang: pendingTranslateOverlayLang) }
@@ -2467,6 +2468,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 // MARK: - OverlayWindowControllerDelegate
 
 extension AppDelegate: OverlayWindowControllerDelegate {
+    func overlayDidRequestRestoreLastSelection(_ controller: OverlayWindowController) {
+        restoreLastSelection(controllers: overlayControllers)
+    }
+
     func overlayDidCancel(_ controller: OverlayWindowController) {
         // If the user cancels while in recording setup (before capture started),
         // just dismiss. If recording is actively capturing, stop it.

@@ -3444,7 +3444,9 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         let sampleDate = sampleFilenameDate()
         let sampleWindow = template.contains("{window}") ? "Example Window" : nil
         let sampleIndex = template.contains("{index}") ? 1 : nil
-        let base = FilenameFormatter.format(template: template, windowTitle: sampleWindow, index: sampleIndex, date: sampleDate)
+        let base = FilenameFormatter.formatRelativePath(
+            template: template, windowTitle: sampleWindow, appName: "Safari", index: sampleIndex, date: sampleDate
+        ).joined(separator: "/")
         preview.stringValue = "\(L("Preview:")) \(base).\(ImageEncoder.fileExtension)"
     }
 
@@ -3729,6 +3731,10 @@ extension SettingsWindowController {
             ("{window}",    L("Screenshots only — captured window title (blank otherwise)")),
             ("{index}",     L("Counter for multi-screen captures")),
             ("{random}",    L("8-character random string (e.g. k3j7x9q2)")),
+            ("{app}",       "Safari"),
+            ("{yyyy}/{MM}/{dd}", "2026/04/17"),
+            ("{HH}.{mm}.{ss}",   "14.22.05"),
+            ("{ms}",        "042"),
         ]
 
         let title = NSTextField(labelWithString: L("Filename Template Tokens"))
