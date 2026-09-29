@@ -736,3 +736,14 @@
 "Maintained by" = "Maintained by";
 
 "Based on macshot by sw33tLie and contributors." = "Based on macshot by sw33tLie and contributors.";
+
+/* Fork capture exclusions */
+"Add Application…" = "Add Application…";
+"Application exclusion requires macOS 14 or later." = "Application exclusion requires macOS 14 or later.";
+"Capture Exclusions" = "Capture Exclusions";
+"Choose Applications to Exclude" = "Choose Applications to Exclude";
+"Exclude" = "Exclude";
+"No applications excluded" = "No applications excluded";
+"Remove" = "Remove";
+"Selected applications will not appear in screenshots or recordings." = "Selected applications will not appear in screenshots or recordings.";
+"Some applications could not be added" = "Some applications could not be added";

@@ -11,11 +11,11 @@ Quit macshot normally and let pending saves finish. Make a copy of the entire
 history directory, including `index.json`, before changing anything. The normal
 sandboxed app uses:
 
-`~/Library/Containers/com.sw33tlie.macshot.macshot/Data/Library/Application Support/com.sw33tlie.macshot/history`
+`~/Library/Containers/com.itvx.macshot/Data/Library/Application Support/com.itvx.macshot/history`
 
 An older, unsandboxed installation may instead have used:
 
-`~/Library/Application Support/com.sw33tlie.macshot/history`
+`~/Library/Application Support/com.itvx.macshot/history`
 
 Use the directory containing the captures from the installation being recovered.
 These instructions do not require modifying the index or deleting the source.
@@ -52,10 +52,9 @@ history backup made by the older build to its original location. Keep the newer
 history backup separately; do not merge its index into the old backup. Reimporting
 a flattened image preserves its appearance but does not restore editable objects.
 
-For the local installation made during this review, pre-install backups are in
-`~/Library/Application Support/macshot-local-build-backups/c4b86a8-20260920-020927/`.
-The `sandbox-history` and `legacy-history` folders correspond to the two locations
-above. This is a local development backup, not a backup made by every app update.
+Back up the history directory before installing a version that changes its format.
+Application ZIP backups alone do not contain screenshot history. A backup made by
+a developer during a local upgrade is not an automatic backup for other users.
 
 ## What has been checked
 

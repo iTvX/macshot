@@ -15,6 +15,7 @@ mkdir -p "$DERIVED_DATA"
 touch "$ROOT_DIR/.release/.metadata_never_index"
 
 python3 "$ROOT_DIR/Scripts/validate_workflows.py"
+python3 "$ROOT_DIR/Tests/test_release_metadata.py"
 "$ROOT_DIR/Scripts/test_shortcuts.sh"
 
 cleanup() {

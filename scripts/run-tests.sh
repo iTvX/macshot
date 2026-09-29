@@ -15,6 +15,9 @@ test_args=(
   -resultBundlePath "$test_result"
   # Tests temporarily change preferences in the same xctest domain.
   -parallel-testing-enabled NO
+  -test-timeouts-enabled YES
+  -default-test-execution-time-allowance 120
+  -maximum-test-execution-time-allowance 180
   CODE_SIGNING_ALLOWED=NO
 )
 for test_filter in "$@"; do

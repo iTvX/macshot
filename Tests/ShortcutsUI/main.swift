@@ -249,7 +249,8 @@ func runTests() throws {
         let engine = RecordingEngine()
         var completions = 0
         engine.onCompletion = { url, error in
-            check(url == nil && error == nil, "cancelled startup has no phantom output")
+            check(url == nil, "cancelled startup has no phantom output")
+            check(error as? RecordingEngine.RecordingError == .stoppedBeforeStart, "cancelled startup reports why no recording was produced")
             completions += 1
         }
         engine.startRecording(rect: NSRect(x: screen.frame.minX, y: screen.frame.minY, width: 32, height: 32), screen: screen)

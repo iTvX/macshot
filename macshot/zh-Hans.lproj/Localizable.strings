@@ -737,3 +737,14 @@
 "Maintained by" = "维护者";
 
 "Based on macshot by sw33tLie and contributors." = "基于 sw33tLie 及其他贡献者开发的 macshot。";
+
+/* Fork capture exclusions */
+"Add Application…" = "添加应用…";
+"Application exclusion requires macOS 14 or later." = "应用排除功能需要 macOS 14 或更高版本。";
+"Capture Exclusions" = "截图排除";
+"Choose Applications to Exclude" = "选择要排除的应用";
+"Exclude" = "排除";
+"No applications excluded" = "未排除任何应用";
+"Remove" = "移除";
+"Selected applications will not appear in screenshots or recordings." = "所选应用不会出现在截图或录屏中。";
+"Some applications could not be added" = "部分应用无法添加";

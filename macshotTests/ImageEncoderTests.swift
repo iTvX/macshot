@@ -180,6 +180,22 @@ final class ImageEncoderTests: XCTestCase {
         XCTAssertEqual(try clipboardTypes(format: .png, optIn: true), [.png, .tiff], "PNG is never listed twice")
     }
 
+    func testFinderCompatibilityKeepsConfiguredFormatAndPNGRepresentations() throws {
+        var prepared: ImageEncoder.PreparedImage?
+        try withDefaults(["imageFormat": "jpeg"]) {
+            prepared = try ImageEncoder.PreparedImage(ImageProbe.quadrantImage(width: 16, height: 12))
+        }
+        let representations = ImageEncoder.clipboardRepresentations(for: try XCTUnwrap(prepared), includeConfiguredFormat: true)
+        let pasteboard = NSPasteboard(name: NSPasteboard.Name("macshot.tests.\(UUID().uuidString)"))
+        defer { pasteboard.releaseGlobally() }
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent("clipboard-test.png")
+        ImageEncoder.writeImagePasteboard(pasteboard, representations: representations, backingURL: file)
+        XCTAssertNotNil(pasteboard.string(forType: .fileURL))
+        XCTAssertTrue(representations.contains { $0.type == .png })
+        XCTAssertTrue(representations.contains { $0.type.rawValue == "public.jpeg" })
+        for item in representations { XCTAssertEqual(pasteboard.data(forType: item.type), item.data) }
+    }
+
     func testClipboardWriteKeepsFlavorOrderAndDataWithoutAFileURL() throws {
         var prepared: ImageEncoder.PreparedImage?
         try withDefaults(["imageFormat": "jpeg"]) {

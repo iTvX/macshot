@@ -19,6 +19,33 @@ final class LocalizationTests: XCTestCase {
 
     private static let baseLocale = "en"
 
+    // The fork currently localizes its added UI in English and both Chinese locales.
+    // Other locales intentionally use English for these explicit keys; upstream
+    // translations and all future keys remain subject to full coverage checks.
+    private static let forkEnglishFallbackKeys: Set<String> = [
+        "Add Application…",
+        "Alternative",
+        "Application exclusion requires macOS 14 or later.",
+        "Based on macshot by sw33tLie and contributors.",
+        "Capture Exclusions",
+        "Choose Applications to Exclude",
+        "Click Set and press a key with a modifier (⌘, ⌥, ⌃, ⇧), or an F1–F20 key. Press Esc to cancel.",
+        "Click Set to record a shortcut.",
+        "Each action can have a primary and an alternative shortcut. Both trigger the same action; either can be cleared independently.",
+        "Enable Finder clipboard compatibility",
+        "Enable to paste screenshots as files in Finder on macOS 26 or earlier. Leave off for image pasting in Teams, websites, and remote desktops.",
+        "Exclude",
+        "Maintained by",
+        "No applications excluded",
+        "Primary",
+        "Remove",
+        "Selected applications will not appear in screenshots or recordings.",
+        "Shortcut unavailable",
+        "Some applications could not be added",
+        "This shortcut is already assigned to %@.",
+        "This shortcut is unavailable. It may be used by macOS or another application.",
+    ]
+
     /// Locale code -> parsed strings table.
     private static let tables: [String: [String: String]] = {
         var tables: [String: [String: String]] = [:]
@@ -93,7 +120,10 @@ final class LocalizationTests: XCTestCase {
         let base = try XCTUnwrap(Self.tables[Self.baseLocale])
         var report: [String] = []
         for (locale, table) in Self.tables.sorted(by: { $0.key < $1.key }) where locale != Self.baseLocale {
-            let missing = base.keys.filter { table[$0] == nil }.sorted()
+            let missing = base.keys.filter { key in
+                table[key] == nil && (["zh-Hans", "zh-Hant"].contains(locale)
+                    || !Self.forkEnglishFallbackKeys.contains(key))
+            }.sorted()
             if !missing.isEmpty {
                 report.append("\(locale): \(missing.count) missing (\(missing.prefix(3).joined(separator: ", ")))")
             }
@@ -215,7 +245,7 @@ final class LocalizationTests: XCTestCase {
     /// ban. A locale that climbs above its budget has almost certainly been
     /// re-damaged; the fix is to repair the strings, not to raise the number.
     private static let diacriticSuspectBudget: [String: Int] = [
-        "ca": 3, "cs": 16, "es": 3, "fr": 6, "hr": 1, "pl": 1,
+        "ca": 2, "cs": 16, "es": 3, "fr": 6, "hr": 1, "pl": 1,
         "pt": 4, "pt-BR": 3, "ro": 38, "sk": 3, "sv": 1, "tr": 4, "vi": 39,
     ]
 
@@ -250,6 +280,7 @@ final class LocalizationTests: XCTestCase {
         switch locale {
         case "vi": validPlainWords = ["trong"]
         case "es": validPlainWords = ["video"]
+        case "ca": validPlainWords = ["copia"] // valid verb, unlike the noun còpia
         default: validPlainWords = []
         }
         return plain.filter { accented.contains($0.key) && !validPlainWords.contains($0.key) }

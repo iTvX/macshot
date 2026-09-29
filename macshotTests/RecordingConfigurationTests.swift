@@ -46,6 +46,19 @@ final class RecordingConfigurationTests: XCTestCase {
         for fps in [1, 15, 24, 30, 60, 120] { XCTAssertNoThrow(try make(fps: fps)) }
     }
 
+    func testApplicationExclusionsAreFrozenWithTheRecordingConfiguration() throws {
+        var excluded = ["com.itvx.lotus"]
+        let config = try RecordingConfiguration(displayID: 42,
+            rect: CGRect(x: 0, y: 0, width: 100, height: 100),
+            displayBounds: CGRect(x: 0, y: 0, width: 200, height: 200),
+            backingScale: 1, frameRate: 30, microphone: false, systemAudio: true,
+            microphoneDeviceID: nil, excludedWindows: [123],
+            excludedApplicationIdentifiers: excluded, filename: "Test")
+        excluded.removeAll()
+        XCTAssertEqual(config.excludedApplicationIdentifiers, ["com.itvx.lotus"])
+        XCTAssertEqual(config.excludedWindows, [123])
+    }
+
     func testDeviceAndAudioChoicesTravelWithTheConfiguration() throws {
         let config = try make()
         XCTAssertTrue(config.microphone)
