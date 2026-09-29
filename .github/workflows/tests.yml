@@ -38,9 +38,9 @@ jobs:
           BUILD_VARIANT: ${{ matrix.variant }}
         run: |
           set -euo pipefail
-          flags=()
+          build_args=(-quiet build -scheme macshot -configuration Release
+            -destination "platform=macOS" CODE_SIGNING_ALLOWED=NO)
           if [[ "$BUILD_VARIANT" == offline ]]; then
-            flags+=('SWIFT_ACTIVE_COMPILATION_CONDITIONS=$(inherited) OFFLINE')
+            build_args+=('SWIFT_ACTIVE_COMPILATION_CONDITIONS=$(inherited) OFFLINE')
           fi
-          xcodebuild -quiet build -scheme macshot -configuration Release \
-            -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO "${flags[@]}"
+          xcodebuild "${build_args[@]}"
