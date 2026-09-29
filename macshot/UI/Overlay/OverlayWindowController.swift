@@ -260,6 +260,12 @@ class OverlayWindowController {
         }
     }
 
+    /// Whether the user has started or finished a selection on this display.
+    var hasSelection: Bool {
+        guard let state = overlayView?.state else { return false }
+        return state != .idle
+    }
+
     func makeKey() {
         overlayWindow?.ignoresMouseEvents = false
         overlayWindow?.makeKeyAndOrderFront(nil)

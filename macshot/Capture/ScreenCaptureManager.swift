@@ -140,13 +140,17 @@ class ScreenCaptureManager {
     /// CGWindowListCreateImage path.
     @available(macOS 14.0, *)
     static func captureAllScreensImmediatelySCK(
-        timing: (@Sendable (String) -> Void)? = nil
+        priorityScreen: NSScreen? = nil,
+        timing: (@Sendable (String) -> Void)? = nil,
+        onCapture: ((ScreenCapture) -> Void)? = nil
     ) async -> [ScreenCapture]? {
         let showsCursor = UserDefaults.standard.bool(forKey: "captureCursor")
         if #available(macOS 26.0, *), !CaptureExclusionStore.hasConfiguredApplications {
             if let captures = await captureAllScreensImmediatelySCKRect(
                 showsCursor: showsCursor,
-                timing: timing
+                priorityScreen: priorityScreen,
+                timing: timing,
+                onCapture: onCapture
             ) {
                 return captures
             }
@@ -178,38 +182,32 @@ class ScreenCaptureManager {
             return nil
         }
 
-        let captures = await withTaskGroup(
-            of: ScreenCapture?.self, returning: [ScreenCapture].self
-        ) { group in
-            for (index, pair) in pairs.enumerated() {
-                let (display, screen) = pair
-                group.addTask {
-                    // Capture the whole display while applying application-level
-                    // privacy exclusions. Transient UI from other apps remains visible.
-                    let filter = CaptureExclusionStore.contentFilter(
-                        display: display,
-                        content: content)
-                    let config = SCStreamConfiguration()
-                    let scale = Int(screen.backingScaleFactor)
-                    config.width = display.width * scale
-                    config.height = display.height * scale
-                    config.showsCursor = showsCursor
-                    config.captureResolution = .best
-                    timing?("SCK immediate capture begin display=\(index)")
-                    guard
-                        let image = try? await SCScreenshotManager.captureImage(
-                            contentFilter: filter, configuration: config)
-                    else {
-                        timing?("SCK immediate capture failed display=\(index)")
-                        return nil
-                    }
-                    timing?("SCK immediate capture end display=\(index) pixels=\(image.width)x\(image.height)")
-                    return ScreenCapture(screen: screen, image: image)
-                }
+        // Keep the priority/progressive path available when application exclusions
+        // require a content filter instead of the macOS 26 rectangle API.
+        if let priorityScreen, let index = pairs.firstIndex(where: { $0.1 === priorityScreen }), index != 0 {
+            pairs.insert(pairs.remove(at: index), at: 0)
+        }
+        let excludedIdentifiers = Set(CaptureExclusionStore.applications.map(\.bundleIdentifier))
+        var captures: [ScreenCapture] = []
+        for (index, pair) in pairs.enumerated() {
+            guard !Task.isCancelled else { return nil }
+            let (display, screen) = pair
+            let filter = CaptureExclusionStore.contentFilter(display: display, content: content,
+                excludingApplicationIdentifiers: excludedIdentifiers)
+            let config = SCStreamConfiguration()
+            let scale = Int(screen.backingScaleFactor)
+            config.width = display.width * scale
+            config.height = display.height * scale
+            config.showsCursor = showsCursor
+            config.captureResolution = .best
+            timing?("SCK filtered capture begin display=\(index)")
+            guard let image = try? await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config) else {
+                timing?("SCK filtered capture failed display=\(index)")
+                continue
             }
-            var results: [ScreenCapture] = []
-            for await capture in group { if let capture = capture { results.append(capture) } }
-            return results
+            let capture = ScreenCapture(screen: screen, image: image)
+            captures.append(capture)
+            onCapture?(capture)
         }
 
         // If SCK couldn't produce an image for every display, fall back rather
@@ -224,7 +222,9 @@ class ScreenCaptureManager {
     @available(macOS 26.0, *)
     private static func captureAllScreensImmediatelySCKRect(
         showsCursor: Bool,
-        timing: (@Sendable (String) -> Void)? = nil
+        priorityScreen: NSScreen? = nil,
+        timing: (@Sendable (String) -> Void)? = nil,
+        onCapture: ((ScreenCapture) -> Void)? = nil
     ) async -> [ScreenCapture]? {
         let screens = NSScreen.screens
         guard !screens.isEmpty else {
@@ -241,48 +241,52 @@ class ScreenCaptureManager {
         // black stripe where the rect fell off the display (#291, #294).
         guard let primaryScreen = screens.first else { return [] }
         let primaryHeight = primaryScreen.frame.maxY
-        let captures = await withTaskGroup(
-            of: ScreenCapture?.self,
-            returning: [ScreenCapture].self
-        ) { group in
-            for (index, screen) in screens.enumerated() {
-                group.addTask {
-                    let appKitFrame = screen.frame
-                    let rect = CGRect(
-                        x: appKitFrame.origin.x,
-                        y: primaryHeight - appKitFrame.maxY,
-                        width: appKitFrame.width,
-                        height: appKitFrame.height)
-                    let config = SCScreenshotConfiguration()
-                    config.width = Int(rect.width * screen.backingScaleFactor)
-                    config.height = Int(rect.height * screen.backingScaleFactor)
-                    config.showsCursor = showsCursor
-                    // Rectangle screenshots omit window framing by default on
-                    // macOS 26. Preserve the shadows visible on the desktop.
-                    config.ignoreShadows = false
-                    config.displayIntent = .local
-                    config.dynamicRange = .sdr
-                    timing?("SCK rect capture begin screen=\(index) rect=\(Int(rect.origin.x)),\(Int(rect.origin.y)) \(Int(rect.width))x\(Int(rect.height))")
-                    let result = await captureScreenshotOutput(rect: rect, configuration: config)
-                    guard
-                        result.error == nil,
-                        let output = result.output,
-                        let image = output.sdrImage ?? output.hdrImage
-                    else {
-                        let reason = result.error?.localizedDescription ?? "no image returned"
-                        timing?("SCK rect capture failed screen=\(index) error=\(reason)")
-                        return nil
-                    }
-                    timing?("SCK rect capture end screen=\(index) pixels=\(image.width)x\(image.height)")
-                    return ScreenCapture(screen: screen, image: image)
-                }
+        // NOTE: capture displays SEQUENTIALLY, not concurrently.
+        // On macOS 26 replayd serialises concurrent SCScreenshotManager requests
+        // anyway, and charges ~1.3s per queued request instead of ~380ms. On a
+        // 4-display Mac that is 3.9s concurrent vs 1.5s sequential (2.5x).
+        // Capture the cursor's display first and hand each capture back through
+        // onCapture the moment it lands, so the overlay on the display the user
+        // is looking at goes interactive after ONE capture, not after all of them.
+        var order = Array(screens.enumerated())
+        if let priority = priorityScreen,
+           let hit = order.firstIndex(where: { $0.element === priority }), hit != 0 {
+            let entry = order.remove(at: hit)
+            order.insert(entry, at: 0)
+            timing?("SCK rect: prioritised cursor display index=\(entry.offset)")
+        }
+        var captures: [ScreenCapture] = []
+        for (index, screen) in order {
+            let appKitFrame = screen.frame
+            let rect = CGRect(
+                x: appKitFrame.origin.x,
+                y: primaryHeight - appKitFrame.maxY,
+                width: appKitFrame.width,
+                height: appKitFrame.height)
+            let config = SCScreenshotConfiguration()
+            config.width = Int(rect.width * screen.backingScaleFactor)
+            config.height = Int(rect.height * screen.backingScaleFactor)
+            config.showsCursor = showsCursor
+            // Rectangle screenshots omit window framing by default on
+            // macOS 26. Preserve the shadows visible on the desktop.
+            config.ignoreShadows = false
+            config.displayIntent = .local
+            config.dynamicRange = .sdr
+            timing?("SCK rect capture begin screen=\(index) rect=\(Int(rect.origin.x)),\(Int(rect.origin.y)) \(Int(rect.width))x\(Int(rect.height))")
+            let result = await captureScreenshotOutput(rect: rect, configuration: config)
+            guard
+                result.error == nil,
+                let output = result.output,
+                let image = output.sdrImage ?? output.hdrImage
+            else {
+                let reason = result.error?.localizedDescription ?? "no image returned"
+                timing?("SCK rect capture failed screen=\(index) error=\(reason)")
+                continue
             }
-
-            var results: [ScreenCapture] = []
-            for await capture in group {
-                if let capture { results.append(capture) }
-            }
-            return results
+            timing?("SCK rect capture end screen=\(index) pixels=\(image.width)x\(image.height)")
+            let capture = ScreenCapture(screen: screen, image: image)
+            captures.append(capture)
+            onCapture?(capture)
         }
 
         guard captures.count == screens.count else {
