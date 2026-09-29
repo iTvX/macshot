@@ -1,0 +1,46 @@
+name: Upstream Regression Checks
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: regression-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Core tests (normal and Offline)
+    runs-on: macos-26
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
+      - name: Run complete normal suite
+        run: ./scripts/run-tests.sh
+      - name: Run complete Offline suite
+        run: ./scripts/run-tests.sh --offline
+
+  release-build:
+    name: Release compilation (${{ matrix.variant }})
+    runs-on: macos-26
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        variant: [normal, offline]
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
+      - name: Compile Release
+        env:
+          BUILD_VARIANT: ${{ matrix.variant }}
+        run: |
+          set -euo pipefail
+          build_args=(-quiet build -scheme macshot -configuration Release
+            -destination "platform=macOS" CODE_SIGNING_ALLOWED=NO)
+          if [[ "$BUILD_VARIANT" == offline ]]; then
+            build_args+=('SWIFT_ACTIVE_COMPILATION_CONDITIONS=$(inherited) OFFLINE')
+          fi
+          xcodebuild "${build_args[@]}"

@@ -83,6 +83,11 @@ protocol OverlayWindowControllerDelegate: AnyObject {
     func overlayDidFinishRemoteResize(_ controller: OverlayWindowController, globalRect: NSRect)
     func overlayCrossScreenImage(_ controller: OverlayWindowController) -> NSImage?
     func overlayDidChangeSnapMode(_ controller: OverlayWindowController)
+    func overlayDidRequestRestoreLastSelection(_ controller: OverlayWindowController)
+}
+
+extension OverlayWindowControllerDelegate {
+    func overlayDidRequestRestoreLastSelection(_ controller: OverlayWindowController) {}
 }
 
 /// Manages one fullscreen overlay per screen.
@@ -92,6 +97,31 @@ class OverlayWindowController {
 
     weak var overlayDelegate: OverlayWindowControllerDelegate?
     var capturedWindowTitle: String?
+    /// Frontmost app when the capture started (for the `{app}` filename token).
+    var capturedAppName: String?
+
+    /// App a capture belongs to: the owner of a snapped window, nil for a
+    /// whole-display selection, otherwise the app that was frontmost when the
+    /// capture started. Call before `dismiss()`, which resets the selection.
+    func resolvedAppName() -> String? {
+        guard let view = overlayView else { return capturedAppName }
+        if view.selectionIsWindowSnap, let windowID = view.snappedWindowID ?? view.hoveredSnapWindowID,
+           let owner = Self.ownerName(ofWindow: windowID) {
+            return FilenameFormatter.appNameForTemplate(owner)
+        }
+        let selection = view.selectionRect
+        if selection.width >= view.bounds.width - 1, selection.height >= view.bounds.height - 1 {
+            return nil
+        }
+        return capturedAppName
+    }
+
+    private static func ownerName(ofWindow windowID: CGWindowID) -> String? {
+        guard let info = CGWindowListCopyWindowInfo([.optionIncludingWindow], windowID) as? [[String: Any]] else {
+            return nil
+        }
+        return info.first?[kCGWindowOwnerName as String] as? String
+    }
     var timingMark: ((String) -> Void)? {
         didSet {
             overlayView?.timingMark = timingMark
@@ -228,6 +258,12 @@ class OverlayWindowController {
         if let view = overlayView {
             overlayWindow?.invalidateCursorRects(for: view)
         }
+    }
+
+    /// Whether the user has started or finished a selection on this display.
+    var hasSelection: Bool {
+        guard let state = overlayView?.state else { return false }
+        return state != .idle
     }
 
     func makeKey() {
@@ -528,6 +564,10 @@ class OverlayWindowController {
 // MARK: - OverlayViewDelegate
 
 extension OverlayWindowController: OverlayViewDelegate {
+    func overlayViewDidRequestRestoreLastSelection() {
+        overlayDelegate?.overlayDidRequestRestoreLastSelection(self)
+    }
+
     func overlayViewDidFinishSelection(_ rect: NSRect) {
         // No-op: window is already key (.nonactivatingPanel + makeKeyAndOrderFront).
     }
@@ -595,9 +635,15 @@ extension OverlayWindowController: OverlayViewDelegate {
         if hasBeautify {
             // For snapped windows, use the independently captured window image (transparent corners)
             // with annotations composited on top (using pre-dismiss snapshot)
-            let beautifyInput = (beautifyCfg.isWindowSnap && snapWindowImg != nil)
-                ? compositeAnnotationsOnSnappedWindow(snapWindowImg!, annotations: snapshotAnnotations, selectionRect: snapshotSelRect)
-                : finalImage
+            var beautifyInput = finalImage
+            if beautifyCfg.isWindowSnap, let snapWindowImg {
+                // The snapped window is its own capture, so the effects applied
+                // to `finalImage` above have to be applied to it as well —
+                // otherwise turning on beautify silently discarded them.
+                let snapped = compositeAnnotationsOnSnappedWindow(
+                    snapWindowImg, annotations: snapshotAnnotations, selectionRect: snapshotSelRect)
+                beautifyInput = hasEffects ? ImageEffects.apply(to: snapped, config: effectsCfg) : snapped
+            }
             finalImage = BeautifyRenderer.render(image: beautifyInput, config: beautifyCfg)
         }
 
@@ -847,6 +893,7 @@ extension OverlayWindowController: OverlayViewDelegate {
 
     @available(macOS 14.0, *)
     func overlayViewDidRequestRemoveBackground() {
+        let appName = resolvedAppName()
         guard var image = captureRegion() else { return }
         image = applyBeautifyIfNeeded(image) ?? image
 
@@ -893,10 +940,16 @@ extension OverlayWindowController: OverlayViewDelegate {
                 let finalNSImage = NSImage(cgImage: finalCGImage, size: image.size)
 
                 DispatchQueue.main.async {
-                    // quickCaptureMode: 0=save, 1=copy, 2=both, 3=do nothing
-                    let mode = UserDefaults.standard.object(forKey: "quickCaptureMode") as? Int ?? 1
-                    if mode == 1 || mode == 2 {
+                    let mode = QuickCaptureMode.current
+                    if mode.shouldCopyImage {
                         self.copyImageToClipboard(finalNSImage)
+                    }
+                    if mode.shouldSave {
+                        ImageSaveService.saveToConfiguredFolder(
+                            finalNSImage,
+                            windowTitle: self.capturedWindowTitle,
+                            appName: appName,
+                            copyPathToClipboard: mode.copyPathOverride)
                     }
                     self.playCopySound()
                     self.dismiss()
@@ -915,6 +968,7 @@ extension OverlayWindowController: OverlayViewDelegate {
     }
 
     func overlayViewDidRequestQuickSave() {
+        let appName = resolvedAppName()
         // Snapshot post-processing config before dismissing
         let hasEffects = overlayView?.effectsActive ?? false
         let effectsCfg = overlayView?.effectsConfig ?? ImageEffectsConfig()
@@ -953,29 +1007,36 @@ extension OverlayWindowController: OverlayViewDelegate {
         var image = compositedImage
         if hasEffects { image = ImageEffects.apply(to: image, config: effectsCfg) }
         if hasBeautify {
-            let beautifyInput = (beautifyCfg.isWindowSnap && snapWindowImg != nil)
-                ? compositeAnnotationsOnSnappedWindow(snapWindowImg!, annotations: snapshotAnns, selectionRect: snapshotSel)
-                : image
+            var beautifyInput = image
+            if beautifyCfg.isWindowSnap, let snapWindowImg {
+                let snapped = compositeAnnotationsOnSnappedWindow(
+                    snapWindowImg, annotations: snapshotAnns, selectionRect: snapshotSel)
+                beautifyInput = hasEffects ? ImageEffects.apply(to: snapped, config: effectsCfg) : snapped
+            }
             image = BeautifyRenderer.render(image: beautifyInput, config: beautifyCfg)
         }
 
-        // quickCaptureMode: 0=save, 1=copy, 2=both, 3=do nothing (thumbnail only)
-        let mode = UserDefaults.standard.object(forKey: "quickCaptureMode") as? Int ?? 1
+        let mode = QuickCaptureMode.current
 
-        if mode == 1 || mode == 2 {
+        if mode.shouldCopyImage {
             ImageEncoder.copyToClipboard(image)
         }
         playCopySound()
 
         overlayDelegate?.overlayDidConfirm(self, capturedImage: image, annotationData: annotationData)
 
-        if mode == 0 || mode == 2 {
-            ImageSaveService.saveToConfiguredFolder(image, windowTitle: capturedWindowTitle)
+        if mode.shouldSave {
+            ImageSaveService.saveToConfiguredFolder(
+                image,
+                windowTitle: capturedWindowTitle,
+                appName: appName,
+                copyPathToClipboard: mode.copyPathOverride)
         }
-        // mode 3: do nothing — image is passed to delegate which shows the thumbnail
+        // In do-nothing mode, the image is still passed to the delegate for the thumbnail.
     }
 
     func overlayViewDidRequestFileSave() {
+        let appName = resolvedAppName()
         guard let image = captureImageForSave() else {
             dismiss()
             overlayDelegate?.overlayDidCancel(self)
@@ -988,6 +1049,7 @@ extension OverlayWindowController: OverlayViewDelegate {
         ImageSaveService.saveToConfiguredFolder(
             image,
             windowTitle: capturedWindowTitle,
+            appName: appName,
             panelLevel: NSWindow.Level(258)
         ) { [weak self] success in
             if success {
@@ -1011,6 +1073,7 @@ extension OverlayWindowController: OverlayViewDelegate {
         ImageSaveService.showSavePanel(
             for: image,
             windowTitle: capturedWindowTitle,
+            appName: resolvedAppName(),
             panelLevel: NSWindow.Level(258)
         ) { [weak self] success in
             guard let self = self else { return }
@@ -1043,9 +1106,12 @@ extension OverlayWindowController: OverlayViewDelegate {
             image = ImageEffects.apply(to: image, config: effectsCfg)
         }
         if hasBeautify {
-            let beautifyInput = (beautifyCfg.isWindowSnap && snapWindowImg != nil)
-                ? compositeAnnotationsOnSnappedWindow(snapWindowImg!, annotations: snapshotAnns, selectionRect: snapshotSel)
-                : image
+            var beautifyInput = image
+            if beautifyCfg.isWindowSnap, let snapWindowImg {
+                let snapped = compositeAnnotationsOnSnappedWindow(
+                    snapWindowImg, annotations: snapshotAnns, selectionRect: snapshotSel)
+                beautifyInput = hasEffects ? ImageEffects.apply(to: snapped, config: effectsCfg) : snapped
+            }
             image = BeautifyRenderer.render(image: beautifyInput, config: beautifyCfg)
         }
         return image

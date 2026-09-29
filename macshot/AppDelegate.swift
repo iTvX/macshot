@@ -111,6 +111,14 @@ private let sigtermHandler: @convention(c) (Int32) -> Void = { _ in
     kill(getpid(), SIGTERM)
 }
 
+/// Tracks whether the first (cursor-display) overlay has already been shown,
+/// so only that one marks the capture INTERACTIVE.
+private final class ProgressiveOverlayState {
+    var shownAny = false
+    /// Controllers already showing their display's capture.
+    var installed = Set<ObjectIdentifier>()
+}
+
 private final class CaptureTimingTrace: @unchecked Sendable {
     private struct Entry {
         let label: String
@@ -202,8 +210,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     #if !OFFLINE
     private var uploadToastController: UploadToastController?
     #endif
+    /// Transient toast for failures that would otherwise be invisible — a save
+    /// that couldn't be written, a recording that produced no file.
+    private var errorToastController: UploadToastController?
     private var recordingEngine: RecordingEngine?
-    private var audioMergeController: AudioMergeController?
+    private var terminatingAfterRecording = false
+    private let terminationCoordinator = ApplicationTerminationCoordinator()
+    private var recordingTerminationWaiter: CheckedContinuation<Void, Never>?
+    private var audioMergeControllers: [UUID: AudioMergeController] = [:]
     private var recordingOverlayController: OverlayWindowController?
     private var recordingHUDPanel: RecordingHUDPanel?
     private var recordingScreenRect: NSRect = .zero  // screen-space capture rect
@@ -256,6 +270,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             )
             NSApp.terminate(nil)
             return
+        }
+
+        // Clear image-effect state written by a pre-June-2026 build, which
+        // otherwise leaves Vivid silently applied to every capture (#345).
+        EffectsMigration.runIfNeeded()
+
+        // Surface save failures — otherwise a capture that can't be written
+        // (full disk, unmounted volume) disappears without a word.
+        ImageSaveService.onFailure = { [weak self] message in
+            self?.showFailureToast(message)
         }
 
         // Disable App Nap. macshot is LSUIElement with no visible windows
@@ -609,8 +633,25 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         }
     }
 
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        terminationCoordinator.request(hasActiveWork: recordingEngine != nil || MediaExportCoordinator.shared.hasActiveJobs || ScreenshotHistory.shared.hasPendingWrites,
+            drain: { [weak self] in
+                if let self, let engine = self.recordingEngine {
+                    self.terminatingAfterRecording = true
+                    await withCheckedContinuation { continuation in
+                        self.recordingTerminationWaiter = continuation
+                        engine.stopRecording()
+                    }
+                }
+                await MediaExportCoordinator.shared.waitUntilIdle()
+                await ScreenshotHistory.shared.waitUntilIdle()
+            }, terminate: { sender.terminate(nil) })
+    }
+
     func applicationWillTerminate(_ aNotification: Notification) {
         os_log(.fault, log: timingLog, "macshot terminating — thermalState=%d", ProcessInfo.processInfo.thermalState.rawValue)
+        // Normal quit drains the recording writer and coordinated exports.
+        // A force quit leaves the durable take in place.
         for (_, controller) in overlayControllerPool {
             controller.tearDown()
         }
@@ -857,6 +898,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         openVideoItem.image = NSImage(systemSymbolName: "film", accessibilityDescription: nil)
         menu.addItem(openVideoItem)
 
+        let recordingsItem = NSMenuItem(title: L("Show Recordings in Finder"),
+            action: #selector(showRecordingsInFinder), keyEquivalent: "")
+        recordingsItem.target = self
+        recordingsItem.image = NSImage(systemSymbolName: "folder", accessibilityDescription: nil)
+        menu.addItem(recordingsItem)
+
         let pasteImageItem = NSMenuItem(title: L("Open from Clipboard"), action: #selector(openImageFromClipboard), keyEquivalent: "")
         pasteImageItem.target = self
         pasteImageItem.image = NSImage(systemSymbolName: "doc.on.clipboard", accessibilityDescription: nil)
@@ -992,7 +1039,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     /// during capture can't drag them in front of the user's frontmost app,
     /// then `orderFront` them when the overlay dismisses. Kept in the order
     /// they appeared so restoring preserves relative z-order.
-    private var stashedBackgroundWindows: [NSWindow] = []
+    private var backgroundWindowRestoration = DeferredRestoration<NSWindow>()
+    private var stashedBackgroundWindows: [NSWindow] { backgroundWindowRestoration.pending }
+    private var backgroundWindowRestoreObserver: NSObjectProtocol?
+    private var stashedWindowCloseObserver: NSObjectProtocol?
 
     /// True when floating thumbnails or pin windows are visible.
     var hasVisibleFloatingPanels: Bool {
@@ -1273,7 +1323,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     private func showPreCaptureCountdown(seconds: Int) {
-        let screen = NSScreen.main ?? NSScreen.screens[0]
+        // No display to show a countdown on (all asleep, or headless).
+        guard let screen = NSScreen.preferred else { return }
         let size = NSSize(width: 140, height: 140)
         let origin = NSPoint(
             x: screen.frame.midX - size.width / 2,
@@ -1383,6 +1434,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
                 controller.timingMark = { label in trace.mark(label) }
             }
             controller.capturedWindowTitle = capturedWindowTitle
+            controller.capturedAppName = FilenameFormatter.appNameForTemplate(previousApp?.localizedName)
             if pendingRecordMode { controller.setAutoRecordMode() }
             if pendingOCRMode { controller.setAutoOCRMode() }
             if pendingTranslateOverlayMode { controller.setAutoTranslateOverlayMode(targetLang: pendingTranslateOverlayLang) }
@@ -1418,13 +1470,44 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         // transient UI (menus, Spotlight) is preserved. If SCK fails or can't
         // cover every display, fall back to the synchronous CGWindowListCreateImage
         // path (which manually composites the cursor from the prebuilt context).
+        let progressive = ProgressiveOverlayState()
         Task { [weak self] in
             trace?.mark("background screenshot begin")
             var captures: [ScreenCapture]? = nil
             if #available(macOS 14.0, *) {
+                // Install each display's overlay as soon as its own capture
+                // lands, cursor display first, instead of waiting for all of them.
                 captures = await ScreenCaptureManager.captureAllScreensImmediatelySCK(
-                    timing: { label in trace?.mark(label) })
+                    priorityScreen: mouseScreen,
+                    timing: { label in trace?.mark(label) },
+                    onCapture: { capture in
+                        guard let self = self, self.isCapturing,
+                              self.captureSessionID == sessionID else { return }
+                        guard let controller = controllers.first(where: { $0.screen === capture.screen })
+                        else { return }
+                        let isFirst = !progressive.shownAny
+                        progressive.shownAny = true
+                        progressive.installed.insert(ObjectIdentifier(controller))
+                        self.installAndShowOverlays(
+                            captures: [capture],
+                            controllers: [controller],
+                            mouseScreen: mouseScreen,
+                            applyFullScreen: didApplyFullScreen,
+                            applyFullScreenRecord: didApplyFullScreenRecord,
+                            autoStartRecord: didApplyFullScreenRecordAutoStart,
+                            markInteractive: isFirst)
+                        // Showing a later display makes it key; keep the keyboard
+                        // on the display the user is working on.
+                        if !isFirst { self.refocusOverlay(among: controllers, installed: progressive.installed) }
+                    })
             }
+            if let captures, progressive.shownAny {
+                trace?.mark("background screenshot end count=\(captures.count) (progressive)")
+                return
+            }
+            // No SCK result, or some displays failed after others were already
+            // shown: capture the rest with the fallback and install only those.
+            let remaining = controllers.filter { !progressive.installed.contains(ObjectIdentifier($0)) }
             let finalCaptures = captures ?? ScreenCaptureManager.captureAllScreensImmediately(
                 context: captureContext,
                 timing: { label in trace?.mark(label) })
@@ -1432,6 +1515,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             await MainActor.run {
                 guard let self = self, self.isCapturing,
                       self.captureSessionID == sessionID else { return }
+                if progressive.shownAny {
+                    self.installAndShowOverlays(
+                        captures: finalCaptures.filter { capture in remaining.contains { $0.screen == capture.screen } },
+                        controllers: remaining,
+                        mouseScreen: mouseScreen,
+                        applyFullScreen: didApplyFullScreen,
+                        applyFullScreenRecord: didApplyFullScreenRecord,
+                        autoStartRecord: didApplyFullScreenRecordAutoStart,
+                        markInteractive: false)
+                    self.refocusOverlay(among: controllers, installed: nil)
+                    return
+                }
                 self.installAndShowOverlays(
                     captures: finalCaptures,
                     controllers: controllers,
@@ -1443,6 +1538,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         }
     }
 
+    /// Keeps keyboard focus on the overlay the user is working on while other
+    /// displays appear: the one with a selection, else the one under the pointer.
+    private func refocusOverlay(among controllers: [OverlayWindowController], installed: Set<ObjectIdentifier>?) {
+        let shown = controllers.filter { installed?.contains(ObjectIdentifier($0)) ?? true }
+        if let selected = shown.first(where: { $0.hasSelection }) {
+            selected.makeKey()
+            return
+        }
+        let pointer = NSEvent.mouseLocation
+        shown.first { $0.screen.frame.contains(pointer) }?.makeKey()
+    }
+
     /// Install screenshots into the pre-built overlay controllers and order
     /// them front. This is the single moment the overlay becomes visible.
     private func installAndShowOverlays(
@@ -1451,7 +1558,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         mouseScreen: NSScreen?,
         applyFullScreen: Bool,
         applyFullScreenRecord: Bool,
-        autoStartRecord: Bool
+        autoStartRecord: Bool,
+        markInteractive: Bool = true
     ) {
         if captures.isEmpty {
             captureTimingTrace?.mark("no captures returned — bailing out")
@@ -1491,6 +1599,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             }
         }
 
+        guard markInteractive else { return }
         captureTimingTrace?.mark("overlays installed and shown — INTERACTIVE")
         // Beacon: schedule periodic main-runloop marks so we can see if the
         // runloop is alive between INTERACTIVE and the first user event.
@@ -1674,61 +1783,66 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     /// macshot itself is frontmost the user presumably wants to capture one
     /// of its own windows, so we leave everything alone.
     private func stashBackgroundWindows() {
-        stashedBackgroundWindows.removeAll()
-        let ourBundleID = Bundle.main.bundleIdentifier
-        let macshotWasFrontmost = previousApp?.bundleIdentifier == ourBundleID
-        guard !macshotWasFrontmost else { return }
-        for window in NSApp.windows where window.isVisible && window.styleMask.contains(.titled) {
-            stashedBackgroundWindows.append(window)
-            window.orderOut(nil)
+        clearBackgroundRestoreObservers()
+        let macshotWasFrontmost = previousApp?.bundleIdentifier == Bundle.main.bundleIdentifier
+        let additions = macshotWasFrontmost ? [] : NSApp.windows.filter {
+            $0.isVisible && $0.styleMask.contains(.titled)
         }
-    }
-
-    /// Wait until another app becomes frontmost, then restore the stashed
-    /// windows. If we restore before the user's previous app regains focus,
-    /// the windows come back on top and clobber whatever was frontmost.
-    ///
-    /// Uses NSWorkspace's activation notification as the trigger, with a
-    /// short timer fallback in case activation never completes (e.g. the
-    /// previous app terminated during capture).
-    private func scheduleBackgroundWindowRestore() {
+        // Keep windows hidden by the preceding capture until this one can
+        // restore them. Clearing the list here loses those windows permanently.
+        backgroundWindowRestoration.begin(adding: additions)
+        for window in additions { window.orderOut(nil) }
         guard !stashedBackgroundWindows.isEmpty else { return }
-        let ws = NSWorkspace.shared.notificationCenter
-        var token: NSObjectProtocol?
-        token = ws.addObserver(
-            forName: NSWorkspace.didActivateApplicationNotification,
-            object: nil,
-            queue: .main
-        ) { [weak self] note in
-            guard let self = self else { return }
-            if let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
-               app.bundleIdentifier != Bundle.main.bundleIdentifier {
-                if let token = token { ws.removeObserver(token) }
-                self.restoreBackgroundWindowsNow()
+        stashedWindowCloseObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.willCloseNotification, object: nil, queue: .main) { [weak self] note in
+                MainActor.assumeIsolated {
+                    guard let self = self, let window = note.object as? NSWindow else { return }
+                    self.backgroundWindowRestoration.remove(window)
+                    if self.stashedBackgroundWindows.isEmpty { self.clearBackgroundRestoreObservers() }
+                }
             }
+    }
+
+    /// Restore only after another app regains focus, with a short fallback.
+    /// Both callbacks belong to the scheduled generation, never a later stash.
+    private func scheduleBackgroundWindowRestore() {
+        if let observer = backgroundWindowRestoreObserver {
+            NSWorkspace.shared.notificationCenter.removeObserver(observer)
+            backgroundWindowRestoreObserver = nil
         }
-        // Fallback — if no other app ever activates in the next 1s just
-        // restore anyway. Otherwise the windows would stay invisible.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-            guard let self = self else { return }
-            if !self.stashedBackgroundWindows.isEmpty {
-                if let token = token { ws.removeObserver(token) }
-                self.restoreBackgroundWindowsNow()
+        guard let token = backgroundWindowRestoration.schedule() else { return }
+        backgroundWindowRestoreObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main) { [weak self] note in
+                MainActor.assumeIsolated {
+                    guard let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
+                          app.bundleIdentifier != Bundle.main.bundleIdentifier else { return }
+                    self?.restoreBackgroundWindows(ifCurrent: token)
+                }
             }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
+            self?.restoreBackgroundWindows(ifCurrent: token)
         }
     }
 
-    /// Reverse of `stashBackgroundWindows`. Uses `orderBack` instead of
-    /// `orderFront` so the restored windows land behind every other
-    /// app's windows rather than on top of them. (`orderFront` still
-    /// raises windows in the global z-stack even when the owning app
-    /// isn't frontmost, which is what was causing the editor to pop
-    /// visible right after a screenshot.)
+    private func restoreBackgroundWindows(ifCurrent token: UInt64) {
+        guard let windows = backgroundWindowRestoration.take(ifCurrent: token) else { return }
+        clearBackgroundRestoreObservers()
+        for window in windows { window.orderBack(nil) }
+    }
+
     private func restoreBackgroundWindowsNow() {
-        for window in stashedBackgroundWindows {
-            window.orderBack(nil)
+        let windows = backgroundWindowRestoration.takeNow()
+        clearBackgroundRestoreObservers()
+        for window in windows { window.orderBack(nil) }
+    }
+
+    private func clearBackgroundRestoreObservers() {
+        if let observer = backgroundWindowRestoreObserver {
+            NSWorkspace.shared.notificationCenter.removeObserver(observer)
         }
-        stashedBackgroundWindows.removeAll()
+        backgroundWindowRestoreObserver = nil
+        if let observer = stashedWindowCloseObserver { NotificationCenter.default.removeObserver(observer) }
+        stashedWindowCloseObserver = nil
     }
 
     private func finishCaptureTimingReport(_ finalLabel: String) -> String? {
@@ -1787,7 +1901,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             thumbnailControllers.removeAll()
         }
 
-        let screen = NSScreen.main ?? NSScreen.screens[0]
+        guard let screen = NSScreen.preferred else { return }
         let screenFrame = screen.visibleFrame
         let padding: CGFloat = 16
         let gap: CGFloat = 8
@@ -1848,14 +1962,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             }
             if let id,
                let entry = ScreenshotHistory.shared.entries.first(where: { $0.id == id }),
-               let rawImage = ScreenshotHistory.shared.loadRawImage(for: entry),
-               let annotations = ScreenshotHistory.shared.loadAnnotations(for: entry) {
-                let editState = ScreenshotHistory.shared.loadEditState(for: entry)
+               let editable = ScreenshotHistory.shared.loadEditableCapture(for: entry) {
                 DetachedEditorWindowController.open(
-                    image: rawImage,
-                    annotations: annotations,
+                    image: editable.rawImage,
+                    annotations: editable.annotations,
                     historyEntryID: id,
-                    editState: editState
+                    editState: editable.editState
                 )
                 return
             }
@@ -1944,7 +2056,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     private func reflowThumbnails() {
-        let screen = NSScreen.main ?? NSScreen.screens[0]
+        // Thumbnails reflow from a timer, which can fire while displays sleep.
+        guard let screen = NSScreen.preferred else { return }
         let padding: CGFloat = 16
         let gap: CGFloat = 8
         let frame = screen.visibleFrame
@@ -2043,8 +2156,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         }
     }
 
-    private func saveImageToConfiguredFolder(_ image: NSImage) {
-        ImageSaveService.saveToConfiguredFolder(image, panelLevel: .floating, activateApp: true)
+    private func saveImageToConfiguredFolder(_ image: NSImage, copyPathToClipboard: Bool? = nil) {
+        ImageSaveService.saveToConfiguredFolder(
+            image,
+            panelLevel: .floating,
+            activateApp: true,
+            copyPathToClipboard: copyPathToClipboard)
     }
 
     #if !OFFLINE
@@ -2058,6 +2175,19 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     @objc private func pinFromHistory(_ notification: Notification) {
         guard let image = notification.object as? NSImage else { return }
         showPin(image: image)
+    }
+
+    /// Reports a failure the user needs to know about. Losing a capture without
+    /// any indication is worse than any error message.
+    func showFailureToast(_ message: String) {
+        errorToastController?.dismiss()
+        let toast = UploadToastController()
+        errorToastController = toast
+        toast.onDismiss = { [weak self] in
+            self?.errorToastController = nil
+        }
+        toast.show(status: message)
+        toast.showError(message: message, asUploadFailure: false)
     }
 
     func showPin(image: NSImage) {
@@ -2102,10 +2232,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
                 }
             }
         } else if provider == "s3" {
-            S3Uploader.shared.onProgress = { fraction in
+            S3Uploader.shared.uploadImage(image, progress: { fraction in
                 toast.updateProgress(fraction)
-            }
-            S3Uploader.shared.uploadImage(image) { result in
+            }) { result in
                 switch result {
                 case .success(let link):
                     let pasteboard = NSPasteboard.general
@@ -2223,14 +2352,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         guard let entry = ScreenshotHistory.shared.entries.first(where: { $0.id == id }) else { return }
 
         if entry.hasAnnotations,
-           let rawImage = ScreenshotHistory.shared.loadRawImage(for: entry),
-           let annotations = ScreenshotHistory.shared.loadAnnotations(for: entry) {
-            let editState = ScreenshotHistory.shared.loadEditState(for: entry)
+           let editable = ScreenshotHistory.shared.loadEditableCapture(for: entry) {
             DetachedEditorWindowController.open(
-                image: rawImage,
-                annotations: annotations,
+                image: editable.rawImage,
+                annotations: editable.annotations,
                 historyEntryID: id,
-                editState: editState
+                editState: editable.editState
             )
             return
         }
@@ -2238,6 +2365,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         // Fall back to the flattened image — beautify already baked in.
         guard let image = ScreenshotHistory.shared.loadImage(for: entry) else { return }
         DetachedEditorWindowController.open(image: image, historyEntryID: id, disableBeautify: true)
+    }
+
+    @objc private func showRecordingsInFinder() {
+        let folder = RecordingSessionStore.rootURL
+        do {
+            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+            NSWorkspace.shared.open(folder)
+        } catch {
+            showFailureToast(error.localizedDescription)
+        }
     }
 
     // MARK: - Open Video
@@ -2396,6 +2533,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 // MARK: - OverlayWindowControllerDelegate
 
 extension AppDelegate: OverlayWindowControllerDelegate {
+    func overlayDidRequestRestoreLastSelection(_ controller: OverlayWindowController) {
+        restoreLastSelection(controllers: overlayControllers)
+    }
+
     func overlayDidCancel(_ controller: OverlayWindowController) {
         // If the user cancels while in recording setup (before capture started),
         // just dismiss. If recording is actively capturing, stop it.
@@ -2413,14 +2554,12 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         dismissOverlays()
         captureTimingTrace?.mark("overlayDidConfirm after dismissOverlays")
         if let image = capturedImage {
-            ScreenshotHistory.shared.add(
+            let entryID = ScreenshotHistory.shared.add(
                 image: image,
                 rawImage: annotationData?.rawImage,
                 annotations: annotationData?.annotations,
                 editState: annotationData?.editState)
             captureTimingTrace?.mark("screenshot added to history")
-            // The entry just added is at index 0
-            let entryID = ScreenshotHistory.shared.entries.first?.id
             // Defer thumbnail to next runloop cycle so overlay teardown completes first
             // and the main thread is free for the next capture trigger
             let annData = annotationData
@@ -2698,6 +2837,18 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         engine.onCompletion = { [weak self] url, error in
             guard let self = self else { return }
             self.stopRecordingUI()
+            if self.terminatingAfterRecording {
+                self.terminatingAfterRecording = false
+                self.recordingTerminationWaiter?.resume()
+                self.recordingTerminationWaiter = nil
+                return
+            }
+
+            if let error = error {
+                // Interrupted capture can still have a playable partial file.
+                // Explain the interruption while delivering that file below.
+                self.showFailureToast(String(format: L("Recording failed: %@"), error.localizedDescription))
+            }
 
             if let url = url {
                 let deliverRecording: (URL) -> Void = { [weak self] finalURL in
@@ -2705,12 +2856,8 @@ extension AppDelegate: OverlayWindowControllerDelegate {
                     let onStop = onStopOverride ?? UserDefaults.standard.string(forKey: "recordingOnStop") ?? "editor"
                     switch onStop {
                     case "finder":
-                        // Move the recording out of our sandbox tmp to a
-                        // user-visible directory before revealing. Otherwise
-                        // Finder would open inside the sandbox container
-                        // (confusing to navigate, and our launch sweep can't
-                        // safely clean tmp Recordings since they look
-                        // user-managed).
+                        // Publish a user-visible copy while keeping the
+                        // original take available in the recording library.
                         self.revealRecordingInFinder(tmpURL: finalURL)
                     case "clipboard":
                         self.copyRecordingToClipboard(url: finalURL)
@@ -2722,18 +2869,15 @@ extension AppDelegate: OverlayWindowControllerDelegate {
                 // Offer audio merge when both mic + system audio were recorded
                 if hadSystemAudio && hadMicAudio {
                     let merger = AudioMergeController()
-                    self.audioMergeController = merger
+                    let mergeID = UUID()
+                    self.audioMergeControllers[mergeID] = merger
                     merger.show(url: url) { [weak self] finalURL in
-                        self?.audioMergeController = nil
+                        self?.audioMergeControllers.removeValue(forKey: mergeID)
                         deliverRecording(finalURL)
                     }
                 } else {
                     deliverRecording(url)
                 }
-            } else if let error = error {
-                #if DEBUG
-                print("Recording failed: \(error.localizedDescription)")
-                #endif
             }
         }
         recordingEngine = engine
@@ -2875,7 +3019,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         }
     }
 
-    /// Move a recording out of our sandbox tmp to a user-visible directory
+    /// Copy a recording to a user-visible directory
     /// and reveal it in Finder. Used by the `recordingOnStop = "finder"`
     /// flow so the user doesn't end up staring at a deep sandbox path.
     ///
@@ -2887,56 +3031,24 @@ extension AppDelegate: OverlayWindowControllerDelegate {
     /// On a collision at the destination, we append " (N)" to the filename
     /// so nothing gets silently overwritten.
     private func revealRecordingInFinder(tmpURL: URL) {
-        // Try the configured recording dir first.
-        if let recDir = SaveDirectoryAccess.resolveRecordingDirectoryIfAccessible() {
-            defer { SaveDirectoryAccess.stopAccessing(url: recDir) }
-            if let moved = moveRecording(from: tmpURL, intoDirectory: recDir) {
-                NSWorkspace.shared.activateFileViewerSelecting([moved])
-                return
+        guard let directory = SaveDirectoryAccess.resolveRecordingDirectoryIfAccessible()
+            ?? SaveDirectoryAccess.resolveIfAccessible() else {
+            promptToSaveRecording(tmpURL: tmpURL)
+            return
+        }
+        let access = SaveDirectoryLease(alreadyAccessing: directory)
+        saveRecordingCopy(source: tmpURL, destination: directory.appendingPathComponent(tmpURL.lastPathComponent),
+            avoidCollisions: true, access: access) { [weak self] error in
+            guard !(error is CancellationError) else { return }
+            if self?.terminationCoordinator.isWaiting != true {
+                self?.promptToSaveRecording(tmpURL: tmpURL)
+            } else {
+                self?.showFailureToast(L("Save failed") + ": " + error.localizedDescription)
             }
-        }
-        // Fall back to the general screenshot save directory if THAT has a
-        // valid security-scoped bookmark (without one we have no sandbox write
-        // access). resolveIfAccessible() returns nil precisely in that case.
-        if let screenshotDir = SaveDirectoryAccess.resolveIfAccessible() {
-            defer { SaveDirectoryAccess.stopAccessing(url: screenshotDir) }
-            if let moved = moveRecording(from: tmpURL, intoDirectory: screenshotDir) {
-                NSWorkspace.shared.activateFileViewerSelecting([moved])
-                return
-            }
-        }
-        // No usable saved location — prompt the user via NSSavePanel.
-        promptToSaveRecording(tmpURL: tmpURL)
-    }
-
-    /// Move `src` into `dir`, renaming on collision, returning the new URL.
-    /// Returns nil if the move fails (bad permissions, disk full, etc.).
-    private func moveRecording(from src: URL, intoDirectory dir: URL) -> URL? {
-        let fm = FileManager.default
-        let name = src.lastPathComponent
-        let base = (name as NSString).deletingPathExtension
-        let ext = (name as NSString).pathExtension
-
-        var dest = dir.appendingPathComponent(name)
-        var counter = 2
-        while fm.fileExists(atPath: dest.path) {
-            let newName = ext.isEmpty ? "\(base) (\(counter))" : "\(base) (\(counter)).\(ext)"
-            dest = dir.appendingPathComponent(newName)
-            counter += 1
-            if counter > 1000 { return nil }  // sanity cap
-        }
-        do {
-            try fm.moveItem(at: src, to: dest)
-            return dest
-        } catch {
-            return nil
         }
     }
 
-    /// Last-resort: the user has no configured save dir, so ask them where
-    /// to put the recording. On cancel we leave the tmp file in place —
-    /// the launch sweep won't touch it (Recording prefix is preserved)
-    /// but the user can still deal with it manually if they want.
+    /// Cancelling Save leaves the original in the recording library.
     private func promptToSaveRecording(tmpURL: URL) {
         let panel = NSSavePanel()
         panel.nameFieldStringValue = tmpURL.lastPathComponent
@@ -2944,38 +3056,62 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         panel.prompt = L("Save")
         panel.canCreateDirectories = true
         panel.isExtensionHidden = false
-        panel.begin { response in
-            guard response == .OK, let dest = panel.url else { return }
-            try? FileManager.default.removeItem(at: dest)
-            if (try? FileManager.default.moveItem(at: tmpURL, to: dest)) != nil {
-                NSWorkspace.shared.activateFileViewerSelecting([dest])
+        panel.begin { [weak self] response in
+            guard response == .OK, let destination = panel.url else { return }
+            self?.saveRecordingCopy(source: tmpURL, destination: destination, avoidCollisions: false) { [weak self] error in
+                guard !(error is CancellationError) else { return }
+                self?.showFailureToast(L("Save failed") + ": " + error.localizedDescription)
             }
         }
+    }
+
+    private func saveRecordingCopy(source: URL, destination: URL, avoidCollisions: Bool,
+                                   access: SaveDirectoryLease? = nil, onFailure: @escaping (Error) -> Void) {
+        var publishedURL = destination
+        let job = MediaExportCoordinator.shared.start(title: destination.lastPathComponent, status: L("Saving..."),
+            operation: { cancellation, progress in
+                publishedURL = try await MediaExportIO.perform {
+                    try cancellation.check()
+                    var selectedURL = destination
+                    if avoidCollisions {
+                        let base = destination.deletingPathExtension().lastPathComponent
+                        let ext = destination.pathExtension
+                        var counter = 2
+                        while FileManager.default.fileExists(atPath: selectedURL.path), counter <= 1000 {
+                            selectedURL = destination.deletingLastPathComponent()
+                                .appendingPathComponent("\(base) (\(counter)).\(ext)")
+                            counter += 1
+                        }
+                    }
+                    let save = try AtomicMediaSave(destinationURL: selectedURL)
+                    try save.copySource(source, checkCancellation: cancellation.check, progress: progress)
+                    // Exclusive publication also protects a file created after
+                    // the name check. Every failure retains the durable take.
+                    try save.commit(overwritingExisting: !avoidCollisions,
+                                    beforePublish: cancellation.beginPublication)
+                    return selectedURL
+                }
+            }, completion: { result in
+                withExtendedLifetime(access) {}
+                switch result {
+                case .success: NSWorkspace.shared.activateFileViewerSelecting([publishedURL])
+                case .failure(let error): onFailure(error)
+                }
+            })
+        MediaExportProgressController.show(for: job)
     }
 
     private func copyRecordingToClipboard(url: URL) {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
 
-        // Move the recording to a fixed clipboard path so we only ever have
-        // one-per-extension on disk. The user's recording tmp at `url` would
-        // otherwise linger forever (the pasteboard keeps the file URL
-        // reference so we can't delete it; but we can overwrite the same
-        // fixed path on the next clipboard copy).
+        // Each take has a durable, unique URL. A later copy must not replace
+        // the bytes behind an earlier clipboard/history reference.
         let ext = url.pathExtension.lowercased()
-        let fixedURL = FileManager.default.temporaryDirectory
-            .appendingPathComponent("macshot-clipboard-recording.\(ext)")
-        try? FileManager.default.removeItem(at: fixedURL)
-        let pasteURL: URL
-        if (try? FileManager.default.moveItem(at: url, to: fixedURL)) != nil {
-            pasteURL = fixedURL
-        } else {
-            // Move failed (cross-volume? permissions?) — fall back to the
-            // original path. Launch sweep will still clean it up later.
-            pasteURL = url
-        }
+        let pasteURL = url
+        let byteCount = (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? Int.max
 
-        if ext == "gif", let data = try? Data(contentsOf: pasteURL) {
+        if ext == "gif", byteCount <= 32_000_000, let data = try? Data(contentsOf: pasteURL) {
             // Write raw GIF data so apps can render the animation inline
             let item = NSPasteboardItem()
             item.setData(data, forType: NSPasteboard.PasteboardType("com.compuserve.gif"))
@@ -3119,7 +3255,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         KeystrokeOverlay.requestInputMonitoringPermission()
         let alert = NSAlert()
         alert.messageText = L("Input Monitoring Required")
-        alert.informativeText = L("macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again.")
+        alert.informativeText = L("macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again.")
         alert.alertStyle = .warning
         alert.addButton(withTitle: L("Open Settings"))
         alert.addButton(withTitle: L("Cancel"))
@@ -3266,15 +3402,13 @@ extension AppDelegate: OverlayWindowControllerDelegate {
 
         guard let image = finalImage else { return }
 
-        ScreenshotHistory.shared.add(image: image)
-        let entryID = ScreenshotHistory.shared.entries.first?.id
-        // quickCaptureMode: 0=save, 1=copy, 2=both, 3=do nothing (thumbnail only)
-        let mode = UserDefaults.standard.object(forKey: "quickCaptureMode") as? Int ?? 1
-        if mode == 1 || mode == 2 {
+        let entryID = ScreenshotHistory.shared.add(image: image)
+        let mode = QuickCaptureMode.current
+        if mode.shouldCopyImage {
             ImageEncoder.copyToClipboard(image)
         }
-        if mode == 0 || mode == 2 {
-            saveImageToConfiguredFolder(image)
+        if mode.shouldSave {
+            saveImageToConfiguredFolder(image, copyPathToClipboard: mode.copyPathOverride)
         }
         playCopySound()
         showFloatingThumbnail(image: image)

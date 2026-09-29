@@ -1,5 +1,19 @@
 # Changelog
 
+## 4.3.0 — reliability integration (fork, 2026-09-29)
+
+- Integrate upstream stable 4.3.0 through `5b76299`, preserving original upstream history.
+- Improve transactional screenshot/history saves, legacy annotation recovery, scroll stitching, no-display handling, redaction, clipboard HTML import, uploads, recording lifecycle, and video/GIF export.
+- Backport later system-audio buffer ownership/queue fixes, exports past the end of audio, and WebP alpha/size validation without introducing the Studio video-editor rewrite.
+- Add optional configured image formats on the clipboard while retaining PNG/TIFF and the fork’s opt-in Finder compatibility.
+- Add R to restore the last capture area, screenshot-path copying, application/date filename tokens and date subfolders.
+- Prioritize the pointer display and show each capture as it arrives, including the content-filter path required for application exclusions.
+- Preserve application exclusions during recording with an immutable per-session identifier snapshot. Keep both global bindings, factory settings, About update check, fork identity, history location, update feed and signing pipeline.
+- Read release metadata from the application target so the new test target cannot reset release/build numbers.
+- Add full normal/Offline upstream regression checks alongside fork shortcut/UI tests.
+
+History now stores immutable revisions. Read [history recovery and downgrade guidance](docs/history-recovery.md) before returning to an older build.
+
 ## 4.2.2 — upstream beta.5 integration (fork, 2026-09-19)
 
 ### Added and updated

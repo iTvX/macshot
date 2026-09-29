@@ -82,9 +82,11 @@ enum CaptureExclusionStore {
     nonisolated static func contentFilter(
         display: SCDisplay,
         content: SCShareableContent,
-        excludingWindows: [SCWindow] = []
+        excludingWindows: [SCWindow] = [],
+        excludingApplicationIdentifiers: Set<String>? = nil
     ) -> SCContentFilter {
-        let excludedApplications = resolvedApplications(in: content)
+        let identifiers = excludingApplicationIdentifiers ?? Set(applications.map(\.bundleIdentifier))
+        let excludedApplications = content.applications.filter { identifiers.contains($0.bundleIdentifier) }
         let filter: SCContentFilter
         if excludedApplications.isEmpty {
             filter = SCContentFilter(display: display, excludingWindows: excludingWindows)

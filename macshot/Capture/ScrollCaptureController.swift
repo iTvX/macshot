@@ -198,7 +198,17 @@ final class ScrollCaptureController {
     }
 
     func stopSession() {
-        guard isActive else { return }
+        // The HUD (and its Stop button) is on screen before `isActive` becomes
+        // true — startSession first awaits a settled frame, which can take a
+        // couple of seconds on a page with a blinking caret or a clock. A stop
+        // in that window used to do nothing at all, and the session then
+        // installed its scroll monitors anyway.
+        guard isActive || !isCancelled else { return }
+        guard isActive else {
+            isCancelled = true
+            onSessionDone?(nil)
+            return
+        }
         isActive = false
 
         autoScrollTask?.cancel(); autoScrollTask = nil
@@ -456,8 +466,17 @@ final class ScrollCaptureController {
                 }
             }
 
-            // captureAndCompare: settle, capture, compare, stitch
+            // captureAndCompare: settle, capture, compare, stitch.
+            // `isCapturing` serializes this against a manual settledCapture
+            // that may still be running — both mutate shotA/mergedImage/
+            // stripCount around their suspension points.
+            if isCapturing {
+                try? await Task.sleep(nanoseconds: 20_000_000)
+                continue
+            }
+            isCapturing = true
             let success = await captureAndCompare()
+            isCapturing = false
 
             if !success {
                 matchNotFoundCount += 1
@@ -770,58 +789,21 @@ final class ScrollCaptureController {
         let handler = VNImageRequestHandler(cgImage: curImg, options: [:])
         guard (try? handler.perform([request])) != nil,
               let obs = request.results?.first as? VNImageTranslationAlignmentObservation else { return nil }
-        return obs.alignmentTransform.ty
-    }
-
-    /// Extract raw BGRA pixel data from a CGImage.
-    private func pixelData(for image: CGImage) -> UnsafePointer<UInt8>? {
-        guard let dataProvider = image.dataProvider,
-              let data = dataProvider.data else { return nil }
-        return CFDataGetBytePtr(data)
+        // Vision returns a degenerate transform when registration fails on
+        // blank, dark or repetitive content. The caller rounds this into an
+        // Int, which traps on a non-finite value.
+        let shift = obs.alignmentTransform.ty
+        return ScrollFrameAnalyzer.validatedVerticalShift(shift, frameHeight: curImg.height)
     }
 
     // MARK: - Scrollbar detection
 
     private func detectRightMargin(current: CGImage, previous: CGImage) {
+        // Only mark detection as done once a comparable pair actually arrived.
+        // Setting it up front let one odd pair (a resize mid-session, say)
+        // disable scrollbar exclusion for the rest of the capture.
+        guard let scrollbarWidth = ScrollFrameAnalyzer.scrollbarWidth(current: current, previous: previous) else { return }
         rightMarginDetected = true
-
-        guard current.width == previous.width, current.height == previous.height else { return }
-        guard let curData = pixelData(for: current),
-              let prevData = pixelData(for: previous) else { return }
-
-        let w = current.width
-        let h = current.height
-        let bytesPerRow = w * 4
-
-        let rowStart = h * 2 / 10
-        let rowEnd = h * 8 / 10
-        let rowStep = max(1, (rowEnd - rowStart) / 40)
-
-        var scrollbarWidth = 0
-        let maxScanCols = min(50, w / 8)
-
-        for colOffset in 0..<maxScanCols {
-            let col = w - 1 - colOffset
-            var sad: UInt64 = 0
-            var samples: Int = 0
-
-            for row in stride(from: rowStart, to: rowEnd, by: rowStep) {
-                let idx = row * bytesPerRow + col * 4
-                guard idx + 2 < h * bytesPerRow else { continue }
-                sad += UInt64(abs(Int(curData[idx]) - Int(prevData[idx]))
-                            + abs(Int(curData[idx + 1]) - Int(prevData[idx + 1]))
-                            + abs(Int(curData[idx + 2]) - Int(prevData[idx + 2])))
-                samples += 1
-            }
-            guard samples > 0 else { continue }
-            let avgSAD = sad / UInt64(samples)
-
-            if avgSAD > 8 {
-                scrollbarWidth = colOffset + 1
-            } else if scrollbarWidth > 0 {
-                break
-            }
-        }
 
         if scrollbarWidth >= 3 && scrollbarWidth <= 40 {
             rightMarginPx = scrollbarWidth + 4
@@ -831,41 +813,15 @@ final class ScrollCaptureController {
     // MARK: - Header (frozen region) detection
 
     private func detectHeader(current: CGImage, previous: CGImage, shiftPx: Int) {
-        guard current.width == previous.width, current.height == previous.height else { return }
         guard shiftPx > 5 else { return }
+        guard let frozenRows = ScrollFrameAnalyzer.frozenTopRows(
+            current: current, previous: previous, rightMarginPx: rightMarginPx) else { return }
 
-        let w = current.width
         let h = current.height
-
-        guard let curData = pixelData(for: current),
-              let prevData = pixelData(for: previous) else { return }
-
-        let bytesPerRow = w * 4
-        let compareBytes = max(4, (w - rightMarginPx)) * 4
-        let colStep = 4
-
-        var frozenRows = 0
-        for row in 0..<h {
-            var rowSAD: UInt64 = 0
-            var samples: Int = 0
-            let offset = row * bytesPerRow
-            for col in stride(from: 0, to: compareBytes, by: colStep * 4) {
-                let cR = Int(curData[offset + col])
-                let cG = Int(curData[offset + col + 1])
-                let cB = Int(curData[offset + col + 2])
-                let pR = Int(prevData[offset + col])
-                let pG = Int(prevData[offset + col + 1])
-                let pB = Int(prevData[offset + col + 2])
-                rowSAD += UInt64(abs(cR - pR) + abs(cG - pG) + abs(cB - pB))
-                samples += 1
-            }
-            let avg = samples > 0 ? rowSAD / UInt64(samples) : 999
-            if avg > 8 {
-                frozenRows = row
-                break
-            }
-            if row == h - 1 { return }
-        }
+        // Nothing changed anywhere: this pair says nothing about a header, so
+        // leave detection open for the next frame instead of freezing the
+        // whole capture area.
+        guard frozenRows < h else { return }
 
         if frozenRows >= 10 && frozenRows < (h * 6 / 10) {
             headerDetectionSamples += 1

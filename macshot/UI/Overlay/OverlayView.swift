@@ -33,6 +33,11 @@ protocol OverlayViewDelegate: AnyObject {
     func overlayViewDidChangeSnapMode()
     func overlayViewRemoteSelectionDidFinish(_ rect: NSRect)
     func overlayViewDidRequestAddCapture()
+    func overlayViewDidRequestRestoreLastSelection()
+}
+
+extension OverlayViewDelegate {
+    func overlayViewDidRequestRestoreLastSelection() {}
 }
 
 /// An entry in the undo/redo history.
@@ -40,7 +45,11 @@ enum UndoEntry {
     case added(Annotation)  // annotation was added; undo removes it
     case deleted(Annotation, Int)  // annotation was deleted at index; undo re-inserts it
     /// Image transform (crop/flip): stores the previous image and annotation offsets to restore.
-    case imageTransform(previousImage: NSImage, annotationOffsets: [(Annotation, CGFloat, CGFloat)])
+    /// `previousSnappedWindowImage` is non-nil only for transforms that also
+    /// changed the separately-captured window image beautify's window-snap
+    /// mode draws from.
+    case imageTransform(previousImage: NSImage, previousSnappedWindowImage: NSImage?,
+                        annotationOffsets: [(Annotation, CGFloat, CGFloat)])
     /// Property change: stores the annotation and a snapshot taken before the edit.
     case propertyChange(annotation: Annotation, snapshot: Annotation)
 
@@ -200,11 +209,24 @@ class OverlayView: NSView {
             if showToolbars { rebuildToolbarLayout() }
         }
     }
+    // An undo depth is not a document identity: undo + a different edit can
+    // return to the same depth. Keep identities for the current undo/redo
+    // branch so returning to a saved state is clean, but replacing it is not.
+    private var undoStateIdentities = [UUID()]
+    private var isReplayingRedo = false
+    var undoStateIdentity: UUID { undoStateIdentities[undoStack.count] }
     var undoStack: [UndoEntry] = [] {
         didSet {
-            // Every annotation/image edit mutates the undo stack — notify so the
-            // editor can show/hide its "Done" button based on dirty state.
-            if undoStack.count != oldValue.count { onContentChanged?() }
+            if undoStack.count > oldValue.count {
+                if !isReplayingRedo {
+                    undoStateIdentities.removeSubrange((oldValue.count + 1)...)
+                }
+                while undoStateIdentities.count <= undoStack.count { undoStateIdentities.append(UUID()) }
+            } else if undoStack.count == oldValue.count {
+                // Whole-stack replacement (for example, restored annotations).
+                undoStateIdentities = (0...undoStack.count).map { _ in UUID() }
+            }
+            onContentChanged?()
         }
     }
     var redoStack: [UndoEntry] = []
@@ -696,6 +718,10 @@ class OverlayView: NSView {
     private var overlayErrorTimer: Timer? = nil
 
     // Recording state
+    var hasRecordingInputMonitoringPermission: Bool {
+        KeystrokeOverlay.hasInputMonitoringPermission
+    }
+
     var isRecording: Bool = false {  // true when recording toolbar is shown (pre-recording setup)
         didSet {
             if isRecording {
@@ -708,11 +734,15 @@ class OverlayView: NSView {
                 hoveredAnnotation = nil
                 selectedAnnotation = nil
                 needsDisplay = true
-                // Pre-check Input Monitoring permission if keystroke overlay is enabled
-                if UserDefaults.standard.bool(forKey: "recordKeystroke") && !KeystrokeOverlay.hasInputMonitoringPermission {
-                    UserDefaults.standard.set(false, forKey: "recordKeystroke")
+                // Unavailable optional overlays stay off. Ask for Input
+                // Monitoring only when the user explicitly enables one, not
+                // merely on entering recording setup with saved preferences.
+                let enabledInputOverlays = ["recordMouseHighlight", "recordKeystroke"].filter {
+                    UserDefaults.standard.bool(forKey: $0)
+                }
+                if !enabledInputOverlays.isEmpty && !hasRecordingInputMonitoringPermission {
+                    for key in enabledInputOverlays { UserDefaults.standard.set(false, forKey: key) }
                     rebuildToolbarLayout()
-                    overlayDelegate?.overlayViewDidRequestInputMonitoringPermission()
                 }
 
                 // Pre-check mic + camera permissions sequentially so dialogs don't overlap
@@ -3212,6 +3242,10 @@ class OverlayView: NSView {
         if config.isWindowSnap {
             // Snapped window: use independently captured window image (has real transparent corners).
             // Draw it directly on top of the gradient — transparent corners reveal the gradient.
+            let drawWindowImage: NSImage?
+            if let windowImage = snappedWindowImage {
+                drawWindowImage = effectsActive ? ImageEffects.apply(to: windowImage, config: effectsConfig) : windowImage
+            } else { drawWindowImage = nil }
             context.cgContext.saveGState()
 
             // Drop shadow from the window shape
@@ -3224,7 +3258,7 @@ class OverlayView: NSView {
                     blur: BeautifyRenderer.contactShadowBlur(for: shadowRadius),
                     color: NSColor.black.withAlphaComponent(
                         BeautifyRenderer.contactShadowAlpha(for: shadowRadius)).cgColor)
-                if let windowImg = snappedWindowImage {
+                if let windowImg = drawWindowImage {
                     windowImg.draw(in: imageRect, from: .zero, operation: .sourceOver, fraction: 1.0)
                 } else if let image = screenshotImage {
                     let drawImage = effectsActive ? effectsProcessedScreenshot(image) : image
@@ -3239,7 +3273,7 @@ class OverlayView: NSView {
                     blur: shadowRadius,
                     color: NSColor.black.withAlphaComponent(
                         BeautifyRenderer.shadowAlpha(for: shadowRadius)).cgColor)
-                if let windowImg = snappedWindowImage {
+                if let windowImg = drawWindowImage {
                     windowImg.draw(in: imageRect, from: .zero, operation: .sourceOver, fraction: 1.0)
                 } else if let image = screenshotImage {
                     let drawImage = effectsActive ? effectsProcessedScreenshot(image) : image
@@ -3249,7 +3283,7 @@ class OverlayView: NSView {
                 context.cgContext.restoreGState()
             }
 
-            if let windowImg = snappedWindowImage {
+            if let windowImg = drawWindowImage {
                 windowImg.draw(in: imageRect, from: .zero, operation: .sourceOver, fraction: 1.0)
             } else if let image = screenshotImage {
                 // Fallback: crop from screenshot (before window capture completes)
@@ -3575,7 +3609,7 @@ class OverlayView: NSView {
 
         // Save state for undo
         let prevImage = original.copy() as! NSImage
-        undoStack.append(.imageTransform(previousImage: prevImage, annotationOffsets: []))
+        undoStack.append(.imageTransform(previousImage: prevImage, previousSnappedWindowImage: nil, annotationOffsets: []))
         redoStack.removeAll()
 
         let w = cgImage.width
@@ -3624,7 +3658,7 @@ class OverlayView: NSView {
         else { return }
 
         let prevImage = original.copy() as! NSImage
-        undoStack.append(.imageTransform(previousImage: prevImage, annotationOffsets: []))
+        undoStack.append(.imageTransform(previousImage: prevImage, previousSnappedWindowImage: nil, annotationOffsets: []))
         redoStack.removeAll()
 
         let w = cgImage.width
@@ -3773,7 +3807,7 @@ class OverlayView: NSView {
         let shiftDx = -targetRect.origin.x
         let shiftDy = -targetRect.origin.y
         let offsets = annotations.map { ($0, shiftDx, shiftDy) }
-        undoStack.append(.imageTransform(previousImage: prevImage, annotationOffsets: offsets))
+        undoStack.append(.imageTransform(previousImage: prevImage, previousSnappedWindowImage: nil, annotationOffsets: offsets))
 
         screenshotImage = NSImage(cgImage: newCG, size: NSSize(width: newPtW, height: newPtH))
         cachedOpaqueRect = nil  // invalidate — image content changed
@@ -3818,10 +3852,22 @@ class OverlayView: NSView {
 
         var minRow = h, maxRow = 0, minCol = w, maxCol = 0
 
+        // Bound the scan by the buffer's real length rather than by the
+        // geometry: a provider whose data is shorter than bytesPerRow * h
+        // would otherwise be read past the end.
+        let byteCount = CFDataGetLength(data)
+        // Nothing sensible to report from a truncated buffer; treat the whole
+        // image as opaque rather than reading past the end.
+        guard byteCount >= bytesPerRow * h else {
+            return NSRect(x: 0, y: 0, width: CGFloat(w) / scale, height: CGFloat(h) / scale)
+        }
+
         for row in 0..<h {
             let rowBase = row * bytesPerRow
             for col in 0..<w {
-                let alpha = ptr[rowBase + col * bytesPerPixel + alphaOffset]
+                let offset = rowBase + col * bytesPerPixel + alphaOffset
+                guard offset < byteCount else { continue }
+                let alpha = ptr[offset]
                 if alpha > 0 {
                     if row < minRow { minRow = row }
                     if row > maxRow { maxRow = row }
@@ -3846,24 +3892,37 @@ class OverlayView: NSView {
 
     private func invertImageColors() {
         guard let original = screenshotImage,
-            let cgImage = original.cgImage(forProposedRect: nil, context: nil, hints: nil)
+              let invertedScreenshot = Self.invertedCopy(of: original)
         else { return }
 
-        let prevImage = original.copy() as! NSImage
-        undoStack.append(.imageTransform(previousImage: prevImage, annotationOffsets: []))
+        // A selection snapped to a window draws — and exports — from
+        // snappedWindowImage, a separately captured image. Inverting only the
+        // screenshot left the capture itself in its original colours while
+        // everything around it flipped (#88).
+        let previousSnapped = snappedWindowImage
+        let invertedSnapped = snappedWindowImage.flatMap { Self.invertedCopy(of: $0) }
+
+        undoStack.append(.imageTransform(
+            previousImage: original.copy() as? NSImage ?? original,
+            previousSnappedWindowImage: previousSnapped,
+            annotationOffsets: []))
         redoStack.removeAll()
 
-        let ciImage = CIImage(cgImage: cgImage)
-        guard let filter = CIFilter(name: "CIColorInvert") else { return }
-        filter.setValue(ciImage, forKey: kCIInputImageKey)
-        guard let output = filter.outputImage else { return }
-
-        let ciCtx = CIContext()
-        guard let inverted = ciCtx.createCGImage(output, from: output.extent) else { return }
-
-        screenshotImage = NSImage(cgImage: inverted, size: original.size)
+        screenshotImage = invertedScreenshot
+        if invertedSnapped != nil { snappedWindowImage = invertedSnapped }
         cachedCompositedImage = nil
+        cachedEffectsScreenshot = nil
         needsDisplay = true
+    }
+
+    /// Colour-inverted copy of an image, or nil when it can't be read.
+    static func invertedCopy(of image: NSImage) -> NSImage? {
+        guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil),
+              let filter = CIFilter(name: "CIColorInvert") else { return nil }
+        filter.setValue(CIImage(cgImage: cgImage), forKey: kCIInputImageKey)
+        guard let output = filter.outputImage,
+              let inverted = CIContext().createCGImage(output, from: output.extent) else { return nil }
+        return NSImage(cgImage: inverted, size: image.size)
     }
 
     // MARK: - Snap/Alignment Guides
@@ -4371,7 +4430,7 @@ class OverlayView: NSView {
 
         // Save state for undo before modifying
         let prevImage = originalImage.copy() as! NSImage
-        undoStack.append(.imageTransform(previousImage: prevImage, annotationOffsets: []))
+        undoStack.append(.imageTransform(previousImage: prevImage, previousSnappedWindowImage: nil, annotationOffsets: []))
         redoStack.removeAll()
 
         let dx = selectionRect.minX - canvasRect.minX
@@ -7544,11 +7603,10 @@ class OverlayView: NSView {
             && KeyboardShortcutMatcher.toolCharacters(for: event).contains(keyboardMoveSelectionShortcut)
     }
 
-    private func canStartKeyboardMoveSelection() -> Bool {
+    func canStartKeyboardMoveSelection() -> Bool {
         state == .selected
             && !isEditorMode
             && textEditView == nil
-            && !isRecording
             && !isScrollCapturing
             && !isAnchoredSelecting
             && !isResizingSelection
@@ -7563,7 +7621,7 @@ class OverlayView: NSView {
     }
 
     @discardableResult
-    private func startKeyboardMoveSelection() -> Bool {
+    func startKeyboardMoveSelection() -> Bool {
         guard canStartKeyboardMoveSelection(), let win = window else { return false }
         var moveButton = moveSelectionButtonView()
 
@@ -8276,11 +8334,9 @@ class OverlayView: NSView {
             isRecording = false
             overlayDelegate?.overlayViewDidCancel()
         case .mouseHighlight:
-            let current = UserDefaults.standard.bool(forKey: "recordMouseHighlight")
-            UserDefaults.standard.set(!current, forKey: "recordMouseHighlight")
-            rebuildToolbarLayout()
+            toggleInputMonitoredRecordingOverlay(forKey: "recordMouseHighlight")
         case .showKeystrokes:
-            toggleKeystrokeOverlay()
+            toggleInputMonitoredRecordingOverlay(forKey: "recordKeystroke")
         case .systemAudio:
             let current = UserDefaults.standard.bool(forKey: "recordSystemAudio")
             UserDefaults.standard.set(!current, forKey: "recordSystemAudio")
@@ -8809,20 +8865,15 @@ class OverlayView: NSView {
         needsDisplay = true
     }
 
-    private func toggleKeystrokeOverlay() {
-        let current = UserDefaults.standard.bool(forKey: "recordKeystroke")
-        if current {
-            UserDefaults.standard.set(false, forKey: "recordKeystroke")
-            rebuildToolbarLayout()
+    private func toggleInputMonitoredRecordingOverlay(forKey key: String) {
+        let current = UserDefaults.standard.bool(forKey: key)
+        // Turning an option off must still work after access is revoked.
+        guard current || hasRecordingInputMonitoringPermission else {
+            overlayDelegate?.overlayViewDidRequestInputMonitoringPermission()
             return
         }
-        // Requires Input Monitoring permission for CGEvent tap
-        if KeystrokeOverlay.hasInputMonitoringPermission {
-            UserDefaults.standard.set(true, forKey: "recordKeystroke")
-            rebuildToolbarLayout()
-        } else {
-            overlayDelegate?.overlayViewDidRequestInputMonitoringPermission()
-        }
+        UserDefaults.standard.set(!current, forKey: key)
+        rebuildToolbarLayout()
     }
 
     func commitTextFieldIfNeeded() {
@@ -9118,10 +9169,14 @@ class OverlayView: NSView {
     }
 
     override func keyDown(with event: NSEvent) {
-        // In recording mode, only allow Escape (to exit recording mode)
+        // Recording setup allows Move and Escape, without activating screenshot
+        // tools or output shortcuts. The actual recording uses a separate HUD.
         if isRecording {
             if event.keyCode == 53 { // Escape
                 handleToolbarAction(.stopRecord)
+            } else if !event.isARepeat, !isKeyboardMoveSelectionActive,
+                      eventMatchesToolShortcut(event, action: .moveSelection) {
+                _ = startKeyboardMoveSelection()
             }
             return
         }
@@ -9141,6 +9196,15 @@ class OverlayView: NSView {
                 overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
                 needsDisplay = true
             }
+            return
+        }
+
+        // R restores the previous capture region while the overlay is still
+        // waiting for a selection. Once selected, R keeps its normal Rectangle
+        // tool shortcut behavior.
+        if state == .idle, !isEditorMode, textEditView == nil,
+           KeyboardShortcutMatcher.matches(event, character: "r", modifiers: []) {
+            overlayDelegate?.overlayViewDidRequestRestoreLastSelection()
             return
         }
 
@@ -9528,11 +9592,15 @@ class OverlayView: NSView {
             ann.copyProperties(from: snapshot)
             redoStack.append(.propertyChange(annotation: ann, snapshot: currentSnapshot))
             cachedCompositedImage = nil
-        case .imageTransform(let previousImage, _):
+        case .imageTransform(let previousImage, let previousSnapped, _):
             // Undo crop/flip — swap the current image with the saved one
             let currentImage = screenshotImage?.copy() as? NSImage ?? previousImage
-            redoStack.append(.imageTransform(previousImage: currentImage, annotationOffsets: []))
+            let currentSnapped = previousSnapped != nil ? snappedWindowImage : nil
+            redoStack.append(.imageTransform(previousImage: currentImage,
+                                             previousSnappedWindowImage: currentSnapped,
+                                             annotationOffsets: []))
             screenshotImage = previousImage
+            if previousSnapped != nil { snappedWindowImage = previousSnapped }
             // Update selectionRect to match restored image size
             if isEditorMode {
                 selectionRect = NSRect(origin: .zero, size: previousImage.size)
@@ -9561,6 +9629,8 @@ class OverlayView: NSView {
 
     func redo() {
         guard let entry = redoStack.last else { return }
+        isReplayingRedo = true
+        defer { isReplayingRedo = false }
         redoStack.removeLast()
         switch entry {
         case .added(let ann):
@@ -9589,11 +9659,15 @@ class OverlayView: NSView {
             ann.copyProperties(from: snapshot)
             undoStack.append(.propertyChange(annotation: ann, snapshot: currentSnapshot))
             cachedCompositedImage = nil
-        case .imageTransform(let redoImage, _):
+        case .imageTransform(let redoImage, let redoSnapped, _):
             // Redo crop/flip — swap back
             let currentImage = screenshotImage?.copy() as? NSImage ?? redoImage
-            undoStack.append(.imageTransform(previousImage: currentImage, annotationOffsets: []))
+            let currentSnapped = redoSnapped != nil ? snappedWindowImage : nil
+            undoStack.append(.imageTransform(previousImage: currentImage,
+                                             previousSnappedWindowImage: currentSnapped,
+                                             annotationOffsets: []))
             screenshotImage = redoImage
+            if redoSnapped != nil { snappedWindowImage = redoSnapped }
             if isEditorMode {
                 selectionRect = NSRect(origin: .zero, size: redoImage.size)
                 if isInsideScrollView { frame.size = redoImage.size }

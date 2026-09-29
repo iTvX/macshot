@@ -31,7 +31,6 @@
 "Open Image..." = "Open Image...";
 "Open from Clipboard" = "Open from Clipboard";
 "Pin from Clipboard" = "Pin from Clipboard";
-"Settings..." = "Settings...";
 "Check for Updates..." = "Check for Updates...";
 "Quit macshot" = "Quit macshot";
 "No recent captures" = "No recent captures";
@@ -39,7 +38,6 @@
 
 /* History Panel */
 "Copy" = "Copy";
-"Save As..." = "Save As...";
 "Open in Editor" = "Open in Editor";
 "Pin to Screen" = "Pin to Screen";
 "Quick Look" = "Quick Look";
@@ -52,7 +50,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "Close All";
-"Save All to Folder…" = "Save All to Folder…";
 "Save Recording" = "Save Recording";
 "Save" = "Save";
 
@@ -247,6 +244,8 @@
 "Move down" = "Move down";
 "Output" = "Output";
 "Image format:" = "Image format:";
+"Also copy to the clipboard in this format" = "Also copy to the clipboard in this format";
+"PNG is always included so every app can paste" = "PNG is always included so every app can paste";
 "Quality:" = "Quality:";
 "%d%%" = "%d%%";
 "Save at standard resolution (1x)" = "Save at standard resolution (1x)";
@@ -490,7 +489,7 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Input Monitoring Required";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again.";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again.";
 "macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again.";
 
 /* Recording — Keystroke Overlay */
@@ -686,15 +685,6 @@
 "Font" = "Font";
 "System" = "System";
 
-/* Alternative keyboard shortcuts */
-"Primary" = "Primary";
-"Alternative" = "Alternative";
-"Each action can have a primary and an alternative shortcut. Both trigger the same action; either can be cleared independently." = "Each action can have a primary and an alternative shortcut. Both trigger the same action; either can be cleared independently.";
-"Click Set and press a key with a modifier (⌘, ⌥, ⌃, ⇧), or an F1–F20 key. Press Esc to cancel." = "Click Set and press a key with a modifier (⌘, ⌥, ⌃, ⇧), or an F1–F20 key. Press Esc to cancel.";
-"This shortcut is already assigned to %@." = "This shortcut is already assigned to %@.";
-"Click Set to record a shortcut." = "Click Set to record a shortcut.";
-"This shortcut is unavailable. It may be used by macOS or another application." = "This shortcut is unavailable. It may be used by macOS or another application.";
-"Shortcut unavailable" = "Shortcut unavailable";
 /* Auto-adjust selection (#317) */
 "Auto-Adjust Selection" = "Auto-Adjust Selection";
 "Auto-adjust selection" = "Auto-adjust selection";
@@ -703,11 +693,57 @@
 "No nearby edges found" = "No nearby edges found";
 "Selection adjusted" = "Selection adjusted";
 "Selection is already aligned" = "Selection is already aligned";
+"Recording failed: %@" = "Recording failed: %@";
+"Could not encode the screenshot." = "Could not encode the screenshot.";
+"Could not save the screenshot: %@" = "Could not save the screenshot: %@";
+"Could not save the screenshot to history." = "Could not save the screenshot to history.";
 
-/* Fork clipboard compatibility */
+"Saving..." = "Saving...";
+
+"Show Recordings in Finder" = "Show Recordings in Finder";
+
+"Cancelled" = "Cancelled";
+
+"Cancelling..." = "Cancelling...";
+"Preparing video..." = "Preparing video...";
+"History is busy saving. Please try again shortly." = "History is busy saving. Please try again shortly.";
+
+// Video editor accessibility
+"Play" = "Play";
+"Mute" = "Mute";
+"Unmute" = "Unmute";
+
+"Primary" = "Primary";
+
+"Alternative" = "Alternative";
+
+"Each action can have a primary and an alternative shortcut. Both trigger the same action; either can be cleared independently." = "Each action can have a primary and an alternative shortcut. Both trigger the same action; either can be cleared independently.";
+
+"Click Set and press a key with a modifier (⌘, ⌥, ⌃, ⇧), or an F1–F20 key. Press Esc to cancel." = "Click Set and press a key with a modifier (⌘, ⌥, ⌃, ⇧), or an F1–F20 key. Press Esc to cancel.";
+
+"This shortcut is already assigned to %@." = "This shortcut is already assigned to %@.";
+
+"Click Set to record a shortcut." = "Click Set to record a shortcut.";
+
+"This shortcut is unavailable. It may be used by macOS or another application." = "This shortcut is unavailable. It may be used by macOS or another application.";
+
+"Shortcut unavailable" = "Shortcut unavailable";
+
 "Enable Finder clipboard compatibility" = "Enable Finder clipboard compatibility";
+
 "Enable to paste screenshots as files in Finder on macOS 26 or earlier. Leave off for image pasting in Teams, websites, and remote desktops." = "Enable to paste screenshots as files in Finder on macOS 26 or earlier. Leave off for image pasting in Teams, websites, and remote desktops.";
 
-/* Fork maintainer and upstream attribution */
 "Maintained by" = "Maintained by";
+
 "Based on macshot by sw33tLie and contributors." = "Based on macshot by sw33tLie and contributors.";
+
+/* Fork capture exclusions */
+"Add Application…" = "Add Application…";
+"Application exclusion requires macOS 14 or later." = "Application exclusion requires macOS 14 or later.";
+"Capture Exclusions" = "Capture Exclusions";
+"Choose Applications to Exclude" = "Choose Applications to Exclude";
+"Exclude" = "Exclude";
+"No applications excluded" = "No applications excluded";
+"Remove" = "Remove";
+"Selected applications will not appear in screenshots or recordings." = "Selected applications will not appear in screenshots or recordings.";
+"Some applications could not be added" = "Some applications could not be added";

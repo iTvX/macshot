@@ -41,7 +41,6 @@
 
 /* History Panel */
 "Copy" = "拷贝";
-"Save As..." = "存储为...";
 "Open in Editor" = "在编辑器中打开";
 "Pin to Screen" = "固定到屏幕";
 "Quick Look" = "快速预览";
@@ -54,7 +53,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "关闭全部";
-"Save All to Folder…" = "全部存储到文件夹…";
 "Save" = "存储";
 
 /* Editor Top Bar */
@@ -235,6 +233,8 @@
 "Replace (show only latest)" = "替换（仅显示最新）";
 "Output" = "输出";
 "Image format:" = "图片格式:";
+"Also copy to the clipboard in this format" = "同时以此格式复制到剪贴板";
+"PNG is always included so every app can paste" = "始终包含 PNG，确保所有 App 都能粘贴";
 "Quality:" = "质量:";
 "%d%%" = "%d%%";
 "Save at standard resolution (1x)" = "以标准分辨率 (1x) 存储";
@@ -416,6 +416,7 @@
 /* Recording Toast */
 "Recording saved" = "录制已保存";
 "%@ • Recording saved" = "%@ · 录制已保存";
+"Recording failed: %@" = "录制失败: %@";
 "Copy Path" = "拷贝路径";
 "Path copied!" = "路径已拷贝！";
 
@@ -426,6 +427,9 @@
 "Export failed" = "导出失败";
 "Saved to %@" = "已存储到 %@";
 "Save failed" = "存储失败";
+"Could not encode the screenshot." = "无法编码截图。";
+"Could not save the screenshot: %@" = "无法存储截图: %@";
+"Could not save the screenshot to history." = "无法将截图存储到历史记录。";
 
 /* Barcode Detector */
 /* "Open" and "Copy" are shared with other sections */
@@ -465,7 +469,7 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "需要输入监控权限";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot 需要输入监控权限才能在录制时显示按键。请在 System Settings 中授予权限，然后重试。";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot 需要输入监控权限才能在录制时高亮显示鼠标点击或显示按键。请在系统设置中授予权限，然后重试。";
 "macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot 需要辅助功能权限才能吸附到单个界面元素。请在系统设置中授予访问权限，然后重试。";
 
 /* Recording — Keystroke Overlay */
@@ -684,15 +688,6 @@
 /* URL scheme: edit (PR #272) */
 "Open a history entry in the editor (keeps annotations editable)" = "在编辑器中打开历史记录（保持标注可编辑）";
 
-/* Alternative keyboard shortcuts */
-"Primary" = "主快捷键";
-"Alternative" = "备用快捷键";
-"Each action can have a primary and an alternative shortcut. Both trigger the same action; either can be cleared independently." = "每个操作均可设置主快捷键和备用快捷键。两者执行相同操作，也可分别清除。";
-"Click Set and press a key with a modifier (⌘, ⌥, ⌃, ⇧), or an F1–F20 key. Press Esc to cancel." = "点击“设置”，按下带修饰键（⌘、⌥、⌃、⇧）的组合键，或 F1–F20 功能键。按 Esc 取消。";
-"This shortcut is already assigned to %@." = "此快捷键已分配给 %@。";
-"Click Set to record a shortcut." = "点击“设置”以录入快捷键。";
-"This shortcut is unavailable. It may be used by macOS or another application." = "此快捷键不可用，可能已被 macOS 或其他应用占用。";
-"Shortcut unavailable" = "快捷键不可用";
 /* Selection edge adjustment */
 "Auto-Adjust Selection" = "自动调整选区";
 "Auto-adjust selection" = "自动调整选区";
@@ -704,10 +699,52 @@
 "Space to move. Release to annotate and edit" = "按住空格键移动。松开后进行标注和编辑";
 "Space to move. Release to finish" = "按住空格键移动。松开后完成";
 
-/* Fork clipboard compatibility */
+"Saving..." = "正在保存…";
+
+"Show Recordings in Finder" = "在访达中显示录制文件";
+
+"Cancelled" = "已取消";
+
+"Cancelling..." = "正在取消...";
+"Preparing video..." = "正在准备视频...";
+"History is busy saving. Please try again shortly." = "正在保存历史记录。请稍后重试。";
+
+// Video editor accessibility
+"Play" = "播放";
+"Mute" = "静音";
+"Unmute" = "取消静音";
+
+"Primary" = "主快捷键";
+
+"Alternative" = "备用快捷键";
+
+"Each action can have a primary and an alternative shortcut. Both trigger the same action; either can be cleared independently." = "每个操作均可设置主快捷键和备用快捷键。两者执行相同操作，也可分别清除。";
+
+"Click Set and press a key with a modifier (⌘, ⌥, ⌃, ⇧), or an F1–F20 key. Press Esc to cancel." = "点击“设置”，按下带修饰键（⌘、⌥、⌃、⇧）的组合键，或 F1–F20 功能键。按 Esc 取消。";
+
+"This shortcut is already assigned to %@." = "此快捷键已分配给 %@。";
+
+"Click Set to record a shortcut." = "点击“设置”以录入快捷键。";
+
+"This shortcut is unavailable. It may be used by macOS or another application." = "此快捷键不可用，可能已被 macOS 或其他应用占用。";
+
+"Shortcut unavailable" = "快捷键不可用";
+
 "Enable Finder clipboard compatibility" = "启用 Finder 剪贴板兼容模式";
+
 "Enable to paste screenshots as files in Finder on macOS 26 or earlier. Leave off for image pasting in Teams, websites, and remote desktops." = "启用后可在 macOS 26 或更早版本的 Finder 中将截图粘贴为文件。在 Teams、网页和远程桌面中粘贴图片时，请保持关闭。";
 
-/* Fork maintainer and upstream attribution */
 "Maintained by" = "维护者";
+
 "Based on macshot by sw33tLie and contributors." = "基于 sw33tLie 及其他贡献者开发的 macshot。";
+
+/* Fork capture exclusions */
+"Add Application…" = "添加应用…";
+"Application exclusion requires macOS 14 or later." = "应用排除功能需要 macOS 14 或更高版本。";
+"Capture Exclusions" = "截图排除";
+"Choose Applications to Exclude" = "选择要排除的应用";
+"Exclude" = "排除";
+"No applications excluded" = "未排除任何应用";
+"Remove" = "移除";
+"Selected applications will not appear in screenshots or recordings." = "所选应用不会出现在截图或录屏中。";
+"Some applications could not be added" = "部分应用无法添加";
