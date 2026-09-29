@@ -41,7 +41,6 @@
 
 /* History Panel */
 "Copy" = "Másolás";
-"Save As..." = "Mentés másként...";
 "Open in Editor" = "Megnyitás a szerkesztőben";
 "Open With" = "Megnyitás ezzel";
 "Open Link" = "Hivatkozás megnyitása";
@@ -57,7 +56,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "Összes bezárása";
-"Save All to Folder…" = "Összes mentése mappába…";
 "Save" = "Mentés";
 
 /* Editor Top Bar */
@@ -428,6 +426,7 @@
 /* Recording Toast */
 "Recording saved" = "Felvétel mentve";
 "%@ • Recording saved" = "%@ • Felvétel mentve";
+"Recording failed: %@" = "Felvétel sikertelen: %@";
 "Copy Path" = "Útvonal másolása";
 "Path copied!" = "Útvonal másolva!";
 
@@ -446,6 +445,9 @@
 "Save As..." = "Mentés másként...";
 "Choose a folder" = "Válassz mappát";
 "Save All to Folder…" = "Összes mentése mappába…";
+"Could not encode the screenshot." = "Nem sikerült kódolni a képernyőképet.";
+"Could not save the screenshot: %@" = "Nem sikerült menteni a képernyőképet: %@";
+"Could not save the screenshot to history." = "Nem sikerült menteni a képernyőképet az előzményekbe.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "Automatikus görgetés";
@@ -477,7 +479,7 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Bevitelfigyelés szükséges";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "A macshot-nak Bevitelfigyelés engedélyre van szüksége a billentyűleütések megjelenítéséhez felvétel közben. Kérlek, adj hozzáférést a System Settings-ben, majd próbáld újra.";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "A macshot-nak Bevitelfigyelés engedélyre van szüksége az egérkattintások kiemeléséhez vagy a billentyűleütések megjelenítéséhez felvétel közben. Adj hozzáférést a Rendszerbeállításokban, majd próbáld újra.";
 "macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "A macshot alkalmazásnak Kisegítő lehetőségek engedélyre van szüksége az egyes felületelemekhez való illesztéshez. Kérjük, engedélyezze a hozzáférést a Rendszerbeállításokban, majd próbálja újra.";
 
 /* Recording — Keystroke Overlay */
@@ -692,3 +694,18 @@
 "Selection is already aligned" = "A kijelölés már igazítva van";
 "Space to move. Release to annotate and edit" = "Tartsd lenyomva a szóközt a mozgatáshoz. Engedd fel a jegyzeteléshez és szerkesztéshez";
 "Space to move. Release to finish" = "Tartsd lenyomva a szóközt a mozgatáshoz. Engedd fel a befejezéshez";
+
+"Saving..." = "Mentés…";
+
+"Show Recordings in Finder" = "Felvételek megjelenítése a Finderben";
+
+"Cancelled" = "Megszakítva";
+
+"Cancelling..." = "Megszakítás...";
+"Preparing video..." = "Videó előkészítése...";
+"History is busy saving. Please try again shortly." = "Az előzmények mentése folyamatban van. Próbáld újra egy kis idő múlva.";
+
+// Video editor accessibility
+"Play" = "Lejátszás";
+"Mute" = "Némítás";
+"Unmute" = "Némítás feloldása";

@@ -41,7 +41,6 @@
 
 /* History Panel */
 "Copy" = "Kopírovat";
-"Save As..." = "Uložit jako...";
 "Open in Editor" = "Otevřít v editoru";
 "Pin to Screen" = "Připnout na obrazovku";
 "Quick Look" = "Rychlý náhled";
@@ -54,7 +53,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "Zavřít vše";
-"Save All to Folder…" = "Uložit vše do složky…";
 "Save" = "Uložit";
 
 /* Editor Top Bar */
@@ -427,6 +425,7 @@
 /* Recording Toast */
 "Recording saved" = "Nahrávka uložena";
 "%@ • Recording saved" = "%@ • Nahrávka uložena";
+"Recording failed: %@" = "Nahrávka selhala: %@";
 "Copy Path" = "Kopírovat cestu";
 "Path copied!" = "Cesta zkopírována!";
 
@@ -445,6 +444,9 @@
 "Save As..." = "Uložit jako...";
 "Choose a folder" = "Vyberte složku";
 "Save All to Folder…" = "Uložit vše do složky…";
+"Could not encode the screenshot." = "Nepodařilo se zakódovat snímek obrazovky.";
+"Could not save the screenshot: %@" = "Nepodařilo se uložit snímek obrazovky: %@";
+"Could not save the screenshot to history." = "Nepodařilo se uložit snímek obrazovky do historie.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "Automatické posouvání";
@@ -476,7 +478,7 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Vyžadováno monitorování vstupu";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot potřebuje oprávnění Monitorování vstupu pro zobrazení stisknutých kláves během nahrávání. Udělte přístup v System Settings a zkuste to znovu.";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot potřebuje oprávnění Monitorování vstupu ke zvýraznění kliknutí myší nebo zobrazení stisknutých kláves během nahrávání. Udělte přístup v Nastavení systému a zkuste to znovu.";
 "macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot potřebuje oprávnění Zpřístupnění pro přichytávání k jednotlivým prvkům rozhraní. Povolte přístup v Nastavení systému a zkuste to znovu.";
 
 /* Recording — Keystroke Overlay */
@@ -692,3 +694,18 @@
 "Selection is already aligned" = "Výběr je již zarovnán";
 "Space to move. Release to annotate and edit" = "Podržením mezerníku přesunete. Uvolněním můžete přidávat anotace a upravovat";
 "Space to move. Release to finish" = "Podržením mezerníku přesunete. Uvolněním dokončíte";
+
+"Saving..." = "Ukládání…";
+
+"Show Recordings in Finder" = "Zobrazit nahrávky ve Finderu";
+
+"Cancelled" = "Zrušeno";
+
+"Cancelling..." = "Rušení...";
+"Preparing video..." = "Příprava videa...";
+"History is busy saving. Please try again shortly." = "Historie se právě ukládá. Zkuste to prosím za chvíli znovu.";
+
+// Video editor accessibility
+"Play" = "Přehrát";
+"Mute" = "Ztlumit";
+"Unmute" = "Zapnout zvuk";

@@ -39,7 +39,6 @@
 
 /* History Panel */
 "Copy" = "העתק";
-"Save As..." = "שמור בשם...";
 "Open in Editor" = "פתח בעורך";
 "Open With" = "פתח באמצעות";
 "Open Link" = "פתח קישור";
@@ -56,7 +55,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "סגור הכל";
-"Save All to Folder…" = "שמור הכל לתיקייה…";
 "Save" = "שמור";
 
 /* Editor Top Bar */
@@ -420,6 +418,7 @@
 /* Recording Toast */
 "Recording saved" = "ההקלטה נשמרה";
 "%@ • Recording saved" = "%@ • ההקלטה נשמרה";
+"Recording failed: %@" = "ההקלטה נכשלה: %@";
 "Copy Path" = "העתק נתיב";
 "Path copied!" = "הנתיב הועתק!";
 
@@ -438,6 +437,9 @@
 "Save As..." = "שמור בשם...";
 "Choose a folder" = "בחר תיקייה";
 "Save All to Folder…" = "שמור הכל לתיקייה…";
+"Could not encode the screenshot." = "לא ניתן היה לקודד את צילום המסך.";
+"Could not save the screenshot: %@" = "לא ניתן היה לשמור את צילום המסך: %@";
+"Could not save the screenshot to history." = "לא ניתן היה לשמור את צילום המסך בהיסטוריה.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "גלילה אוטומטית";
@@ -469,7 +471,7 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "נדרש ניטור קלט";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot זקוק להרשאת ניטור קלט כדי להציג הקשות מקשים בזמן הקלטה. אנא אשר גישה ב-System Settings ונסה שוב.";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot זקוק להרשאת ניטור קלט כדי להדגיש לחיצות עכבר או להציג הקשות מקשים בזמן הקלטה. יש לאשר גישה בהגדרות המערכת ולנסות שוב.";
 "macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot זקוק להרשאת נגישות כדי להיצמד לרכיבי ממשק בודדים. אנא הענק גישה בהגדרות המערכת ונסה שוב.";
 
 /* Recording — Keystroke Overlay */
@@ -694,3 +696,18 @@
 "Selection is already aligned" = "הבחירה כבר מיושרת";
 "Space to move. Release to annotate and edit" = "החזיקו את מקש הרווח כדי להזיז. שחררו כדי להוסיף הערות ולערוך";
 "Space to move. Release to finish" = "החזיקו את מקש הרווח כדי להזיז. שחררו כדי לסיים";
+
+"Saving..." = "שומר…";
+
+"Show Recordings in Finder" = "הצגת ההקלטות ב-Finder";
+
+"Cancelled" = "בוטל";
+
+"Cancelling..." = "מבטל...";
+"Preparing video..." = "מכין סרטון...";
+"History is busy saving. Please try again shortly." = "ההיסטוריה נשמרת כעת. נא לנסות שוב בעוד רגע.";
+
+// Video editor accessibility
+"Play" = "הפעל";
+"Mute" = "השתק";
+"Unmute" = "בטל השתקה";

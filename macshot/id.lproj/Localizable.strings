@@ -41,7 +41,6 @@
 
 /* History Panel */
 "Copy" = "Salin";
-"Save As..." = "Simpan Sebagai...";
 "Open in Editor" = "Buka di Editor";
 "Pin to Screen" = "Sematkan ke Layar";
 "Quick Look" = "Lihat Cepat";
@@ -54,7 +53,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "Tutup Semua";
-"Save All to Folder…" = "Simpan Semua ke Folder…";
 "Save" = "Simpan";
 
 /* Editor Top Bar */
@@ -427,6 +425,7 @@
 /* Recording Toast */
 "Recording saved" = "Rekaman disimpan";
 "%@ • Recording saved" = "%@ • Rekaman disimpan";
+"Recording failed: %@" = "Perekaman gagal: %@";
 "Copy Path" = "Salin Path";
 "Path copied!" = "Path disalin!";
 
@@ -437,6 +436,9 @@
 "Export failed" = "Ekspor gagal";
 "Saved to %@" = "Disimpan ke %@";
 "Save failed" = "Gagal menyimpan";
+"Could not encode the screenshot." = "Tidak dapat mengodekan tangkapan layar.";
+"Could not save the screenshot: %@" = "Tidak dapat menyimpan tangkapan layar: %@";
+"Could not save the screenshot to history." = "Tidak dapat menyimpan tangkapan layar ke riwayat.";
 
 /* Barcode Detector */
 /* "Open" and "Copy" are shared with other sections */
@@ -476,7 +478,7 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Pemantauan Input Diperlukan";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot memerlukan izin Pemantauan Input untuk menampilkan ketukan tombol selama perekaman. Berikan akses di System Settings, lalu coba lagi.";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot memerlukan izin Pemantauan Input untuk menyorot klik mouse atau menampilkan penekanan tombol selama perekaman. Berikan akses di Pengaturan Sistem, lalu coba lagi.";
 "macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot memerlukan izin Aksesibilitas untuk menempel ke elemen antarmuka individual. Berikan akses di Pengaturan Sistem, lalu coba lagi.";
 
 /* Recording — Keystroke Overlay */
@@ -692,3 +694,18 @@
 "Selection is already aligned" = "Pilihan sudah sejajar";
 "Space to move. Release to annotate and edit" = "Tahan Spacebar untuk memindahkan. Lepaskan untuk membuat anotasi dan mengedit";
 "Space to move. Release to finish" = "Tahan Spacebar untuk memindahkan. Lepaskan untuk selesai";
+
+"Saving..." = "Menyimpan…";
+
+"Show Recordings in Finder" = "Tampilkan Rekaman di Finder";
+
+"Cancelled" = "Dibatalkan";
+
+"Cancelling..." = "Membatalkan...";
+"Preparing video..." = "Menyiapkan video...";
+"History is busy saving. Please try again shortly." = "Riwayat sedang disimpan. Coba lagi sebentar lagi.";
+
+// Video editor accessibility
+"Play" = "Putar";
+"Mute" = "Bisukan";
+"Unmute" = "Aktifkan suara";

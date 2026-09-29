@@ -43,7 +43,6 @@
 
 /* History Panel */
 "Copy" = "কপি";
-"Save As..." = "এইরূপে সংরক্ষণ...";
 "Open in Editor" = "সম্পাদকে খুলুন";
 "Open With" = "এর সাহায্যে খুলুন";
 "Pin to Screen" = "স্ক্রিনে পিন করুন";
@@ -57,7 +56,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "সব বন্ধ করুন";
-"Save All to Folder…" = "সব ফোল্ডারে সংরক্ষণ করুন…";
 "Save" = "সংরক্ষণ";
 
 /* Editor Top Bar */
@@ -427,6 +425,7 @@
 /* Recording Toast */
 "Recording saved" = "রেকর্ডিং সংরক্ষিত";
 "%@ • Recording saved" = "%@ • রেকর্ডিং সংরক্ষিত";
+"Recording failed: %@" = "রেকর্ডিং ব্যর্থ: %@";
 "Copy Path" = "পাথ কপি";
 "Path copied!" = "পাথ কপি হয়েছে!";
 
@@ -446,6 +445,9 @@
 "Save As..." = "এইরূপে সংরক্ষণ...";
 "Choose a folder" = "একটি ফোল্ডার নির্বাচন করুন";
 "Save All to Folder…" = "সব ফোল্ডারে সংরক্ষণ করুন…";
+"Could not encode the screenshot." = "স্ক্রিনশট এনকোড করা যায়নি।";
+"Could not save the screenshot: %@" = "স্ক্রিনশট সংরক্ষণ করা যায়নি: %@";
+"Could not save the screenshot to history." = "স্ক্রিনশট ইতিহাসে সংরক্ষণ করা যায়নি।";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "স্বয়ংক্রিয় স্ক্রল";
@@ -477,7 +479,7 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "ইনপুট মনিটরিং প্রয়োজন";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "রেকর্ডিংয়ের সময় কীস্ট্রোক দেখাতে macshot-এর ইনপুট মনিটরিং অনুমতি প্রয়োজন। অনুগ্রহ করে System Settings-এ অ্যাক্সেস দিন, তারপর আবার চেষ্টা করুন।";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "রেকর্ডিংয়ের সময় মাউসের ক্লিক হাইলাইট করতে বা কীস্ট্রোক দেখাতে macshot-এর ইনপুট মনিটরিং অনুমতি প্রয়োজন। সিস্টেম সেটিংসে অ্যাক্সেসের অনুমতি দিন, তারপর আবার চেষ্টা করুন।";
 "macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "আলাদা আলাদা ইন্টারফেস উপাদানে স্ন্যাপ করার জন্য macshot-এর অ্যাক্সেসিবিলিটি অনুমতি প্রয়োজন। সিস্টেম সেটিংসে অ্যাক্সেস দিন, তারপর আবার চেষ্টা করুন।";
 
 /* Recording — Keystroke Overlay */
@@ -694,3 +696,18 @@
 "Selection is already aligned" = "নির্বাচন ইতিমধ্যে সারিবদ্ধ";
 "Space to move. Release to annotate and edit" = "সরাতে স্পেস চেপে ধরুন। টীকা যোগ ও সম্পাদনা করতে ছেড়ে দিন";
 "Space to move. Release to finish" = "সরাতে স্পেস চেপে ধরুন। শেষ করতে ছেড়ে দিন";
+
+"Saving..." = "সংরক্ষণ করা হচ্ছে…";
+
+"Show Recordings in Finder" = "Finder-এ রেকর্ডিং দেখান";
+
+"Cancelled" = "বাতিল হয়েছে";
+
+"Cancelling..." = "বাতিল করা হচ্ছে...";
+"Preparing video..." = "ভিডিও প্রস্তুত করা হচ্ছে...";
+"History is busy saving. Please try again shortly." = "ইতিহাস সংরক্ষণ করা হচ্ছে। অনুগ্রহ করে কিছুক্ষণ পরে আবার চেষ্টা করুন।";
+
+// Video editor accessibility
+"Play" = "চালান";
+"Mute" = "শব্দ বন্ধ করুন";
+"Unmute" = "শব্দ চালু করুন";

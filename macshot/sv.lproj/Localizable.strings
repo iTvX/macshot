@@ -41,7 +41,6 @@
 
 /* History Panel */
 "Copy" = "Kopiera";
-"Save As..." = "Spara som...";
 "Open in Editor" = "\U00D6ppna i redigeraren";
 "Pin to Screen" = "F\U00E4st p\U00E5 sk\U00E4rmen";
 "Quick Look" = "\U00D6verblick";
@@ -54,7 +53,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "St\U00E4ng alla";
-"Save All to Folder\U2026" = "Spara alla till mapp\U2026";
 "Save" = "Spara";
 
 /* Editor Top Bar */
@@ -425,6 +423,7 @@
 /* Recording Toast */
 "Recording saved" = "Inspelning sparad";
 "%@ \U2022 Recording saved" = "%@ \U2022 Inspelning sparad";
+"Recording failed: %@" = "Inspelningen misslyckades: %@";
 "Copy Path" = "Kopiera s\U00F6kv\U00E4g";
 "Path copied!" = "S\U00F6kv\U00E4g kopierad!";
 
@@ -443,6 +442,9 @@
 "Save As..." = "Spara som...";
 "Choose a folder" = "V\U00E4lj en mapp";
 "Save All to Folder\U2026" = "Spara alla till mapp\U2026";
+"Could not encode the screenshot." = "Det gick inte att koda sk\U00E4rmbilden.";
+"Could not save the screenshot: %@" = "Det gick inte att spara sk\U00E4rmbilden: %@";
+"Could not save the screenshot to history." = "Det gick inte att spara sk\U00E4rmbilden i historiken.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "Auto-rullning";
@@ -474,7 +476,7 @@
 
 /* Recording \U2014 Input Monitoring Permission */
 "Input Monitoring Required" = "Inmatnings\U00F6vervakning kr\U00E4vs";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot beh\U00F6ver beh\U00F6righet f\U00F6r inmatnings\U00F6vervakning f\U00F6r att visa tangenttryckningar under inspelning. Ge \U00E5tkomst i System Settings och f\U00F6rs\U00F6k sedan igen.";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot behöver behörighet för inmatningsövervakning för att markera musklick eller visa tangenttryckningar under inspelning. Ge åtkomst i Systeminställningar och försök igen.";
 "macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot behöver behörighet för Tillgänglighet för att fästa mot enskilda gränssnittselement. Ge åtkomst i Systeminställningar och försök igen.";
 
 /* Recording \U2014 Keystroke Overlay */
@@ -692,3 +694,18 @@
 "Selection is already aligned" = "Markeringen är redan justerad";
 "Space to move. Release to annotate and edit" = "Håll ned mellanslag för att flytta. Släpp för att kommentera och redigera";
 "Space to move. Release to finish" = "Håll ned mellanslag för att flytta. Släpp för att slutföra";
+
+"Saving..." = "Sparar…";
+
+"Show Recordings in Finder" = "Visa inspelningar i Finder";
+
+"Cancelled" = "Avbrutet";
+
+"Cancelling..." = "Avbryter...";
+"Preparing video..." = "Förbereder video...";
+"History is busy saving. Please try again shortly." = "Historiken sparas. Försök igen om en stund.";
+
+// Video editor accessibility
+"Play" = "Spela upp";
+"Mute" = "Stäng av ljud";
+"Unmute" = "Slå på ljud";

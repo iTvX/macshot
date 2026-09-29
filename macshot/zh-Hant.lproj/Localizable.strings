@@ -41,7 +41,6 @@
 
 /* History Panel */
 "Copy" = "拷貝";
-"Save As..." = "另存新檔⋯";
 "Open in Editor" = "在編輯器中開啟";
 "Pin to Screen" = "釘選至螢幕";
 "Quick Look" = "快速查看";
@@ -54,7 +53,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "全部關閉";
-"Save All to Folder…" = "全部儲存至檔案夾⋯";
 "Save" = "儲存";
 
 /* Editor Top Bar */
@@ -427,6 +425,7 @@
 /* Recording Toast */
 "Recording saved" = "錄製已儲存";
 "%@ • Recording saved" = "%@ · 錄製已儲存";
+"Recording failed: %@" = "錄製失敗：%@";
 "Copy Path" = "拷貝路徑";
 "Path copied!" = "路徑已拷貝！";
 
@@ -437,6 +436,9 @@
 "Export failed" = "輸出失敗";
 "Saved to %@" = "已儲存至 %@";
 "Save failed" = "儲存失敗";
+"Could not encode the screenshot." = "無法編碼螢幕截圖。";
+"Could not save the screenshot: %@" = "無法儲存螢幕截圖：%@";
+"Could not save the screenshot to history." = "無法將螢幕截圖儲存到歷史記錄。";
 
 /* Barcode Detector */
 /* "Open" and "Copy" are shared with other sections */
@@ -476,7 +478,7 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "需要輸入監控權限";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot 需要「輸入監控」權限才能在錄製時顯示按鍵。請在 System Settings 中授予權限，然後再試一次。";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot 需要「輸入監控」權限才能在錄製時醒目顯示滑鼠點擊或顯示按鍵。請在系統設定中授予權限，然後再試一次。";
 "macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot 需要輔助使用權限才能貼齊個別介面元素。請在系統設定中授予存取權限，然後重試。";
 
 /* Recording — Keystroke Overlay */
@@ -684,15 +686,6 @@
 /* URL scheme: edit (PR #272) */
 "Open a history entry in the editor (keeps annotations editable)" = "在編輯器中開啟歷史記錄項目（標註仍可編輯）";
 
-/* Alternative keyboard shortcuts */
-"Primary" = "主要快捷鍵";
-"Alternative" = "備用快捷鍵";
-"Each action can have a primary and an alternative shortcut. Both trigger the same action; either can be cleared independently." = "每個操作均可設定主要快捷鍵和備用快捷鍵。兩者執行相同操作，也可分別清除。";
-"Click Set and press a key with a modifier (⌘, ⌥, ⌃, ⇧), or an F1–F20 key. Press Esc to cancel." = "點擊「設定」，按下帶修飾鍵（⌘、⌥、⌃、⇧）的組合鍵，或 F1–F20 功能鍵。按 Esc 取消。";
-"This shortcut is already assigned to %@." = "此快捷鍵已指派給 %@。";
-"Click Set to record a shortcut." = "點擊「設定」以錄入快捷鍵。";
-"This shortcut is unavailable. It may be used by macOS or another application." = "此快捷鍵無法使用，可能已被 macOS 或其他應用程式佔用。";
-"Shortcut unavailable" = "快捷鍵無法使用";
 /* Selection edge adjustment */
 "Auto-Adjust Selection" = "自動調整選取範圍";
 "Auto-adjust selection" = "自動調整選取範圍";
@@ -704,10 +697,41 @@
 "Space to move. Release to annotate and edit" = "按住空白鍵移動。放開後進行標註和編輯";
 "Space to move. Release to finish" = "按住空白鍵移動。放開後完成";
 
-/* Fork clipboard compatibility */
+"Saving..." = "正在儲存…";
+
+"Show Recordings in Finder" = "在Finder中顯示錄製檔案";
+
+"Cancelled" = "已取消";
+
+"Cancelling..." = "正在取消...";
+"Preparing video..." = "正在準備影片...";
+"History is busy saving. Please try again shortly." = "正在儲存歷史記錄。請稍後再試。";
+
+// Video editor accessibility
+"Play" = "播放";
+"Mute" = "靜音";
+"Unmute" = "取消靜音";
+
+"Primary" = "主要快捷鍵";
+
+"Alternative" = "備用快捷鍵";
+
+"Each action can have a primary and an alternative shortcut. Both trigger the same action; either can be cleared independently." = "每個操作均可設定主要快捷鍵和備用快捷鍵。兩者執行相同操作，也可分別清除。";
+
+"Click Set and press a key with a modifier (⌘, ⌥, ⌃, ⇧), or an F1–F20 key. Press Esc to cancel." = "點擊「設定」，按下帶修飾鍵（⌘、⌥、⌃、⇧）的組合鍵，或 F1–F20 功能鍵。按 Esc 取消。";
+
+"This shortcut is already assigned to %@." = "此快捷鍵已指派給 %@。";
+
+"Click Set to record a shortcut." = "點擊「設定」以錄入快捷鍵。";
+
+"This shortcut is unavailable. It may be used by macOS or another application." = "此快捷鍵無法使用，可能已被 macOS 或其他應用程式佔用。";
+
+"Shortcut unavailable" = "快捷鍵無法使用";
+
 "Enable Finder clipboard compatibility" = "啟用 Finder 剪貼簿相容模式";
+
 "Enable to paste screenshots as files in Finder on macOS 26 or earlier. Leave off for image pasting in Teams, websites, and remote desktops." = "啟用後可在 macOS 26 或更早版本的 Finder 中將截圖貼上為檔案。在 Teams、網頁和遠端桌面中貼上圖片時，請保持關閉。";
 
-/* Fork maintainer and upstream attribution */
 "Maintained by" = "維護者";
+
 "Based on macshot by sw33tLie and contributors." = "基於 sw33tLie 及其他貢獻者開發的 macshot。";

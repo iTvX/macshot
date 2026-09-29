@@ -41,7 +41,6 @@
 
 /* History Panel */
 "Copy" = "Копирај";
-"Save As..." = "Сачувај као...";
 "Open in Editor" = "Отвори у уређивачу";
 "Pin to Screen" = "Закачи на екран";
 "Quick Look" = "Брзи преглед";
@@ -54,7 +53,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "Затвори све";
-"Save All to Folder…" = "Сачувај све у фасциклу…";
 "Save" = "Сачувај";
 
 /* Editor Top Bar */
@@ -427,6 +425,7 @@
 /* Recording Toast */
 "Recording saved" = "Снимак сачуван";
 "%@ • Recording saved" = "%@ • Снимак сачуван";
+"Recording failed: %@" = "Снимање неуспешно: %@";
 "Copy Path" = "Копирај путању";
 "Path copied!" = "Путања копирана!";
 
@@ -445,6 +444,9 @@
 "Save As..." = "Сачувај као...";
 "Choose a folder" = "Изаберите фасциклу";
 "Save All to Folder…" = "Сачувај све у фасциклу…";
+"Could not encode the screenshot." = "Није могуће кодирати снимак екрана.";
+"Could not save the screenshot: %@" = "Није могуће сачувати снимак екрана: %@";
+"Could not save the screenshot to history." = "Није могуће сачувати снимак екрана у историју.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "Аутоматско скроловање";
@@ -476,7 +478,7 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Потребно праћење уноса";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot захтева дозволу за праћење уноса да би приказивао притиске тастера током снимања. Одобрите приступ у System Settings, па покушајте поново.";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot захтева дозволу за праћење уноса да би истицао кликове миша или приказивао притиске тастера током снимања. Одобрите приступ у системским подешавањима, па покушајте поново.";
 "macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot-у је потребна дозвола приступачности за прилепљивање уз појединачне елементе интерфејса. Одобрите приступ у Подешавањима система и покушајте поново.";
 
 /* Recording — Keystroke Overlay */
@@ -694,3 +696,18 @@
 "Selection is already aligned" = "Izbor je već poravnat";
 "Space to move. Release to annotate and edit" = "Držite razmaknicu za pomeranje. Otpustite za dodavanje napomena i uređivanje";
 "Space to move. Release to finish" = "Držite razmaknicu za pomeranje. Otpustite da završite";
+
+"Saving..." = "Чување…";
+
+"Show Recordings in Finder" = "Прикажи снимке у Finder-у";
+
+"Cancelled" = "Отказано";
+
+"Cancelling..." = "Отказивање...";
+"Preparing video..." = "Припрема видеа...";
+"History is busy saving. Please try again shortly." = "Историја се чува. Покушајте поново за неколико тренутака.";
+
+// Video editor accessibility
+"Play" = "Репродукуј";
+"Mute" = "Искључи звук";
+"Unmute" = "Укључи звук";

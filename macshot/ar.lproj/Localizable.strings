@@ -39,7 +39,6 @@
 
 /* History Panel */
 "Copy" = "نسخ";
-"Save As..." = "حفظ باسم...";
 "Open in Editor" = "فتح في المحرر";
 "Open With" = "فتح باستخدام";
 "Open Link" = "فتح الرابط";
@@ -56,7 +55,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "إغلاق الكل";
-"Save All to Folder…" = "حفظ الكل في مجلد…";
 "Save" = "حفظ";
 
 /* Editor Top Bar */
@@ -420,6 +418,7 @@
 /* Recording Toast */
 "Recording saved" = "تم حفظ التسجيل";
 "%@ • Recording saved" = "%@ • تم حفظ التسجيل";
+"Recording failed: %@" = "فشل التسجيل: %@";
 "Copy Path" = "نسخ المسار";
 "Path copied!" = "تم نسخ المسار!";
 
@@ -438,6 +437,9 @@
 "Save As..." = "حفظ باسم...";
 "Choose a folder" = "اختيار مجلد";
 "Save All to Folder…" = "حفظ الكل في مجلد…";
+"Could not encode the screenshot." = "تعذّر ترميز لقطة الشاشة.";
+"Could not save the screenshot: %@" = "تعذّر حفظ لقطة الشاشة: %@";
+"Could not save the screenshot to history." = "تعذّر حفظ لقطة الشاشة في السجل.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "تمرير تلقائي";
@@ -469,7 +471,7 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "مطلوب إذن مراقبة الإدخال";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "يحتاج macshot إلى إذن مراقبة الإدخال لعرض ضغطات المفاتيح أثناء التسجيل. يرجى منح الإذن في System Settings، ثم المحاولة مجددًا.";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "يحتاج macshot إلى إذن مراقبة الإدخال لإبراز نقرات الماوس أو عرض ضغطات المفاتيح أثناء التسجيل. يرجى منح الإذن في إعدادات النظام، ثم المحاولة مجددًا.";
 "macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "يحتاج macshot إلى إذن إمكانية الوصول للمحاذاة إلى عناصر الواجهة الفردية. يرجى منح الوصول في إعدادات النظام، ثم حاول مرة أخرى.";
 
 /* Recording — Keystroke Overlay */
@@ -694,3 +696,18 @@
 "Selection is already aligned" = "التحديد محاذى بالفعل";
 "Space to move. Release to annotate and edit" = "اضغط على مفتاح المسافة للتحريك. حرّره لإضافة التعليقات التوضيحية والتحرير";
 "Space to move. Release to finish" = "اضغط على مفتاح المسافة للتحريك. حرّره للإنهاء";
+
+"Saving..." = "جارٍ الحفظ…";
+
+"Show Recordings in Finder" = "إظهار التسجيلات في Finder";
+
+"Cancelled" = "تم الإلغاء";
+
+"Cancelling..." = "جارٍ الإلغاء...";
+"Preparing video..." = "جارٍ تجهيز الفيديو...";
+"History is busy saving. Please try again shortly." = "السجل مشغول بالحفظ. يُرجى المحاولة مرة أخرى بعد قليل.";
+
+// Video editor accessibility
+"Play" = "تشغيل";
+"Mute" = "كتم الصوت";
+"Unmute" = "إلغاء كتم الصوت";

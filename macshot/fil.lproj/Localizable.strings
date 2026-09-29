@@ -41,7 +41,6 @@
 
 /* History Panel */
 "Copy" = "Kopyahin";
-"Save As..." = "I-save Bilang...";
 "Open in Editor" = "Buksan sa Editor";
 "Pin to Screen" = "I-pin sa Screen";
 "Quick Look" = "Mabilisang Tingin";
@@ -54,7 +53,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "Isara Lahat";
-"Save All to Folder…" = "I-save Lahat sa Folder…";
 "Save" = "I-save";
 
 /* Editor Top Bar */
@@ -427,6 +425,7 @@
 /* Recording Toast */
 "Recording saved" = "Na-save ang recording";
 "%@ • Recording saved" = "%@ • Na-save ang recording";
+"Recording failed: %@" = "Nabigo ang pag-record: %@";
 "Copy Path" = "Kopyahin ang Path";
 "Path copied!" = "Nakopya ang path!";
 
@@ -437,6 +436,9 @@
 "Export failed" = "Nabigo ang pag-export";
 "Saved to %@" = "Na-save sa %@";
 "Save failed" = "Nabigo ang pag-save";
+"Could not encode the screenshot." = "Hindi ma-encode ang screenshot.";
+"Could not save the screenshot: %@" = "Hindi ma-save ang screenshot: %@";
+"Could not save the screenshot to history." = "Hindi ma-save ang screenshot sa history.";
 
 /* Barcode Detector */
 /* "Open" and "Copy" are shared with other sections */
@@ -476,7 +478,7 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Kinakailangan ang Input Monitoring";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "Kailangan ng macshot ang Input Monitoring permission upang ipakita ang mga keystroke habang nagre-record. Pakibigyan ng access sa System Settings, pagkatapos ay subukang muli.";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "Kailangan ng macshot ang pahintulot sa Input Monitoring upang i-highlight ang mga pag-click ng mouse o ipakita ang mga keystroke habang nagre-record. Magbigay ng access sa System Settings, pagkatapos ay subukang muli.";
 "macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "Kailangan ng macshot ang Accessibility permission para sa pag-snap sa mga indibidwal na elemento ng interface. Mangyaring bigyan ng access sa System Settings, pagkatapos subukan muli.";
 
 /* Recording — Keystroke Overlay */
@@ -694,3 +696,18 @@
 "Selection is already aligned" = "Naka-align na ang pinili";
 "Space to move. Release to annotate and edit" = "Pindutin nang matagal ang Space para ilipat. Bitawan para mag-anotate at mag-edit";
 "Space to move. Release to finish" = "Pindutin nang matagal ang Space para ilipat. Bitawan para tapusin";
+
+"Saving..." = "Sine-save…";
+
+"Show Recordings in Finder" = "Ipakita ang mga recording sa Finder";
+
+"Cancelled" = "Kinansela";
+
+"Cancelling..." = "Kinakansela...";
+"Preparing video..." = "Inihahanda ang video...";
+"History is busy saving. Please try again shortly." = "Sine-save ang kasaysayan. Pakisubukang muli sa ilang sandali.";
+
+// Video editor accessibility
+"Play" = "I-play";
+"Mute" = "I-mute";
+"Unmute" = "I-unmute";

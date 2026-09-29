@@ -41,7 +41,6 @@
 
 /* History Panel */
 "Copy" = "Sao chép";
-"Save As..." = "Lưu thành...";
 "Open in Editor" = "Mở trong trình chỉnh sửa";
 "Pin to Screen" = "Ghim lên màn hình";
 "Quick Look" = "Xem nhanh";
@@ -54,7 +53,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "Đóng tất cả";
-"Save All to Folder…" = "Lưu tất cả vào thư mục…";
 "Save" = "Lưu";
 
 /* Editor Top Bar */
@@ -427,6 +425,7 @@
 /* Recording Toast */
 "Recording saved" = "Đã lưu bản quay";
 "%@ • Recording saved" = "%@ • Đã lưu bản quay";
+"Recording failed: %@" = "Quay màn hình thất bại: %@";
 "Copy Path" = "Sao chép đường dẫn";
 "Path copied!" = "Đã sao chép đường dẫn!";
 
@@ -437,6 +436,9 @@
 "Export failed" = "Xuất thất bại";
 "Saved to %@" = "Đã lưu vào %@";
 "Save failed" = "Lưu thất bại";
+"Could not encode the screenshot." = "Không thể mã hóa ảnh chụp màn hình.";
+"Could not save the screenshot: %@" = "Không thể lưu ảnh chụp màn hình: %@";
+"Could not save the screenshot to history." = "Không thể lưu ảnh chụp màn hình vào lịch sử.";
 
 /* Barcode Detector */
 /* "Open" and "Copy" are shared with other sections */
@@ -476,7 +478,7 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Yêu cầu quyền Giám sát đầu vào";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot cần quyền Giám sát đầu vào để hiển thị phím bấm trong khi quay. Vui lòng cấp quyền trong System Settings, rồi thử lại.";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot cần quyền Giám sát đầu vào để làm nổi bật thao tác nhấp chuột hoặc hiển thị phím bấm trong khi ghi. Hãy cấp quyền truy cập trong Cài đặt hệ thống rồi thử lại.";
 "macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot cần quyền Trợ năng để bám vào từng thành phần giao diện. Vui lòng cấp quyền trong Cài đặt Hệ thống, rồi thử lại.";
 
 /* Recording — Keystroke Overlay */
@@ -692,3 +694,18 @@
 "Selection is already aligned" = "Vùng chọn đã được căn chỉnh";
 "Space to move. Release to annotate and edit" = "Giữ phím cách để di chuyển. Thả ra để chú thích và chỉnh sửa";
 "Space to move. Release to finish" = "Giữ phím cách để di chuyển. Thả ra để hoàn tất";
+
+"Saving..." = "Đang lưu…";
+
+"Show Recordings in Finder" = "Hiển thị bản ghi trong Finder";
+
+"Cancelled" = "Đã hủy";
+
+"Cancelling..." = "Đang hủy...";
+"Preparing video..." = "Đang chuẩn bị video...";
+"History is busy saving. Please try again shortly." = "Đang lưu lịch sử. Vui lòng thử lại sau giây lát.";
+
+// Video editor accessibility
+"Play" = "Phát";
+"Mute" = "Tắt tiếng";
+"Unmute" = "Bật tiếng";

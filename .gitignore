@@ -9,3 +9,5 @@ DerivedData/
 *.swo
 *~
 .claude/
+__pycache__/
+*.pyc

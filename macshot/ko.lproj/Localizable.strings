@@ -41,7 +41,6 @@
 
 /* History Panel */
 "Copy" = "복사";
-"Save As..." = "다른 이름으로 저장...";
 "Open in Editor" = "편집기에서 열기";
 "Pin to Screen" = "화면에 고정";
 "Quick Look" = "훑어보기";
@@ -54,7 +53,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "모두 닫기";
-"Save All to Folder…" = "모두 폴더에 저장…";
 "Save" = "저장";
 
 /* Editor Top Bar */
@@ -416,6 +414,7 @@
 /* Recording Toast */
 "Recording saved" = "녹화 저장됨";
 "%@ • Recording saved" = "%@ · 녹화 저장됨";
+"Recording failed: %@" = "녹화 실패: %@";
 "Copy Path" = "경로 복사";
 "Path copied!" = "경로가 복사되었습니다!";
 
@@ -426,6 +425,9 @@
 "Export failed" = "내보내기 실패";
 "Saved to %@" = "%@에 저장됨";
 "Save failed" = "저장 실패";
+"Could not encode the screenshot." = "스크린샷을 인코딩할 수 없습니다.";
+"Could not save the screenshot: %@" = "스크린샷을 저장할 수 없습니다: %@";
+"Could not save the screenshot to history." = "스크린샷을 기록에 저장할 수 없습니다.";
 
 /* Barcode Detector */
 /* "Open" and "Copy" are shared with other sections */
@@ -465,7 +467,7 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "입력 모니터링 권한 필요";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot이 녹화 중 키 입력을 표시하려면 입력 모니터링 권한이 필요합니다. 시스템 설정에서 접근 권한을 부여한 후 다시 시도하세요.";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot이 녹화 중 마우스 클릭을 강조하거나 키 입력을 표시하려면 입력 모니터링 권한이 필요합니다. 시스템 설정에서 접근 권한을 부여한 후 다시 시도하세요.";
 "macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "개별 인터페이스 요소에 스냅하려면 macshot에 손쉬운 사용 권한이 필요합니다. 시스템 설정에서 접근 권한을 부여한 후 다시 시도해 주세요.";
 
 /* Recording — Keystroke Overlay */
@@ -694,3 +696,18 @@
 "Selection is already aligned" = "선택 영역이 이미 정렬되어 있습니다";
 "Space to move. Release to annotate and edit" = "스페이스바로 이동. 놓으면 주석 및 편집";
 "Space to move. Release to finish" = "스페이스바로 이동. 놓으면 완료";
+
+"Saving..." = "저장 중…";
+
+"Show Recordings in Finder" = "Finder에서 녹화 파일 보기";
+
+"Cancelled" = "취소됨";
+
+"Cancelling..." = "취소 중...";
+"Preparing video..." = "비디오 준비 중...";
+"History is busy saving. Please try again shortly." = "기록을 저장하고 있습니다. 잠시 후 다시 시도해 주세요.";
+
+// Video editor accessibility
+"Play" = "재생";
+"Mute" = "음소거";
+"Unmute" = "음소거 해제";

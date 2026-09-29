@@ -41,7 +41,6 @@
 
 /* History Panel */
 "Copy" = "コピー";
-"Save As..." = "名前を付けて保存...";
 "Open in Editor" = "エディタで開く";
 "Pin to Screen" = "画面にピン留め";
 "Quick Look" = "クイックルック";
@@ -54,7 +53,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "すべて閉じる";
-"Save All to Folder…" = "すべてフォルダに保存…";
 "Save" = "保存";
 
 /* Editor Top Bar */
@@ -416,6 +414,7 @@
 /* Recording Toast */
 "Recording saved" = "録画を保存しました";
 "%@ • Recording saved" = "%@ · 録画を保存しました";
+"Recording failed: %@" = "録画に失敗しました: %@";
 "Copy Path" = "パスをコピー";
 "Path copied!" = "パスをコピーしました!";
 
@@ -426,6 +425,9 @@
 "Export failed" = "書き出しに失敗しました";
 "Saved to %@" = "%@ に保存しました";
 "Save failed" = "保存に失敗しました";
+"Could not encode the screenshot." = "スクリーンショットをエンコードできませんでした。";
+"Could not save the screenshot: %@" = "スクリーンショットを保存できませんでした: %@";
+"Could not save the screenshot to history." = "スクリーンショットを履歴に保存できませんでした。";
 
 /* Barcode Detector */
 /* "Open" and "Copy" are shared with other sections */
@@ -465,7 +467,7 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "入力監視の許可が必要です";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot が録画中にキー入力を表示するには、入力監視の許可が必要です。システム設定でアクセスを許可してから、もう一度お試しください。";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot が録画中にマウスのクリックを強調表示したり、キー入力を表示したりするには、入力監視の許可が必要です。システム設定でアクセスを許可してから、もう一度お試しください。";
 "macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "個々のインターフェイス要素にスナップするには、アクセシビリティの許可が必要です。システム設定でアクセスを許可してから、もう一度お試しください。";
 
 /* Recording — Keystroke Overlay */
@@ -692,3 +694,18 @@
 "Selection is already aligned" = "選択範囲はすでに揃っています";
 "Space to move. Release to annotate and edit" = "スペースバーを押している間は移動できます。離すと注釈の追加と編集に戻ります";
 "Space to move. Release to finish" = "スペースバーを押している間は移動できます。離すと完了します";
+
+"Saving..." = "保存中…";
+
+"Show Recordings in Finder" = "録画をFinderに表示";
+
+"Cancelled" = "キャンセルしました";
+
+"Cancelling..." = "キャンセル中...";
+"Preparing video..." = "ビデオを準備中...";
+"History is busy saving. Please try again shortly." = "履歴を保存中です。しばらくしてからもう一度お試しください。";
+
+// Video editor accessibility
+"Play" = "再生";
+"Mute" = "ミュート";
+"Unmute" = "ミュート解除";

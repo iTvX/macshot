@@ -42,7 +42,6 @@
 
 /* History Panel */
 "Copy" = "Αντιγραφή";
-"Save As..." = "Αποθήκευση ως...";
 "Open in Editor" = "Άνοιγμα σε επεξεργαστή";
 "Open Link" = "Άνοιγμα συνδέσμου";
 "Open With" = "Άνοιγμα με";
@@ -58,7 +57,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "Κλείσιμο όλων";
-"Save All to Folder…" = "Αποθήκευση όλων σε φάκελο…";
 "Save" = "Αποθήκευση";
 
 /* Editor Top Bar */
@@ -428,6 +426,7 @@
 /* Recording Toast */
 "Recording saved" = "Η εγγραφή αποθηκεύτηκε";
 "%@ • Recording saved" = "%@ • Η εγγραφή αποθηκεύτηκε";
+"Recording failed: %@" = "Αποτυχία εγγραφής: %@";
 "Copy Path" = "Αντιγραφή διαδρομής";
 "Path copied!" = "Η διαδρομή αντιγράφηκε!";
 
@@ -446,6 +445,9 @@
 "Save As..." = "Αποθήκευση ως...";
 "Choose a folder" = "Επιλέξτε φάκελο";
 "Save All to Folder…" = "Αποθήκευση όλων σε φάκελο…";
+"Could not encode the screenshot." = "Δεν ήταν δυνατή η κωδικοποίηση του στιγμιότυπου.";
+"Could not save the screenshot: %@" = "Δεν ήταν δυνατή η αποθήκευση του στιγμιότυπου: %@";
+"Could not save the screenshot to history." = "Δεν ήταν δυνατή η αποθήκευση του στιγμιότυπου στο ιστορικό.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "Αυτόματη κύλιση";
@@ -477,7 +479,7 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Απαιτείται παρακολούθηση εισόδου";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "Το macshot χρειάζεται άδεια παρακολούθησης εισόδου για να εμφανίζει τα πλήκτρα κατά την εγγραφή. Παραχωρήστε πρόσβαση στις System Settings και δοκιμάστε ξανά.";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "Το macshot χρειάζεται άδεια παρακολούθησης εισόδου για να επισημαίνει τα κλικ του ποντικιού ή να εμφανίζει τα πατήματα πλήκτρων κατά την εγγραφή. Παραχωρήστε πρόσβαση στις Ρυθμίσεις συστήματος και δοκιμάστε ξανά.";
 "macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "Το macshot χρειάζεται άδεια Προσβασιμότητας για προσκόλληση σε μεμονωμένα στοιχεία της διεπαφής. Παραχωρήστε πρόσβαση στις Ρυθμίσεις Συστήματος και δοκιμάστε ξανά.";
 
 /* Recording — Keystroke Overlay */
@@ -694,3 +696,18 @@
 "Selection is already aligned" = "Η επιλογή είναι ήδη ευθυγραμμισμένη";
 "Space to move. Release to annotate and edit" = "Κρατήστε πατημένο το πλήκτρο διαστήματος για μετακίνηση. Αφήστε το για σχολιασμό και επεξεργασία";
 "Space to move. Release to finish" = "Κρατήστε πατημένο το πλήκτρο διαστήματος για μετακίνηση. Αφήστε το για ολοκλήρωση";
+
+"Saving..." = "Αποθήκευση…";
+
+"Show Recordings in Finder" = "Εμφάνιση εγγραφών στο Finder";
+
+"Cancelled" = "Ακυρώθηκε";
+
+"Cancelling..." = "Ακύρωση...";
+"Preparing video..." = "Προετοιμασία βίντεο...";
+"History is busy saving. Please try again shortly." = "Γίνεται αποθήκευση του ιστορικού. Δοκιμάστε ξανά σε λίγο.";
+
+// Video editor accessibility
+"Play" = "Αναπαραγωγή";
+"Mute" = "Σίγαση";
+"Unmute" = "Κατάργηση σίγασης";

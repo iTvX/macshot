@@ -41,7 +41,6 @@
 
 /* History Panel */
 "Copy" = "Копиране";
-"Save As..." = "Запазване като...";
 "Open in Editor" = "Отваряне в редактора";
 "Pin to Screen" = "Закачане на екрана";
 "Quick Look" = "Бърз преглед";
@@ -54,7 +53,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "Затваряне на всички";
-"Save All to Folder…" = "Запазване на всички в папка…";
 "Save" = "Запазване";
 
 /* Editor Top Bar */
@@ -427,6 +425,7 @@
 /* Recording Toast */
 "Recording saved" = "Записът е запазен";
 "%@ • Recording saved" = "%@ • Записът е запазен";
+"Recording failed: %@" = "Записването е неуспешно: %@";
 "Copy Path" = "Копиране на пътя";
 "Path copied!" = "Пътят е копиран!";
 
@@ -445,6 +444,9 @@
 "Save As..." = "Запазване като...";
 "Choose a folder" = "Изберете папка";
 "Save All to Folder…" = "Запазване на всички в папка…";
+"Could not encode the screenshot." = "Екранната снимка не може да бъде кодирана.";
+"Could not save the screenshot: %@" = "Екранната снимка не може да бъде запазена: %@";
+"Could not save the screenshot to history." = "Екранната снимка не може да бъде запазена в историята.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "Авто-превъртане";
@@ -476,7 +478,7 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Необходим е мониторинг на въвеждането";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot се нуждае от разрешение за мониторинг на въвеждането, за да показва натисканията на клавиши по време на запис. Моля, дайте достъп в System Settings и опитайте отново.";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot се нуждае от разрешение за мониторинг на въвеждането, за да откроява щракванията с мишката или да показва натисканията на клавиши по време на запис. Дайте достъп в системните настройки и опитайте отново.";
 "macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot се нуждае от разрешение за достъпност за прилепване към отделни елементи на интерфейса. Моля, разрешете достъпа в Системни настройки и опитайте отново.";
 
 /* Recording — Keystroke Overlay */
@@ -692,3 +694,18 @@
 "Selection is already aligned" = "Селекцията вече е подравнена";
 "Space to move. Release to annotate and edit" = "Задръжте интервала за преместване. Отпуснете за анотиране и редактиране";
 "Space to move. Release to finish" = "Задръжте интервала за преместване. Отпуснете за завършване";
+
+"Saving..." = "Запазване…";
+
+"Show Recordings in Finder" = "Показване на записите във Finder";
+
+"Cancelled" = "Отменено";
+
+"Cancelling..." = "Отменяне...";
+"Preparing video..." = "Подготовка на видеото...";
+"History is busy saving. Please try again shortly." = "Историята се запазва. Моля, опитайте отново след малко.";
+
+// Video editor accessibility
+"Play" = "Възпроизвеждане";
+"Mute" = "Заглушаване";
+"Unmute" = "Включване на звука";

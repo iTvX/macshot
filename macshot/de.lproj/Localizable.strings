@@ -41,7 +41,6 @@
 
 /* History Panel */
 "Copy" = "Kopieren";
-"Save As..." = "Sichern unter ...";
 "Open in Editor" = "Im Editor öffnen";
 "Pin to Screen" = "An Bildschirm anheften";
 "Quick Look" = "Übersicht";
@@ -54,7 +53,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "Alle schließen";
-"Save All to Folder…" = "Alle in Ordner sichern …";
 "Save" = "Sichern";
 
 /* Editor Top Bar */
@@ -417,6 +415,7 @@
 /* Recording Toast */
 "Recording saved" = "Aufzeichnung gesichert";
 "%@ • Recording saved" = "%@ · Aufzeichnung gesichert";
+"Recording failed: %@" = "Aufzeichnung fehlgeschlagen: %@";
 "Copy Path" = "Pfad kopieren";
 "Path copied!" = "Pfad kopiert!";
 
@@ -436,6 +435,9 @@
 "Save Recording" = "Aufzeichnung sichern";
 "Choose a folder" = "Ordner auswählen";
 "Save All to Folder…" = "Alle in Ordner sichern …";
+"Could not encode the screenshot." = "Der Screenshot konnte nicht codiert werden.";
+"Could not save the screenshot: %@" = "Der Screenshot konnte nicht gesichert werden: %@";
+"Could not save the screenshot to history." = "Der Screenshot konnte nicht im Verlauf gesichert werden.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "Automatisches Scrollen";
@@ -467,7 +469,7 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Eingabeüberwachung erforderlich";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot benötigt die Eingabeüberwachungs-Berechtigung, um Tastenanschläge während der Aufzeichnung anzuzeigen. Bitte gewähren Sie den Zugriff in den System Settings und versuchen Sie es erneut.";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot benötigt die Berechtigung zur Eingabeüberwachung, um Mausklicks hervorzuheben oder Tastenanschläge während der Aufnahme anzuzeigen. Erlaube den Zugriff in den Systemeinstellungen und versuche es erneut.";
 "macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot benötigt die Bedienungshilfen-Berechtigung, um an einzelnen Oberflächenelementen einzurasten. Bitte gewähren Sie den Zugriff in den Systemeinstellungen und versuchen Sie es erneut.";
 
 /* Recording — Keystroke Overlay */
@@ -694,3 +696,18 @@
 "Selection is already aligned" = "Auswahl ist bereits ausgerichtet";
 "Space to move. Release to annotate and edit" = "Leertaste zum Verschieben gedrückt halten. Loslassen, um zu kommentieren und zu bearbeiten";
 "Space to move. Release to finish" = "Leertaste zum Verschieben gedrückt halten. Loslassen, um abzuschließen";
+
+"Saving..." = "Speichern…";
+
+"Show Recordings in Finder" = "Aufnahmen im Finder anzeigen";
+
+"Cancelled" = "Abgebrochen";
+
+"Cancelling..." = "Wird abgebrochen...";
+"Preparing video..." = "Video wird vorbereitet...";
+"History is busy saving. Please try again shortly." = "Der Verlauf wird gerade gespeichert. Bitte versuche es gleich noch einmal.";
+
+// Video editor accessibility
+"Play" = "Wiedergeben";
+"Mute" = "Stummschalten";
+"Unmute" = "Ton einschalten";

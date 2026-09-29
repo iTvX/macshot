@@ -39,7 +39,6 @@
 
 /* History Panel */
 "Copy" = "Kopyala";
-"Save As..." = "Farklı Kaydet...";
 "Open in Editor" = "Düzenleyicide Aç";
 "Open With" = "Birlikte Aç";
 "Open Link" = "Bağlantıyı Aç";
@@ -56,7 +55,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "Tümünü Kapat";
-"Save All to Folder…" = "Tümünü Klasöre Kaydet…";
 "Save" = "Kaydet";
 
 /* Editor Top Bar */
@@ -420,6 +418,7 @@
 /* Recording Toast */
 "Recording saved" = "Kayıt kaydedildi";
 "%@ • Recording saved" = "%@ • Kayıt kaydedildi";
+"Recording failed: %@" = "Kayıt başarısız: %@";
 "Copy Path" = "Yolu Kopyala";
 "Path copied!" = "Yol kopyalandı!";
 
@@ -438,6 +437,9 @@
 "Save As..." = "Farklı Kaydet...";
 "Choose a folder" = "Bir klasör seçin";
 "Save All to Folder…" = "Tümünü Klasöre Kaydet…";
+"Could not encode the screenshot." = "Ekran görüntüsü kodlanamadı.";
+"Could not save the screenshot: %@" = "Ekran görüntüsü kaydedilemedi: %@";
+"Could not save the screenshot to history." = "Ekran görüntüsü geçmişe kaydedilemedi.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "Otomatik Kaydır";
@@ -469,7 +471,7 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Giriş İzleme Gerekli";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot, kayıt sırasında tuş vuruşlarını göstermek için Giriş İzleme iznine ihtiyaç duyar. Lütfen System Settings'ten izin verin ve tekrar deneyin.";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot, kayıt sırasında fare tıklamalarını vurgulamak veya tuş vuruşlarını göstermek için Giriş İzleme iznine ihtiyaç duyar. Sistem Ayarları'ndan erişim izni verin ve tekrar deneyin.";
 "macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot, tek tek arayüz öğelerine hizalanmak için Erişilebilirlik iznine ihtiyaç duyuyor. Lütfen Sistem Ayarları'ndan erişim verin ve tekrar deneyin.";
 
 /* Recording — Keystroke Overlay */
@@ -694,3 +696,18 @@
 "Selection is already aligned" = "Seçim zaten hizalı";
 "Space to move. Release to annotate and edit" = "Taşımak için Boşluk tuşunu basılı tutun. Açıklama eklemek ve düzenlemek için bırakın";
 "Space to move. Release to finish" = "Taşımak için Boşluk tuşunu basılı tutun. Bitirmek için bırakın";
+
+"Saving..." = "Kaydediliyor…";
+
+"Show Recordings in Finder" = "Kayıtları Finder’da Göster";
+
+"Cancelled" = "İptal edildi";
+
+"Cancelling..." = "İptal ediliyor...";
+"Preparing video..." = "Video hazırlanıyor...";
+"History is busy saving. Please try again shortly." = "Geçmiş kaydediliyor. Lütfen biraz sonra tekrar deneyin.";
+
+// Video editor accessibility
+"Play" = "Oynat";
+"Mute" = "Sesi kapat";
+"Unmute" = "Sesi aç";

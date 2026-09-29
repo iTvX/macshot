@@ -43,7 +43,6 @@
 
 /* History Panel */
 "Copy" = "நகலெடு";
-"Save As..." = "இவ்வாறு சேமி...";
 "Open in Editor" = "திருத்தியில் திற";
 "Open With" = "இதனுடன் திற";
 "Open Link" = "இணைப்பைத் திற";
@@ -58,7 +57,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "அனைத்தையும் மூடு";
-"Save All to Folder…" = "அனைத்தையும் கோப்புறையில் சேமி…";
 "Save" = "சேமி";
 
 /* Editor Top Bar */
@@ -428,6 +426,7 @@
 /* Recording Toast */
 "Recording saved" = "பதிவு சேமிக்கப்பட்டது";
 "%@ • Recording saved" = "%@ • பதிவு சேமிக்கப்பட்டது";
+"Recording failed: %@" = "பதிவு தோல்வி: %@";
 "Copy Path" = "பாதையை நகலெடு";
 "Path copied!" = "பாதை நகலெடுக்கப்பட்டது!";
 
@@ -446,6 +445,9 @@
 "Save As..." = "இவ்வாறு சேமி...";
 "Choose a folder" = "கோப்புறையைத் தேர்வுசெய்";
 "Save All to Folder…" = "அனைத்தையும் கோப்புறையில் சேமி…";
+"Could not encode the screenshot." = "திரைப்பிடிப்பைக் குறியாக்கம் செய்ய முடியவில்லை.";
+"Could not save the screenshot: %@" = "திரைப்பிடிப்பைச் சேமிக்க முடியவில்லை: %@";
+"Could not save the screenshot to history." = "திரைப்பிடிப்பை வரலாற்றில் சேமிக்க முடியவில்லை.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "தானியங்கு உருள்தல்";
@@ -477,7 +479,7 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "உள்ளீட்டு கண்காணிப்பு தேவை";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "பதிவின் போது விசை அழுத்தங்களைக் காட்ட macshot க்கு உள்ளீட்டு கண்காணிப்பு அனுமதி தேவை. System Settings இல் அணுகலை வழங்கி, மீண்டும் முயற்சிக்கவும்.";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "பதிவின்போது மவுஸ் கிளிக்குகளை முன்னிலைப்படுத்த அல்லது விசை அழுத்தங்களைக் காட்ட macshot க்கு உள்ளீட்டு கண்காணிப்பு அனுமதி தேவை. கணினி அமைப்புகளில் அணுகலை வழங்கி, மீண்டும் முயற்சிக்கவும்.";
 "macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "தனித்தனி இடைமுக உறுப்புகளுடன் ஸ்நாப் செய்ய macshot-க்கு அணுகல்தன்மை அனுமதி தேவை. கணினி அமைப்புகளில் அணுகலை வழங்கி, மீண்டும் முயற்சிக்கவும்.";
 
 /* Recording — Keystroke Overlay */
@@ -694,3 +696,18 @@
 "Selection is already aligned" = "தேர்வு ஏற்கனவே சீரமைக்கப்பட்டுள்ளது";
 "Space to move. Release to annotate and edit" = "நகர்த்த ஸ்பேஸ் விசையைப் பிடிக்கவும். குறிப்புரையிட்டு திருத்த விடுவிக்கவும்";
 "Space to move. Release to finish" = "நகர்த்த ஸ்பேஸ் விசையைப் பிடிக்கவும். முடிக்க விடுவிக்கவும்";
+
+"Saving..." = "சேமிக்கப்படுகிறது…";
+
+"Show Recordings in Finder" = "Finder-இல் பதிவுகளைக் காட்டு";
+
+"Cancelled" = "ரத்துசெய்யப்பட்டது";
+
+"Cancelling..." = "ரத்துசெய்யப்படுகிறது...";
+"Preparing video..." = "வீடியோ தயாராகிறது...";
+"History is busy saving. Please try again shortly." = "வரலாறு சேமிக்கப்படுகிறது. சிறிது நேரத்திற்குப் பிறகு மீண்டும் முயற்சிக்கவும்.";
+
+// Video editor accessibility
+"Play" = "இயக்கு";
+"Mute" = "ஒலியை முடக்கு";
+"Unmute" = "ஒலியை இயக்கு";

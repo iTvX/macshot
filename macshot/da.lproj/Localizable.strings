@@ -41,7 +41,6 @@
 
 /* History Panel */
 "Copy" = "Kopi\U00E9r";
-"Save As..." = "Gem som...";
 "Open in Editor" = "\U00C5bn i redigering";
 "Pin to Screen" = "Fastg\U00F8r til sk\U00E6rm";
 "Quick Look" = "Smugkig";
@@ -54,7 +53,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "Luk alle";
-"Save All to Folder\U2026" = "Gem alle i mappe\U2026";
 "Save" = "Gem";
 
 /* Editor Top Bar */
@@ -425,6 +423,7 @@
 /* Recording Toast */
 "Recording saved" = "Optagelse gemt";
 "%@ \U2022 Recording saved" = "%@ \U2022 Optagelse gemt";
+"Recording failed: %@" = "Optagelse mislykkedes: %@";
 "Copy Path" = "Kopi\U00E9r sti";
 "Path copied!" = "Sti kopieret!";
 
@@ -443,6 +442,9 @@
 "Save As..." = "Gem som...";
 "Choose a folder" = "V\U00E6lg en mappe";
 "Save All to Folder\U2026" = "Gem alle i mappe\U2026";
+"Could not encode the screenshot." = "Sk\U00E6rmbilledet kunne ikke kodes.";
+"Could not save the screenshot: %@" = "Sk\U00E6rmbilledet kunne ikke gemmes: %@";
+"Could not save the screenshot to history." = "Sk\U00E6rmbilledet kunne ikke gemmes i historikken.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "Auto-rul";
@@ -474,7 +476,7 @@
 
 /* Recording \U2014 Input Monitoring Permission */
 "Input Monitoring Required" = "Inputoverv\U00E5gning kr\U00E6ves";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot kr\U00E6ver tilladelse til inputoverv\U00E5gning for at vise tastetryk under optagelse. Giv adgang i System Settings, og pr\U00F8v derefter igen.";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot kræver tilladelse til inputovervågning for at fremhæve museklik eller vise tastetryk under optagelse. Giv adgang i Systemindstillinger, og prøv derefter igen.";
 "macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot har brug for tilgængelighedstilladelse til at justere efter enkelte grænsefladeelementer. Giv adgang i Systemindstillinger, og prøv igen.";
 
 /* Recording \U2014 Keystroke Overlay */
@@ -692,3 +694,18 @@
 "Selection is already aligned" = "Markeringen flugter allerede med kanterne";
 "Space to move. Release to annotate and edit" = "Hold mellemrumstasten nede for at flytte. Slip for at annotere og redigere";
 "Space to move. Release to finish" = "Hold mellemrumstasten nede for at flytte. Slip for at afslutte";
+
+"Saving..." = "Gemmer…";
+
+"Show Recordings in Finder" = "Vis optagelser i Finder";
+
+"Cancelled" = "Annulleret";
+
+"Cancelling..." = "Annullerer...";
+"Preparing video..." = "Forbereder video...";
+"History is busy saving. Please try again shortly." = "Historikken gemmes. Prøv igen om et øjeblik.";
+
+// Video editor accessibility
+"Play" = "Afspil";
+"Mute" = "Slå lyden fra";
+"Unmute" = "Slå lyden til";

@@ -41,7 +41,6 @@
 
 /* History Panel */
 "Copy" = "Копировать";
-"Save As..." = "Сохранить как...";
 "Open in Editor" = "Открыть в редакторе";
 "Pin to Screen" = "Закрепить на экране";
 "Quick Look" = "Быстрый просмотр";
@@ -54,7 +53,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "Закрыть все";
-"Save All to Folder…" = "Сохранить все в папку…";
 "Save" = "Сохранить";
 
 /* Editor Top Bar */
@@ -427,6 +425,7 @@
 /* Recording Toast */
 "Recording saved" = "Запись сохранена";
 "%@ • Recording saved" = "%@ • Запись сохранена";
+"Recording failed: %@" = "Ошибка записи: %@";
 "Copy Path" = "Копировать путь";
 "Path copied!" = "Путь скопирован!";
 
@@ -445,6 +444,9 @@
 "Save As..." = "Сохранить как...";
 "Choose a folder" = "Выберите папку";
 "Save All to Folder…" = "Сохранить все в папку…";
+"Could not encode the screenshot." = "Не удалось закодировать снимок экрана.";
+"Could not save the screenshot: %@" = "Не удалось сохранить снимок экрана: %@";
+"Could not save the screenshot to history." = "Не удалось сохранить снимок экрана в историю.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "Авто-прокрутка";
@@ -476,7 +478,7 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Требуется мониторинг ввода";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot требуется разрешение на мониторинг ввода для отображения нажатий клавиш во время записи. Предоставьте доступ в System Settings и попробуйте снова.";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot требуется разрешение на мониторинг ввода для выделения щелчков мыши или отображения нажатий клавиш во время записи. Предоставьте доступ в Системных настройках и попробуйте снова.";
 "macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot требуется разрешение Универсального доступа для привязки к отдельным элементам интерфейса. Предоставьте доступ в Системных настройках и повторите попытку.";
 
 /* Recording — Keystroke Overlay */
@@ -692,3 +694,18 @@
 "Selection is already aligned" = "Область уже выровнена";
 "Space to move. Release to annotate and edit" = "Пробел — перемещение. Отпустите, чтобы добавить аннотации и перейти к редактированию";
 "Space to move. Release to finish" = "Пробел — перемещение. Отпустите, чтобы завершить";
+
+"Saving..." = "Сохранение…";
+
+"Show Recordings in Finder" = "Показать записи в Finder";
+
+"Cancelled" = "Отменено";
+
+"Cancelling..." = "Отмена...";
+"Preparing video..." = "Подготовка видео...";
+"History is busy saving. Please try again shortly." = "История сохраняется. Повторите попытку через несколько секунд.";
+
+// Video editor accessibility
+"Play" = "Воспроизвести";
+"Mute" = "Выключить звук";
+"Unmute" = "Включить звук";
