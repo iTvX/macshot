@@ -5,7 +5,7 @@ import Cocoa
 /// Two real, separately-editable number fields with a non-editable "×" between
 /// them (so the separator can't be deleted), plus a presets dropdown button for
 /// aspect ratios and common resolutions. Replaces the old drawn "W × H" badge.
-final class ResolutionBoxView: NSView, NSTextFieldDelegate {
+final class ResolutionBoxView: ToolbarSurfaceView, NSTextFieldDelegate {
 
     enum EditedDimension {
         case width
@@ -35,10 +35,6 @@ final class ResolutionBoxView: NSView, NSTextFieldDelegate {
 
     init() {
         super.init(frame: .zero)
-        wantsLayer = true
-        layer?.cornerRadius = 6
-        layer?.backgroundColor = ToolbarLayout.bgColor.cgColor
-        appearance = ToolbarLayout.appearance
 
         configureField(widthField)
         configureField(heightField)
@@ -63,6 +59,18 @@ final class ResolutionBoxView: NSView, NSTextFieldDelegate {
 
     required init?(coder: NSCoder) { fatalError() }
 
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            for field in [widthField, heightField] {
+                field.textColor = ToolbarLayout.iconColor
+                field.layer?.backgroundColor = ToolbarLayout.iconColor.withAlphaComponent(0.06).cgColor
+            }
+            timesLabel.color = ToolbarLayout.iconColor.withAlphaComponent(0.55)
+            presetsButton.contentTintColor = ToolbarLayout.iconColor
+        }
+    }
+
     private func configureField(_ f: NSTextField) {
         f.font = NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .medium)
         f.alignment = .center
@@ -79,7 +87,7 @@ final class ResolutionBoxView: NSView, NSTextFieldDelegate {
         f.focusRingType = .none
         f.wantsLayer = true
         f.layer?.cornerRadius = 5
-        f.layer?.backgroundColor = ToolbarLayout.iconColor.withAlphaComponent(0.12).cgColor
+        f.layer?.backgroundColor = ToolbarLayout.iconColor.withAlphaComponent(0.06).cgColor
         f.formatter = ResolutionBoxView.intFormatter()
         addSubview(f)
     }

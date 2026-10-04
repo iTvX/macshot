@@ -2,7 +2,14 @@ import Cocoa
 
 /// Real NSView-based tool options row, replacing the custom-drawn drawToolOptionsRow().
 /// Dynamically rebuilds its content when the selected tool changes.
-class ToolOptionsRowView: NSView {
+class ToolOptionsRowView: ToolbarSurfaceView {
+
+    private let optionsScroll = NSScrollView()
+    private let optionsContent = NSView()
+    private var centeredOffset: CGFloat = 0
+    private var verticalOffset: CGFloat = 0
+    private var presentationWidth: CGFloat?
+    private var controls: [NSView] { optionsContent.subviews }
 
     weak var overlayView: OverlayView?
     private(set) var currentTool: AnnotationTool?
@@ -10,7 +17,7 @@ class ToolOptionsRowView: NSView {
     private(set) var editingAnnotation: Annotation?
     /// Snapshot taken before the first property edit, for undo.
     private var editingSnapshot: Annotation?
-    private let rowHeight: CGFloat = 34
+    private let rowHeight: CGFloat = 42
     private let padding: CGFloat = 8
     /// The natural content width calculated during rebuild, before any external resizing.
     private(set) var contentWidth: CGFloat = 200
@@ -19,7 +26,9 @@ class ToolOptionsRowView: NSView {
     override func hitTest(_ point: NSPoint) -> NSView? {
         let local = convert(point, from: superview)
         guard bounds.contains(local) else { return nil }
-        if let result = super.hitTest(point), result !== self { return result }
+        if let result = super.hitTest(point), result !== self, result !== optionsContent, result !== optionsScroll, result !== optionsScroll.contentView { return result }
+        // A scrollable row owns its gaps so wheel events cannot pan the image.
+        if optionsScroll.hasHorizontalScroller { return optionsScroll }
         if overlayView?.isEditorMode == true { return nil }
         return self
     }
@@ -34,7 +43,8 @@ class ToolOptionsRowView: NSView {
     /// Auto-tint controls to match toolbar accent color.
     /// Buttons with tag 990+ are excluded (they have custom colors like red/green/white).
     override func addSubview(_ view: NSView) {
-        super.addSubview(view)
+        if view === optionsScroll { super.addSubview(view); return }
+        optionsContent.addSubview(view)
         if let btn = view as? NSButton, btn.tag < 990 { btn.contentTintColor = ToolbarLayout.accentColor }
         if let slider = view as? NSSlider { slider.trackFillColor = ToolbarLayout.accentColor }
         if let seg = view as? NSSegmentedControl { seg.selectedSegmentBezelColor = ToolbarLayout.accentColor }
@@ -42,15 +52,57 @@ class ToolOptionsRowView: NSView {
 
     override init(frame: NSRect) {
         super.init(frame: frame)
-        wantsLayer = true
-        layer?.cornerRadius = 6
-        layer?.backgroundColor = ToolbarLayout.bgColor.cgColor
-        // Match appearance to toolbar background brightness so system controls
-        // (NSSegmentedControl labels, NSTextField, NSButton titles) stay readable.
-        appearance = ToolbarLayout.appearance
+        optionsScroll.drawsBackground = false
+        optionsScroll.contentView.drawsBackground = false
+        optionsScroll.borderType = .noBorder
+        optionsScroll.scrollerStyle = .legacy
+        optionsScroll.horizontalScroller = NSScroller(frame: NSRect(x: 0, y: 0, width: 200, height: 12))
+        optionsScroll.autohidesScrollers = true
+        optionsScroll.hasVerticalScroller = false
+        optionsScroll.horizontalScrollElasticity = .allowed
+        optionsScroll.verticalScrollElasticity = .none
+        optionsScroll.documentView = optionsContent
+        super.addSubview(optionsScroll)
+
     }
 
     required init?(coder: NSCoder) { fatalError() }
+
+    func setPresentationWidth(_ width: CGFloat) {
+        presentationWidth = width
+        let needsScroll = contentWidth > width - 8
+        let oldScrollX = optionsScroll.contentView.bounds.minX
+        frame.size = NSSize(width: width, height: rowHeight + (needsScroll ? 14 : 0))
+        optionsScroll.frame = bounds.insetBy(dx: 4, dy: 1)
+        optionsScroll.hasHorizontalScroller = needsScroll
+        optionsScroll.tile()
+        positionControls(scrollX: oldScrollX)
+    }
+
+    override func layout() {
+        super.layout()
+        positionControls(scrollX: optionsScroll.contentView.bounds.minX)
+    }
+
+    private func positionControls(scrollX: CGFloat) {
+        let viewport = optionsScroll.contentView.bounds.size
+        let offset = max(0, (viewport.width - contentWidth) / 2)
+        let offsetY = (viewport.height - rowHeight) / 2
+        for control in controls {
+            control.frame.origin.x += offset - centeredOffset
+            control.frame.origin.y += offsetY - verticalOffset
+        }
+        centeredOffset = offset
+        verticalOffset = offsetY
+        optionsContent.frame = NSRect(x: 0, y: 0, width: max(viewport.width, contentWidth), height: viewport.height)
+        optionsScroll.contentView.scroll(to: NSPoint(x: min(max(0, scrollX), max(0, contentWidth - viewport.width)), y: 0))
+        optionsScroll.reflectScrolledClipView(optionsScroll.contentView)
+    }
+
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        if let tool = currentTool { rebuild(for: tool) }
+    }
 
     /// Rebuild the options row for a selected annotation's tool, reading values from the annotation.
     func rebuild(forAnnotation ann: Annotation) {
@@ -103,8 +155,15 @@ class ToolOptionsRowView: NSView {
 
     /// Rebuild the options row for the given tool. Call when tool or state changes.
     func rebuild(for tool: AnnotationTool) {
+        effectiveAppearance.performAsCurrentDrawingAppearance { rebuildContent(for: tool) }
+        setPresentationWidth(presentationWidth ?? contentWidth + 8)
+    }
+
+    private func rebuildContent(for tool: AnnotationTool) {
         // Remove old subviews
-        subviews.forEach { $0.removeFromSuperview() }
+        controls.forEach { $0.removeFromSuperview() }
+        centeredOffset = 0
+        verticalOffset = 0
         guard let ov = overlayView else { return }
 
         currentTool = tool
@@ -216,7 +275,7 @@ class ToolOptionsRowView: NSView {
             }
             // Disable stroke slider when smart marker is on (auto-sized)
             if ov.smartMarkerEnabled {
-                for sub in subviews {
+                for sub in controls {
                     if let slider = sub as? NSSlider, slider.tag == AnnotationTool.marker.rawValue {
                         slider.isEnabled = false
                         slider.alphaValue = 0.35
@@ -226,7 +285,7 @@ class ToolOptionsRowView: NSView {
                     label.alphaValue = 0.35
                 }
                 // Also dim the "Stroke" label
-                for sub in subviews {
+                for sub in controls {
                     if let tf = sub as? NSTextField, tf.stringValue == L("Stroke"), tf.tag == 0 {
                         tf.alphaValue = 0.35
                     }
@@ -297,7 +356,7 @@ class ToolOptionsRowView: NSView {
         var curX = x
 
         let nameLabel = NSTextField(labelWithString: tool == .loupe ? L("Size") : L("Stroke"))
-        nameLabel.font = NSFont.systemFont(ofSize: 9.5, weight: .medium)
+        nameLabel.font = NSFont.systemFont(ofSize: 10.5, weight: .medium)
         nameLabel.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.4)
         nameLabel.sizeToFit()
         nameLabel.frame.origin = NSPoint(x: curX, y: (rowHeight - nameLabel.frame.height) / 2)
@@ -339,7 +398,7 @@ class ToolOptionsRowView: NSView {
         var curX = x
 
         let nameLabel = NSTextField(labelWithString: L("Zoom"))
-        nameLabel.font = NSFont.systemFont(ofSize: 9.5, weight: .medium)
+        nameLabel.font = NSFont.systemFont(ofSize: 10.5, weight: .medium)
         nameLabel.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.4)
         nameLabel.sizeToFit()
         nameLabel.frame.origin = NSPoint(x: curX, y: (rowHeight - nameLabel.frame.height) / 2)
@@ -372,7 +431,7 @@ class ToolOptionsRowView: NSView {
         var curX = x
 
         let nameLabel = NSTextField(labelWithString: L("Dim"))
-        nameLabel.font = NSFont.systemFont(ofSize: 9.5, weight: .medium)
+        nameLabel.font = NSFont.systemFont(ofSize: 10.5, weight: .medium)
         nameLabel.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.4)
         nameLabel.sizeToFit()
         nameLabel.frame.origin = NSPoint(x: curX, y: (rowHeight - nameLabel.frame.height) / 2)
@@ -804,7 +863,7 @@ class ToolOptionsRowView: NSView {
     private func addCornerRadiusSlider(at x: CGFloat, ov: OverlayView) -> CGFloat {
         var curX = x
         let label = NSTextField(labelWithString: L("Radius"))
-        label.font = NSFont.systemFont(ofSize: 9.5, weight: .medium)
+        label.font = NSFont.systemFont(ofSize: 10.5, weight: .medium)
         label.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.4)
         label.sizeToFit()
         label.frame.origin = NSPoint(x: curX, y: (rowHeight - label.frame.height) / 2)
@@ -871,7 +930,7 @@ class ToolOptionsRowView: NSView {
         curX = addSeparator(at: curX)
 
         let startLabel = NSTextField(labelWithString: L("Start:"))
-        startLabel.font = NSFont.systemFont(ofSize: 9.5, weight: .medium)
+        startLabel.font = NSFont.systemFont(ofSize: 10.5, weight: .medium)
         startLabel.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.4)
         startLabel.sizeToFit()
         startLabel.frame.origin = NSPoint(x: curX, y: (rowHeight - startLabel.frame.height) / 2)
@@ -1148,7 +1207,7 @@ class ToolOptionsRowView: NSView {
         // larger than the slider range — those resize via their handles instead.
         if editingAnnotation?.isCaptureStamp != true {
             let sizeLabel = NSTextField(labelWithString: L("Size"))
-            sizeLabel.font = NSFont.systemFont(ofSize: 9.5, weight: .medium)
+            sizeLabel.font = NSFont.systemFont(ofSize: 10.5, weight: .medium)
             sizeLabel.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.4)
             sizeLabel.sizeToFit()
             sizeLabel.frame.origin = NSPoint(x: curX, y: (rowHeight - sizeLabel.frame.height) / 2)
@@ -1228,7 +1287,7 @@ class ToolOptionsRowView: NSView {
 
         // — Draw mode: All / Text Only segmented control —
         let drawLabel = NSTextField(labelWithString: L("Draw:"))
-        drawLabel.font = NSFont.systemFont(ofSize: 9.5, weight: .medium)
+        drawLabel.font = NSFont.systemFont(ofSize: 10.5, weight: .medium)
         drawLabel.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.4)
         drawLabel.sizeToFit()
         drawLabel.frame.origin = NSPoint(x: curX, y: (rowHeight - drawLabel.frame.height) / 2)
@@ -1250,7 +1309,7 @@ class ToolOptionsRowView: NSView {
 
         // — Auto-detect buttons —
         let autoLabel = NSTextField(labelWithString: L("Auto:"))
-        autoLabel.font = NSFont.systemFont(ofSize: 9.5, weight: .medium)
+        autoLabel.font = NSFont.systemFont(ofSize: 10.5, weight: .medium)
         autoLabel.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.4)
         autoLabel.sizeToFit()
         autoLabel.frame.origin = NSPoint(x: curX, y: (rowHeight - autoLabel.frame.height) / 2)
@@ -1450,7 +1509,7 @@ class ToolOptionsRowView: NSView {
 
     private func addHintLabel(at x: CGFloat, text: String) -> CGFloat {
         let label = NSTextField(labelWithString: text)
-        label.font = NSFont.systemFont(ofSize: 9.5, weight: .medium)
+        label.font = NSFont.systemFont(ofSize: 10.5, weight: .medium)
         label.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.3)
         label.sizeToFit()
         label.frame.origin = NSPoint(x: x, y: (rowHeight - label.frame.height) / 2)
@@ -1771,7 +1830,7 @@ class ToolOptionsRowView: NSView {
             ov.textEditor.applyAlignment()
             ov.applyTextFormattingToSelectedAnnotations()
             // Update all alignment buttons — only the selected one should be on
-            for case let btn as NSButton in subviews where
+            for case let btn as NSButton in controls where
                 btn.tag == NSTextAlignment.left.rawValue ||
                 btn.tag == NSTextAlignment.center.rawValue ||
                 btn.tag == NSTextAlignment.right.rawValue {
@@ -1873,7 +1932,6 @@ class ToolOptionsRowView: NSView {
             .baselineOffset: 0.5,
         ])
         outlineBtn.sizeToFit()
-        let rowHeight: CGFloat = frame.height > 0 ? frame.height : 30
         outlineBtn.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: max(50, outlineBtn.frame.width), height: 22)
         addSubview(outlineBtn)
         curX += outlineBtn.frame.width + 2
@@ -1953,7 +2011,6 @@ class ToolOptionsRowView: NSView {
             .baselineOffset: 0.5,
         ])
         outlineBtn.sizeToFit()
-        let rowHeight: CGFloat = frame.height > 0 ? frame.height : 30
         outlineBtn.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: max(50, outlineBtn.frame.width), height: 22)
         addSubview(outlineBtn)
         curX += outlineBtn.frame.width + 2

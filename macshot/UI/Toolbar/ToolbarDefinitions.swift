@@ -146,7 +146,7 @@ enum ToolbarCustomAction: Int {
             return button
         #endif
         case .pin:
-            return ToolbarButton(action: .pin, sfSymbol: "pin.fill", tooltip: L("Pin"))
+            return ToolbarButton(action: .pin, sfSymbol: "pin", tooltip: L("Pin"))
         case .ocr:
             return ToolbarButton(action: .ocr, sfSymbol: "doc.text.viewfinder", tooltip: L("OCR & QR"))
         case .beautify:
@@ -238,10 +238,14 @@ enum ToolbarActionPreferences {
 
 class ToolbarLayout {
 
-    // Default theme colors (Flameshot purple style)
-    static let defaultAccentColor = NSColor(calibratedRed: 0.55, green: 0.30, blue: 0.85, alpha: 1.0)
-    static let defaultIconColor = NSColor.white
-    static let defaultBgColor = NSColor(white: 0.12, alpha: 1.0)
+    // The default palette follows the system; explicit user palettes still win.
+    static let defaultAccentColor = NSColor.systemBlue
+    static let defaultIconColor = NSColor.labelColor
+    static let defaultBgColor = NSColor(name: "MacShotToolbarSurface") { appearance in
+        appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+            ? NSColor(calibratedWhite: 0.16, alpha: 0.98)
+            : NSColor(calibratedWhite: 0.985, alpha: 0.97)
+    }
 
     // User-customizable colors — read from UserDefaults with defaults matching the original look
     static var accentColor: NSColor {
@@ -266,7 +270,7 @@ class ToolbarLayout {
         return defaultBgColor
     }
     static var handleColor: NSColor { accentColor }
-    static let cornerRadius: CGFloat = 6
+    static let cornerRadius: CGFloat = 14
 
     /// Save accent color to UserDefaults.
     static func saveAccentColor(_ color: NSColor) {
@@ -285,6 +289,7 @@ class ToolbarLayout {
     /// Appearance matching the toolbar background brightness.
     /// Dark background → `.darkAqua`, light background → `.aqua`.
     static var appearance: NSAppearance? {
+        guard UserDefaults.standard.data(forKey: "toolbarBgColor") != nil else { return nil }
         let color = bgColor.usingColorSpace(.deviceRGB) ?? bgColor
         var brightness: CGFloat = 0
         color.getHue(nil, saturation: nil, brightness: &brightness, alpha: nil)
@@ -350,7 +355,7 @@ class ToolbarLayout {
                 return "paintbrush.pointed.fill"
             }(), L("Marker")),
             (.text, "textformat", L("Text")),
-            (.number, "1.circle.fill", L("Number")),
+            (.number, "1.circle", L("Number")),
             (.pixelate, "_custom.checkerboard", L("Censor (Pixelate / Blur / Solid)")),
             (.highlight, "sun.max", L("Highlight (Spotlight)")),
             (.loupe, "magnifyingglass", L("Magnify (Loupe)")),
@@ -504,7 +509,7 @@ class ToolbarLayout {
             }
         }()
         var saveBtn = ToolbarButton(
-            action: .save, sfSymbol: "square.and.arrow.down.fill",
+            action: .save, sfSymbol: "square.and.arrow.down",
             tooltip: saveTooltip
         )
         saveBtn.hasContextMenu = true

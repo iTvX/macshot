@@ -81,9 +81,9 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         let minH: CGFloat = 400
         let maxW = screenFrame.width * 0.9
         let maxH = screenFrame.height * 0.9
-        // Add space for top bar (32), bottom toolbar (44), options row (40), right toolbar (46), padding
-        let chromeW: CGFloat = 46 + 60    // right toolbar + horizontal padding
-        let chromeH: CGFloat = 32 + 44 + 40 + 40  // top bar + bottom toolbar + options row + padding
+        let chromeInsets = ToolbarPlacement.editorContentInsets
+        let chromeW = chromeInsets.left + chromeInsets.right
+        let chromeH = 32 + chromeInsets.top + chromeInsets.bottom
         let winW = min(maxW, max(minW, imgSize.width + chromeW))
         let winH = min(maxH, max(minH, imgSize.height + chromeH))
 
@@ -124,7 +124,7 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
 
         // NSScrollView for native zoom/pan/centering.
         // The scroll view is inset from the top by the top bar height (32pt) so the
-        // scrollbar and content don't go behind the top bar. Bottom/right toolbars
+        // scrollbar and content don't go behind the top bar. Floating toolbars
         // are handled via content insets since their sizes are dynamic.
         let topBarHeight: CGFloat = 32
         let scrollView = NSScrollView(frame: NSRect(x: 0, y: 0, width: winW, height: winH - topBarHeight))
@@ -143,12 +143,12 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         scrollView.horizontalScrollElasticity = .none
         scrollView.verticalScrollElasticity = .none
         scrollView.usesPredominantAxisScrolling = false
-        // Insets so user can scroll past document edges to see content behind toolbars:
-        // bottom=80 (bottom toolbar + options row), right=46 (right toolbar)
+        // Keep image edges reachable past the floating action and annotation rows.
         scrollView.automaticallyAdjustsContentInsets = false
-        scrollView.contentInsets = NSEdgeInsets(top: 0, left: 0, bottom: 84, right: 50)
+        scrollView.contentInsets = chromeInsets
         // Extend scrollbar tracks to window edges (negate content insets effect on scrollers)
-        scrollView.scrollerInsets = NSEdgeInsets(top: 0, left: 0, bottom: -84, right: -50)
+        scrollView.scrollerInsets = NSEdgeInsets(top: -chromeInsets.top, left: -chromeInsets.left,
+                                                bottom: -chromeInsets.bottom, right: -chromeInsets.right)
 
         let clipView = CenteringClipView(frame: scrollView.contentView.frame)
         clipView.drawsBackground = false
