@@ -1,5 +1,13 @@
 # Changelog
 
+## 4.3.1 — annotation toolbar redesign (fork, 2026-10-04)
+
+- Add system-adaptive light and dark floating toolbars with outlined icons, grouped actions, and clearer selected states.
+- Put Save and the primary Copy action together above the selection; move advanced tools and actions into native More menus while keeping the active tool visible.
+- Keep long contextual options accessible with horizontal scrolling; avoid collisions between toolbars, resolution controls, screen edges and the display notch.
+- Preserve custom palettes, configured tools, context menus, annotation editing, capture exclusions and primary/alternative global shortcuts.
+- Add native presentation regression tests and an isolated AppKit preview for screenshot, editor and recording layouts.
+
 ## 4.3.0 — reliability integration (fork, 2026-09-29)
 
 - Integrate upstream stable 4.3.0 through `5b76299`, preserving original upstream history.

@@ -1,7 +1,7 @@
 import Cocoa
 
 /// Real NSView for a single toolbar button. Handles its own hover, press, drawing.
-/// Matches the existing dark toolbar look: purple accent, SF Symbols, color swatches.
+/// Adaptive selected states, SF Symbols, color swatches and primary output actions.
 class ToolbarButtonView: NSView {
 
     var action: ToolbarButtonAction
@@ -37,8 +37,30 @@ class ToolbarButtonView: NSView {
     var onRightClick: ((ToolbarButtonAction, NSView) -> Void)?
     var onHover: ((ToolbarButtonAction, Bool) -> Void)?  // (action, isHovered)
 
-    static let size: CGFloat = 32
-    private static let radius: CGFloat = 6
+    static let size: CGFloat = 34
+    private static let radius: CGFloat = 8
+
+    var showsActionTitle = false { didSet { needsDisplay = true } }
+    var actionTitle: String? {
+        guard showsActionTitle else { return nil }
+        switch action {
+        case .copy: return L("Copy")
+        case .save: return L("Save")
+        default: return nil
+        }
+    }
+    var preferredWidth: CGFloat {
+        guard let title = actionTitle else { return Self.size }
+        let width = (title as NSString).size(withAttributes: [.font: NSFont.systemFont(ofSize: 12, weight: .semibold)]).width
+        return min(140, max(66, width + 40))
+    }
+    private var isPrimaryAction: Bool {
+        switch action { case .copy, .startRecord: return true; default: return false }
+    }
+    private var primaryColor: NSColor {
+        if case .startRecord = action { return .systemRed }
+        return ToolbarLayout.accentColor
+    }
 
     var tooltipText: String = ""
 
@@ -77,19 +99,26 @@ class ToolbarButtonView: NSView {
     }
 
     override func draw(_ dirtyRect: NSRect) {
-        // Background
+        let surface = bounds.insetBy(dx: 1, dy: 1)
         let bg: NSColor
-        if isPressed {
-            bg = ToolbarLayout.accentColor.withAlphaComponent(0.6)
+        if isPrimaryAction {
+            bg = primaryColor.withAlphaComponent(isPressed ? 0.72 : (isHovered ? 0.88 : 1))
+        } else if isPressed {
+            bg = ToolbarLayout.iconColor.withAlphaComponent(0.15)
         } else if isOn {
-            bg = ToolbarLayout.accentColor
+            bg = ToolbarLayout.accentColor.withAlphaComponent(0.15)
         } else if isHovered {
-            bg = ToolbarLayout.iconColor.withAlphaComponent(0.12)
+            bg = ToolbarLayout.iconColor.withAlphaComponent(0.08)
         } else {
-            bg = NSColor.clear
+            bg = .clear
         }
         bg.setFill()
-        NSBezierPath(roundedRect: bounds, xRadius: Self.radius, yRadius: Self.radius).fill()
+        NSBezierPath(roundedRect: surface, xRadius: Self.radius, yRadius: Self.radius).fill()
+        if isOn && !isPrimaryAction {
+            ToolbarLayout.accentColor.withAlphaComponent(0.25).setStroke()
+            let outline = NSBezierPath(roundedRect: surface, xRadius: Self.radius, yRadius: Self.radius)
+            outline.lineWidth = 0.5; outline.stroke()
+        }
 
         // Mic level fill — green bar rising from the bottom inside the button
         if micLevel > 0.001 {
@@ -104,12 +133,12 @@ class ToolbarButtonView: NSView {
 
         // Color swatch
         if let swatch = swatchColor {
-            let inset: CGFloat = 6
+            let inset: CGFloat = 7
             let r = bounds.insetBy(dx: inset, dy: inset)
             swatch.setFill()
-            NSBezierPath(roundedRect: r, xRadius: 4, yRadius: 4).fill()
+            NSBezierPath(ovalIn: r).fill()
             ToolbarLayout.iconColor.withAlphaComponent(0.4).setStroke()
-            let border = NSBezierPath(roundedRect: r, xRadius: 4, yRadius: 4)
+            let border = NSBezierPath(ovalIn: r)
             border.lineWidth = 0.5
             border.stroke()
             return
@@ -119,7 +148,7 @@ class ToolbarButtonView: NSView {
         guard let name = sfSymbol else { return }
         let currentIsOn = isOn
         if cachedIcon == nil || cachedIconIsOn != currentIsOn {
-            let color = currentIsOn ? (selectedTintColor ?? ToolbarLayout.iconColor) : tintColor
+            let color: NSColor = isPrimaryAction ? .white : (currentIsOn ? (selectedTintColor ?? ToolbarLayout.accentColor) : tintColor)
             let key = Self.cacheKey(name: name, isOn: currentIsOn, color: color)
             if let cached = Self.iconCache[key] {
                 cachedIcon = cached
@@ -129,7 +158,7 @@ class ToolbarButtonView: NSView {
                 if name == "_custom.checkerboard" {
                     img = Self.checkerboardIcon(color: color)
                 } else {
-                    let cfg = NSImage.SymbolConfiguration(pointSize: 14, weight: .medium)
+                    let cfg = NSImage.SymbolConfiguration(pointSize: 15, weight: .regular)
                     if let symbol = NSImage(systemSymbolName: name, accessibilityDescription: nil)?
                             .withSymbolConfiguration(cfg) {
                         img = NSImage(size: symbol.size, flipped: false) { r in
@@ -151,9 +180,18 @@ class ToolbarButtonView: NSView {
             }
         }
         if let icon = cachedIcon {
-            let x = bounds.midX - icon.size.width / 2
+            let x = actionTitle == nil ? bounds.midX - icon.size.width / 2 : 10
             let y = bounds.midY - icon.size.height / 2
             icon.draw(at: NSPoint(x: x, y: y), from: .zero, operation: .sourceOver, fraction: 1.0)
+        }
+
+        if let title = actionTitle {
+            let style = NSMutableParagraphStyle()
+            style.lineBreakMode = .byTruncatingTail
+            (title as NSString).draw(in: NSRect(x: 32, y: bounds.midY - 8, width: bounds.width - 38, height: 17),
+                withAttributes: [.font: NSFont.systemFont(ofSize: 12, weight: .semibold),
+                                 .foregroundColor: isPrimaryAction ? NSColor.white : ToolbarLayout.iconColor,
+                                 .paragraphStyle: style])
         }
 
         // Context menu triangle
@@ -164,9 +202,27 @@ class ToolbarButtonView: NSView {
             path.line(to: NSPoint(x: bounds.maxX - 3, y: bounds.minY + 3))
             path.line(to: NSPoint(x: bounds.maxX - 3, y: bounds.minY + 3 + s))
             path.close()
-            ToolbarLayout.iconColor.withAlphaComponent(0.4).setFill()
+            ToolbarLayout.iconColor.withAlphaComponent(0.35).setFill()
             path.fill()
         }
+    }
+
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        cachedIcon = nil
+        needsDisplay = true
+    }
+
+    override func isAccessibilityElement() -> Bool { true }
+    override func accessibilityRole() -> NSAccessibility.Role? { .button }
+    override func accessibilityLabel() -> String? { tooltipText }
+    override func accessibilityValue() -> Any? { isOn ? 1 : 0 }
+    override func accessibilityPerformPress() -> Bool {
+        // Drag controls need a real press/release pair; a synthetic accessibility
+        // press must never enter the synchronous mouse-tracking loop.
+        guard onMouseDown == nil else { return false }
+        onClick?(action)
+        return onClick != nil
     }
 
     // MARK: - Events

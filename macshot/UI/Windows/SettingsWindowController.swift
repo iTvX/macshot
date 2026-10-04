@@ -3352,9 +3352,13 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     }
 
     private func applyThemePreset(_ preset: ThemePreset) {
-        ToolbarLayout.saveAccentColor(preset.accent)
-        ToolbarLayout.saveIconColor(preset.icon)
-        ToolbarLayout.saveBgColor(preset.bg)
+        if preset.name == "Default" {
+            ToolbarLayout.resetColors()
+        } else {
+            ToolbarLayout.saveAccentColor(preset.accent)
+            ToolbarLayout.saveIconColor(preset.icon)
+            ToolbarLayout.saveBgColor(preset.bg)
+        }
         accentColorWell.color = preset.accent
         iconColorWell.color = preset.icon
         bgColorWell.color = preset.bg

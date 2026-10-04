@@ -23,6 +23,7 @@ final class LocalizationTests: XCTestCase {
     // Other locales intentionally use English for these explicit keys; upstream
     // translations and all future keys remain subject to full coverage checks.
     private static let forkEnglishFallbackKeys: Set<String> = [
+        "More", "Options",
         "Add Application…",
         "Alternative",
         "Application exclusion requires macOS 14 or later.",

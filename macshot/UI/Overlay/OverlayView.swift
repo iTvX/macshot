@@ -1141,16 +1141,21 @@ class OverlayView: NSView {
             name: .toolbarColorsDidChange, object: nil)
     }
 
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        if bottomStripView != nil { handleToolbarColorsChanged() }
+    }
+
     @objc private func handleToolbarColorsChanged() {
         // Rebuild toolbars and options row with new colors.
-        if let row = toolOptionsRowView {
-            row.layer?.backgroundColor = ToolbarLayout.bgColor.cgColor
-        }
+        bottomStripView?.appearance = ToolbarLayout.appearance
+        rightStripView?.appearance = ToolbarLayout.appearance
         toolOptionsRowView?.appearance = ToolbarLayout.appearance
-        rebuildToolbarLayout()
+        resolutionBox?.appearance = ToolbarLayout.appearance
         if let tool = toolOptionsRowView?.currentTool {
             toolOptionsRowView?.rebuild(for: tool)
         }
+        rebuildToolbarLayout()
         needsDisplay = true
     }
 
@@ -2447,7 +2452,7 @@ class OverlayView: NSView {
             NSRect(x: clampedX, y: y, width: size.width, height: size.height)
         }
         func fits(_ rect: NSRect) -> Bool {
-            rect.minY >= minY && rect.maxY <= maxY
+            rect.minY >= minY && rect.maxY <= maxY && rect.minX >= bounds.minX + 2 && rect.maxX <= bounds.maxX - 2
         }
         let toolbarAvoidanceRects = resolutionBoxAvoidanceRects().map { $0.insetBy(dx: -4, dy: -4) }
         let topObstructionRects = screenTopObstructionRects().map { $0.insetBy(dx: -4, dy: -2) }
@@ -2469,7 +2474,11 @@ class OverlayView: NSView {
 
         let aboveRect = loweredBelowTopObstructions(rect(at: above))
         let belowRect = loweredBelowTopObstructions(rect(at: below))
-        let outsideCandidates = [aboveRect, belowRect]
+        let leadingX = max(bounds.minX + 12, min(selectionRect.minX, bounds.maxX - size.width - 12))
+        let leadingAbove = loweredBelowTopObstructions(NSRect(x: leadingX, y: selectionRect.maxY + 12, width: size.width, height: size.height))
+        let besideLeft = NSRect(x: selectionRect.minX - size.width - 12, y: selectionRect.midY - size.height / 2, width: size.width, height: size.height)
+        let besideRight = NSRect(x: selectionRect.maxX + 12, y: besideLeft.minY, width: size.width, height: size.height)
+        let outsideCandidates = showToolbars ? [leadingAbove, aboveRect, belowRect, besideLeft, besideRight] : [aboveRect, belowRect]
         if let clear = outsideCandidates.first(where: { fits($0) && overlapArea($0) == 0 }) {
             return clear
         }
@@ -5157,11 +5166,13 @@ class OverlayView: NSView {
         let parent = chromeParentView ?? self
         if bottomStripView == nil {
             let strip = ToolbarStripView(orientation: .horizontal)
+            strip.presentation = .tools
             parent.addSubview(strip)
             bottomStripView = strip
         }
         if rightStripView == nil {
-            let strip = ToolbarStripView(orientation: .vertical)
+            let strip = ToolbarStripView(orientation: .horizontal)
+            strip.presentation = .actions
             parent.addSubview(strip)
             rightStripView = strip
         }
@@ -5267,202 +5278,32 @@ class OverlayView: NSView {
             anchorRect = selectionRect
         }
 
-        let rightSize = rightStrip.frame.size
-
-        let bottomSize = bottomStrip.frame.size
-
+        let available = isEditorMode ? (chromeParentView?.bounds ?? bounds) : bounds
+        bottomStrip.maximumWidth = max(220, available.width - 24)
+        rightStrip.maximumWidth = max(220, available.width - 24)
+        let optionsVisible = toolOptionsRowView?.isHidden == false
+        let rowWidth = min(available.width - 24, bottomStrip.frame.width)
+        toolOptionsRowView?.setPresentationWidth(max(0, rowWidth))
+        let optionSize = optionsVisible ? NSSize(width: rowWidth, height: toolOptionsRowView?.frame.height ?? 0) : .zero
         if isEditorMode {
-            let cb = chromeParentView?.bounds ?? bounds
-            bottomStrip.frame.origin = NSPoint(x: cb.midX - bottomSize.width / 2, y: 20)
-            bottomStrip.autoresizingMask = [.minXMargin, .maxXMargin, .maxYMargin]
-            rightStrip.frame.origin = NSPoint(
-                x: cb.maxX - rightSize.width - 20, y: cb.maxY - rightSize.height - 36)
-            rightStrip.autoresizingMask = [.minXMargin, .minYMargin]
+            bottomStrip.frame.origin = NSPoint(x: available.midX - bottomStrip.frame.width / 2, y: 16)
+            rightStrip.frame.origin = NSPoint(x: available.maxX - rightStrip.frame.width - 16,
+                                              y: available.maxY - rightStrip.frame.height - 48)
+            if optionsVisible {
+                toolOptionsRowView?.frame.origin = NSPoint(x: available.midX - rowWidth / 2, y: bottomStrip.frame.maxY + 6)
+            }
         } else {
-            let optRowH: CGFloat = 38  // options row height + gap
-
-            // ── 1. Position right bar (anchored to selection edge) ──
-            let rightMargin: CGFloat = 50
-            let rightFitsRight = anchorRect.maxX < bounds.maxX - rightMargin
-            let rightFitsLeft = anchorRect.minX > bounds.minX + rightMargin
-
-            // For very narrow selections, put the right bar below instead of to the side
-            let selectionTooNarrow = !rightFitsRight && !rightFitsLeft
-                && anchorRect.width < bounds.width * 0.5
-
-            var rx: CGFloat
-            var ry: CGFloat
-
-            if selectionTooNarrow {
-                // Place right bar below the selection, right-aligned
-                rx = anchorRect.maxX - rightSize.width
-                rx = max(bounds.minX + 4, min(rx, bounds.maxX - rightSize.width - 4))
-                ry = anchorRect.minY - rightSize.height - 6
-                ry = max(bounds.minY + 4, min(ry, bounds.maxY - rightSize.height - 4))
-            } else {
-                if rightFitsRight {
-                    rx = anchorRect.maxX + 6
-                } else if rightFitsLeft {
-                    rx = anchorRect.minX - rightSize.width - 6
-                } else {
-                    rx = selectionRect.maxX - rightSize.width - 6
-                }
-                rx = max(bounds.minX + 4, min(rx, bounds.maxX - rightSize.width - 4))
-
-                ry = anchorRect.maxY - rightSize.height
-                ry = max(bounds.minY + 4, min(ry, bounds.maxY - rightSize.height - 4))
-            }
-
-            // ── 2. Choose bottom bar Y, preferring positions that don't overlap right bar ──
-            let belowY = anchorRect.minY - bottomSize.height - 6
-            let belowFits = (belowY - optRowH) >= bounds.minY + 4
-            let aboveY = anchorRect.maxY + optRowH + 6
-            let aboveFits = (aboveY + bottomSize.height) <= bounds.maxY - 4
-
-            // Helper: does a bottom bar at candidate Y (centered) overlap the right bar?
-            let centeredBx = anchorRect.midX - bottomSize.width / 2
-            let clampedCenteredBx = max(bounds.minX + 4, min(centeredBx, bounds.maxX - bottomSize.width - 4))
-            func wouldOverlapRight(candidateY: CGFloat) -> Bool {
-                let bMinY = candidateY - optRowH
-                let bMaxY = candidateY + bottomSize.height
-                guard bMaxY > ry && bMinY < ry + rightSize.height else { return false }
-                let bMaxX = clampedCenteredBx + bottomSize.width
-                let bMinX = clampedCenteredBx
-                return bMaxX > rx && bMinX < rx + rightSize.width
-            }
-
-            var by: CGFloat
-            if belowFits && !wouldOverlapRight(candidateY: belowY) {
-                by = belowY
-            } else if aboveFits && !wouldOverlapRight(candidateY: aboveY) {
-                by = aboveY
-            } else if belowFits {
-                by = belowY  // overlaps but at least fits vertically
-            } else if aboveFits {
-                by = aboveY
-            } else {
-                by = selectionRect.minY + optRowH + 6
-                by = max(bounds.minY + optRowH + 4, min(by, bounds.maxY - bottomSize.height - 4))
-            }
-
-            // ── 3. Position bottom bar X, avoiding right bar if they overlap vertically ──
-            var bx = clampedCenteredBx
-            let bottomMinY = by - optRowH
-            let bottomMaxY = by + bottomSize.height
-            let overlapsVertically = bottomMaxY > ry && bottomMinY < ry + rightSize.height
-
-            if overlapsVertically {
-                // Check if centered bottom bar already clears the right bar horizontally
-                if bx + bottomSize.width <= rx - 4 || bx >= rx + rightSize.width + 4 {
-                    // No overlap — keep both as-is
-                } else {
-                    // Overlap: move the RIGHT bar out of the way, keep bottom bar centered.
-                    // Try pushing right bar further right (past bottom bar's right edge).
-                    let pushRight = bx + bottomSize.width + 4
-                    // Try pushing right bar to the left (before bottom bar's left edge).
-                    let pushLeft = bx - rightSize.width - 4
-
-                    if pushRight + rightSize.width <= bounds.maxX - 4 {
-                        rx = pushRight
-                    } else if pushLeft >= bounds.minX + 4 {
-                        rx = pushLeft
-                    } else {
-                        // Right bar can't dodge horizontally — push it vertically.
-                        // Try below the bottom bar + options row zone.
-                        let rightPushDown = by - optRowH - rightSize.height - 4
-                        if rightPushDown >= bounds.minY + 4 {
-                            ry = rightPushDown
-                        } else {
-                            // Try above the bottom bar
-                            let rightPushUp = by + bottomSize.height + 4
-                            if rightPushUp + rightSize.height <= bounds.maxY - 4 {
-                                ry = rightPushUp
-                            }
-                            // else: truly no room, accept overlap
-                        }
-                    }
-                }
-            }
-
-            // The resolution box is positioned independently from the toolbar
-            // strips. During live selection/annotation resizing it can already
-            // be visible when this method runs, so make the side toolbar treat
-            // it as an obstacle too. Prefer moving the side toolbar farther to
-            // the right; that preserves the user's mental model of "actions sit
-            // beside the selection" when there is still room on that side.
-            if shouldShowResolutionBox(), resolutionBoxRect.width > 1, resolutionBoxRect.height > 1 {
-                let gap: CGFloat = 6
-                let avoidRect = resolutionBoxRect.insetBy(dx: -gap, dy: -gap)
-                let candidate = NSRect(x: rx, y: ry, width: rightSize.width, height: rightSize.height)
-                if candidate.intersects(avoidRect) {
-                    let pushRight = avoidRect.maxX + gap
-                    let pushLeft = avoidRect.minX - rightSize.width - gap
-                    let pushUp = avoidRect.maxY + gap
-                    let pushDown = avoidRect.minY - rightSize.height - gap
-
-                    if pushRight + rightSize.width <= bounds.maxX - 4 {
-                        rx = pushRight
-                    } else if pushLeft >= bounds.minX + 4 {
-                        rx = pushLeft
-                    } else if pushUp + rightSize.height <= bounds.maxY - 4 {
-                        ry = pushUp
-                    } else if pushDown >= bounds.minY + 4 {
-                        ry = pushDown
-                    }
-                }
-            }
-
-            bx = max(bounds.minX + 4, min(bx, bounds.maxX - bottomSize.width - 4))
-            rx = max(bounds.minX + 4, min(rx, bounds.maxX - rightSize.width - 4))
-            ry = max(bounds.minY + 4, min(ry, bounds.maxY - rightSize.height - 4))
-
-            // Keep the right bar clear of the notch / camera housing. The
-            // resolution box already does this (loweredBelowTopObstructions); the
-            // right strip had no such limit, so its top button could land under
-            // the notch. Push it down so its top edge sits below any top
-            // obstruction it would overlap (using the final rx so the horizontal
-            // overlap test matches the placed strip).
-            let topObstructions = screenTopObstructionRects().map { $0.insetBy(dx: -4, dy: -2) }
-            for obstruction in topObstructions {
-                let rightFrame = NSRect(x: rx, y: ry, width: rightSize.width, height: rightSize.height)
-                guard rightFrame.intersects(obstruction) else { continue }
-                ry = min(ry, obstruction.minY - rightSize.height - 2)
-            }
-            ry = max(bounds.minY + 4, ry)
-
-            bottomStrip.frame.origin = NSPoint(x: bx, y: by)
-            rightStrip.frame.origin = NSPoint(x: rx, y: ry)
+            var obstacles = screenTopObstructionRects().map { $0.insetBy(dx: -4, dy: -2) }
+            if shouldShowResolutionBox(), !resolutionBoxRect.isEmpty { obstacles.append(resolutionBoxRect.insetBy(dx: -6, dy: -6)) }
+            let placement = ToolbarPlacement.place(in: available, around: anchorRect,
+                tools: bottomStrip.frame.size, actions: rightStrip.frame.size, options: optionSize, obstacles: obstacles)
+            bottomStrip.frame = placement.tools
+            rightStrip.frame = placement.actions
+            if optionsVisible { toolOptionsRowView?.frame.origin = placement.options.origin }
         }
-
-        // bottomBarRect is the intended OVERLAY-space rect. Build it from the
-        // strip's size + the origin we just set (rather than reading back the
-        // live frame, which is panel-local when the strip is glass-panel-hosted).
-        bottomBarRect = NSRect(origin: bottomStrip.frame.origin, size: bottomStrip.frame.size)
+        bottomBarRect = bottomStrip.frame
         rightBarRect = rightStrip.frame
-
-        // Position options row — above bottom bar in editor, below in overlay
-        if let row = toolOptionsRowView, !row.isHidden {
-            // Use the wider of the bottom bar and the row's natural content width
-            let rowW = max(bottomBarRect.width, row.contentWidth)
-            row.frame.size.width = rowW
-            let rowY: CGFloat
-            if isEditorMode {
-                // In editor mode, center the options row the same way as the bottom bar
-                let cb = chromeParentView?.bounds ?? bounds
-                let rowX = max(4, cb.midX - rowW / 2)
-                row.frame.origin = NSPoint(x: rowX, y: bottomBarRect.maxY + 2)
-                row.autoresizingMask = [.minXMargin, .maxXMargin, .maxYMargin]
-            } else {
-                // Center the options row relative to the bottom bar, clamped to view bounds
-                var rowX = bottomBarRect.midX - rowW / 2
-                rowX = max(4, min(rowX, bounds.maxX - rowW - 4))
-                rowY = bottomBarRect.minY - row.frame.height - 2
-                row.frame.origin = NSPoint(x: rowX, y: rowY)
-            }
-            optionsRowRect = NSRect(origin: row.frame.origin, size: row.frame.size)
-        } else {
-            optionsRowRect = .zero
-        }
+        optionsRowRect = optionsVisible ? (toolOptionsRowView?.frame ?? .zero) : .zero
     }
 
     /// Liquid Glass: lift each toolbar surface (bottom strip, right strip, tool
@@ -8169,7 +8010,7 @@ class OverlayView: NSView {
         case .color:
             if PopoverHelper.toggleClosedIfOpen() { break }
             let colorBtn = bottomStripView?.buttonViews.first { if case .color = $0.action { return true }; return false }
-            showColorPickerPopover(target: .drawColor, anchorView: colorBtn)
+            showColorPickerPopover(target: .drawColor, anchorView: bottomStripView?.anchorView(for: colorBtn))
         case .sizeDisplay:
             break
         case .adjustSelection:
@@ -8281,7 +8122,7 @@ class OverlayView: NSView {
         case .share:
             // Show share picker anchored to the share button, then dismiss on selection
             let shareBtn = rightStripView?.buttonViews.first { if case .share = $0.action { return true }; return false }
-            overlayDelegate?.overlayViewDidRequestShare(anchorView: shareBtn)
+            overlayDelegate?.overlayViewDidRequestShare(anchorView: rightStripView?.anchorView(for: shareBtn))
         case .pin:
             overlayDelegate?.overlayViewDidRequestPin()
         case .ocr:
@@ -8296,7 +8137,7 @@ class OverlayView: NSView {
             invertImageColors()
         case .effects:
             let btn = bottomStripView?.buttonViews.first { if case .effects = $0.action { return true }; return false }
-            showEffectsPopover(anchorView: btn)
+            showEffectsPopover(anchorView: bottomStripView?.anchorView(for: btn))
         case .beautify:
             commitTextFieldIfNeeded()
             stampPreviewPoint = nil
@@ -8355,7 +8196,7 @@ class OverlayView: NSView {
             overlayDelegate?.overlayViewDidRequestAddCapture()
         case .recordSettings:
             let gearBtn = rightStripView?.buttonViews.first { if case .recordSettings = $0.action { return true }; return false }
-            showRecordingSettingsPopover(anchorView: gearBtn)
+            showRecordingSettingsPopover(anchorView: rightStripView?.anchorView(for: gearBtn))
         }
 
         // Rebuild toolbars to reflect new state (selected tool, color, etc.)
