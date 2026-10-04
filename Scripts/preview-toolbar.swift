@@ -16,6 +16,9 @@ final class ToolbarPreviewDelegate: NSObject, NSApplicationDelegate {
         UserDefaults.standard.removeObject(forKey: "toolbarBgColor")
         UserDefaults.standard.removeObject(forKey: "toolbarIconColor")
         UserDefaults.standard.removeObject(forKey: "toolbarAccentColor")
+        let output = FileManager.default.temporaryDirectory.appendingPathComponent("macshot-toolbar-preview-output", isDirectory: true)
+        try? FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
+        UserDefaults.standard.set(output.path, forKey: "saveDirectory")
         window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1200, height: 800), styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
         window.title = "MacShot · Toolbar Preview"
         window.isReleasedWhenClosed = false
