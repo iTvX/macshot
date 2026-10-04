@@ -7588,8 +7588,10 @@ class OverlayView: NSView {
             if tipY + tipH > bounds.maxY - 2 { tipY = bottomBarRect.minY - tipH - 4 }
             tipRect = NSRect(x: btnFrame.midX - tipW / 2, y: tipY, width: tipW, height: tipH)
         } else {
-            // Left of right bar
-            tipRect = NSRect(x: btnFrame.minX - tipW - 6, y: btnFrame.midY - tipH / 2, width: tipW, height: tipH)
+            // Output actions are horizontal: keep tooltips outside the strip.
+            var tipY = rightBarRect.minY - tipH - 4
+            if tipY < bounds.minY + 2 { tipY = rightBarRect.maxY + 4 }
+            tipRect = NSRect(x: btnFrame.midX - tipW / 2, y: tipY, width: tipW, height: tipH)
         }
 
         // Clamp to bounds
@@ -7636,11 +7638,15 @@ class OverlayView: NSView {
 
         if isBottomBar {
             let stripFrame = bottomStripView?.frame ?? .zero
-            var tipY = stripFrame.maxY + 4
+            let upperEdge = toolOptionsRowView?.isHidden == false ? max(stripFrame.maxY, optionsRowRect.maxY) : stripFrame.maxY
+            var tipY = upperEdge + 4
             if tipY + tipH > parent.bounds.maxY - 2 { tipY = stripFrame.minY - tipH - 4 }
             tipRect = NSRect(x: btnFrame.midX - tipW / 2, y: tipY, width: tipW, height: tipH)
         } else {
-            tipRect = NSRect(x: btnFrame.minX - tipW - 6, y: btnFrame.midY - tipH / 2, width: tipW, height: tipH)
+            let stripFrame = rightStripView?.frame ?? btnFrame
+            var tipY = stripFrame.minY - tipH - 4
+            if tipY < parent.bounds.minY + 2 { tipY = stripFrame.maxY + 4 }
+            tipRect = NSRect(x: btnFrame.midX - tipW / 2, y: tipY, width: tipW, height: tipH)
         }
 
         let clamped = NSRect(
