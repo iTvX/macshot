@@ -21,6 +21,30 @@ final class ToolbarPresentationTests: XCTestCase {
         }
     }
 
+    func testDefaultPaletteStaysDynamicAfterAlphaChanges() throws {
+        try withDefaults(["toolbarIconColor": nil, "toolbarAccentColor": nil]) {
+            // Colors are often derived once (labels, tints) and drawn under another appearance.
+            var derived: [NSColor] = []
+            NSAppearance(named: .aqua)!.performAsCurrentDrawingAppearance {
+                derived = [ToolbarLayout.iconColor.withAlphaComponent(0.5), ToolbarLayout.accentColor.withAlphaComponent(0.5)]
+            }
+            for (name, expectedIconRed) in [(NSAppearance.Name.aqua, CGFloat(0)), (.darkAqua, 1)] {
+                NSAppearance(named: name)!.performAsCurrentDrawingAppearance {
+                    let icon = derived[0].usingColorSpace(.sRGB)!
+                    XCTAssertEqual(icon.redComponent, expectedIconRed, accuracy: 0.01, "\(name)")
+                    XCTAssertEqual(icon.alphaComponent, 0.5, accuracy: 0.01)
+                }
+            }
+            var accentReds: [CGFloat] = []
+            for name in [NSAppearance.Name.aqua, .darkAqua] {
+                NSAppearance(named: name)!.performAsCurrentDrawingAppearance {
+                    accentReds.append(derived[1].usingColorSpace(.sRGB)!.redComponent)
+                }
+            }
+            XCTAssertNotEqual(accentReds[0], accentReds[1], accuracy: 0.01)
+        }
+    }
+
     func testOverflowPreservesActionsContextOptionsAndPopoverAnchor() async {
         let strip = ToolbarStripView(orientation: .horizontal)
         strip.presentation = .actions
@@ -79,6 +103,100 @@ final class ToolbarPresentationTests: XCTestCase {
             XCTAssertFalse(frames.tools.intersects(frames.actions))
             XCTAssertFalse(frames.options.intersects(frames.actions))
             XCTAssertFalse(frames.tools.intersects(frames.options))
+        }
+    }
+
+    func testActionsStayOutsideSelectionNearScreenTop() {
+        let bounds = NSRect(x: 0, y: 0, width: 1512, height: 982)
+        let notch = NSRect(x: 652, y: 943, width: 208, height: 41)
+        let anchors = [NSRect(x: 900, y: 600, width: 500, height: 360), NSRect(x: 200, y: 700, width: 600, height: 260),
+                       NSRect(x: 0, y: 0, width: 756, height: 945), NSRect(x: 0, y: 700, width: 1512, height: 282)]
+        for anchor in anchors {
+            let frames = ToolbarPlacement.place(in: bounds, around: anchor, tools: NSSize(width: 487, height: 50),
+                actions: NSSize(width: 372, height: 50), options: NSSize(width: 487, height: 56), obstacles: [notch])
+            // Resize handles straddle the edges, so the actions must clear them too.
+            XCTAssertFalse(frames.actions.intersects(anchor.insetBy(dx: -6, dy: -6)), "\(anchor): \(frames.actions)")
+            XCTAssertTrue(bounds.contains(frames.actions))
+            XCTAssertFalse(frames.actions.intersects(notch))
+            XCTAssertFalse(frames.actions.intersects(frames.tools))
+            XCTAssertFalse(frames.actions.intersects(frames.options))
+        }
+    }
+
+    func testToolbarsStepAwayFromObstacleAboveSelection() {
+        let bounds = NSRect(x: 0, y: 0, width: 1512, height: 982)
+        let anchor = NSRect(x: 300, y: 40, width: 700, height: 300)
+        let badge = NSRect(x: 312, y: anchor.maxY + 12, width: 180, height: 28).insetBy(dx: -6, dy: -6)
+        let frames = ToolbarPlacement.place(in: bounds, around: anchor, tools: NSSize(width: 487, height: 50),
+            actions: NSSize(width: 372, height: 50), options: NSSize(width: 487, height: 56), obstacles: [badge])
+        for frame in [frames.tools, frames.options, frames.actions] {
+            XCTAssertFalse(frame.intersects(anchor), "\(frame)")
+            XCTAssertFalse(frame.intersects(badge), "\(frame)")
+        }
+    }
+
+    func testMovingSelectionTowardBottomKeepsToolbarsOutsideIt() {
+        let overlay = OverlayView(frame: NSRect(x: 0, y: 0, width: 1512, height: 982))
+        overlay.applySelection(NSRect(x: 300, y: 400, width: 700, height: 300))
+        // Same order as the move-selection drag loop: badge first, then toolbars.
+        for y in stride(from: 360, through: 40, by: -40) {
+            let selection = NSRect(x: 300, y: CGFloat(y), width: 700, height: 300)
+            overlay.applySelection(selection)
+            overlay.updateResolutionBox()
+            overlay.rebuildToolbarLayout()
+            let badge = overlay.subviews.compactMap { $0 as? ResolutionBoxView }.first!
+            var chrome = overlay.subviews.compactMap { $0 as? ToolbarStripView }.filter { !$0.isHidden }.map(\.frame)
+            chrome += overlay.subviews.compactMap { $0 as? ToolOptionsRowView }.filter { !$0.isHidden }.map(\.frame)
+            for frame in chrome {
+                XCTAssertFalse(frame.intersects(selection), "y \(y): \(frame)")
+                XCTAssertFalse(frame.intersects(badge.frame), "y \(y): \(frame) vs \(badge.frame)")
+            }
+        }
+    }
+
+    func testEditorChromeFollowsWindowResize() {
+        let container = NSView(frame: NSRect(x: 0, y: 0, width: 1000, height: 700))
+        let editor = ToolbarTestEditor(frame: NSRect(x: 0, y: 0, width: 800, height: 500))
+        editor.chromeParentView = container
+        container.addSubview(editor)
+        editor.applySelection(NSRect(x: 0, y: 0, width: 800, height: 500))
+        for size in [NSSize(width: 1400, height: 1000), NSSize(width: 760, height: 520)] {
+            container.setFrameSize(size)
+            for refit in [false, true] {
+                if refit { editor.relayoutEditorChrome() }
+                let strips = container.subviews.compactMap { $0 as? ToolbarStripView }.filter { !$0.isHidden }
+                let tools = strips.first { $0.presentation == .tools }!
+                let actions = strips.first { $0.presentation == .actions }!
+                XCTAssertTrue(container.bounds.contains(tools.frame), "\(size): \(tools.frame)")
+                XCTAssertTrue(container.bounds.contains(actions.frame), "\(size): \(actions.frame)")
+                XCTAssertEqual(tools.frame.midX, container.bounds.midX, accuracy: 1)
+                XCTAssertEqual(actions.frame.maxX, container.bounds.maxX - 16, accuracy: 1)
+                XCTAssertEqual(actions.frame.maxY, container.bounds.maxY - 48, accuracy: 1)
+            }
+        }
+    }
+
+    func testLegacyPartialPaletteKeepsItsDarkSurface() throws {
+        let reset: [String: Any?] = ["toolbarBgColor": nil, "toolbarIconColor": nil, "toolbarAccentColor": nil,
+                                     ToolbarLayout.legacyPaletteMigratedKey: nil]
+        try withDefaults(reset) {
+            // Untouched palettes stay adaptive.
+            ToolbarLayout.migrateLegacyPaletteIfNeeded()
+            XCTAssertNil(ToolbarLayout.appearance)
+            XCTAssertNil(UserDefaults.standard.data(forKey: "toolbarBgColor"))
+        }
+        try withDefaults(reset) {
+            ToolbarLayout.saveIconColor(.white)
+            ToolbarLayout.migrateLegacyPaletteIfNeeded()
+            XCTAssertEqual(ToolbarLayout.appearance?.name, .darkAqua)
+            let bg = try XCTUnwrap(ToolbarLayout.bgColor.usingColorSpace(.deviceRGB))
+            XCTAssertEqual(bg.brightnessComponent, 0.12, accuracy: 0.01)
+            XCTAssertNotNil(UserDefaults.standard.data(forKey: "toolbarAccentColor"))
+            // Once migrated, palettes chosen in Settings are left as set.
+            ToolbarLayout.resetColors()
+            ToolbarLayout.saveIconColor(.systemBlue)
+            ToolbarLayout.migrateLegacyPaletteIfNeeded()
+            XCTAssertNil(UserDefaults.standard.data(forKey: "toolbarBgColor"))
         }
     }
 

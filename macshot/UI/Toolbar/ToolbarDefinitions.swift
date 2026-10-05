@@ -239,8 +239,19 @@ enum ToolbarActionPreferences {
 class ToolbarLayout {
 
     // The default palette follows the system; explicit user palettes still win.
-    static let defaultAccentColor = NSColor.systemBlue
-    static let defaultIconColor = NSColor.labelColor
+    // Provider-backed rather than .systemBlue/.labelColor: withAlphaComponent on a
+    // system catalog color freezes it to the appearance current at that call,
+    // while these stay dynamic and resolve against the drawing view.
+    static let defaultAccentColor = NSColor(name: "MacShotToolbarAccent") { appearance in
+        appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+            ? NSColor(srgbRed: 10 / 255, green: 132 / 255, blue: 1, alpha: 1)
+            : NSColor(srgbRed: 0, green: 122 / 255, blue: 1, alpha: 1)
+    }
+    static let defaultIconColor = NSColor(name: "MacShotToolbarIcon") { appearance in
+        appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+            ? NSColor(srgbRed: 1, green: 1, blue: 1, alpha: 0.85)
+            : NSColor(srgbRed: 0, green: 0, blue: 0, alpha: 0.85)
+    }
     static let defaultBgColor = NSColor(name: "MacShotToolbarSurface") { appearance in
         appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
             ? NSColor(calibratedWhite: 0.16, alpha: 0.98)
@@ -301,6 +312,28 @@ class ToolbarLayout {
         if let data = try? NSKeyedArchiver.archivedData(withRootObject: color, requiringSecureCoding: false) {
             UserDefaults.standard.set(data, forKey: "toolbarBgColor")
         }
+    }
+
+    // The fixed dark palette used before the default followed the system.
+    static let legacyAccentColor = NSColor(calibratedRed: 0.55, green: 0.30, blue: 0.85, alpha: 1.0)
+    static let legacyIconColor = NSColor.white
+    static let legacyBgColor = NSColor(white: 0.12, alpha: 1.0)
+    static let legacyPaletteMigratedKey = "toolbarLegacyPaletteMigrated"
+
+    /// Colors customized before the adaptive palette were chosen against the
+    /// legacy dark toolbar, so a partial customization (say, only the icon
+    /// color) would lose its contrast next to system colors. Pin the colors
+    /// that were still implicit to their legacy values, once; palettes chosen
+    /// afterwards in Settings are left exactly as the user sets them.
+    static func migrateLegacyPaletteIfNeeded() {
+        let defaults = UserDefaults.standard
+        guard !defaults.bool(forKey: legacyPaletteMigratedKey) else { return }
+        defaults.set(true, forKey: legacyPaletteMigratedKey)
+        let keys = ["toolbarAccentColor", "toolbarIconColor", "toolbarBgColor"]
+        guard keys.contains(where: { defaults.data(forKey: $0) != nil }) else { return }
+        if defaults.data(forKey: "toolbarAccentColor") == nil { saveAccentColor(legacyAccentColor) }
+        if defaults.data(forKey: "toolbarIconColor") == nil { saveIconColor(legacyIconColor) }
+        if defaults.data(forKey: "toolbarBgColor") == nil { saveBgColor(legacyBgColor) }
     }
 
     /// Reset all colors to defaults.

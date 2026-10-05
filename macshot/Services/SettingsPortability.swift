@@ -61,6 +61,7 @@ enum SettingsPortability {
         // or wrongly re-enables ones the user disabled. (enabledTools/enabledActions DO transfer.)
         "knownToolRawValues", "knownActionTags",
         "factorySettingsVersion", "factorySettingsNeedsLoginRegistration",
+        "toolbarLegacyPaletteMigrated",
         "suppressMoveToApplications", "useWindowTitleInFilename",
         // Account PII / history that isn't credential-named but shouldn't leave the machine.
         "gdriveUserEmail",

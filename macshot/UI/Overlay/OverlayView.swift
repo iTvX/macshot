@@ -5229,6 +5229,12 @@ class OverlayView: NSView {
         updateResolutionBox()
     }
 
+    /// Editor window resized: re-fit the floating chrome (widths, overflow) to the new bounds.
+    func relayoutEditorChrome() {
+        guard isEditorMode, showToolbars, state == .selected else { return }
+        repositionToolbars()
+    }
+
     /// Reposition toolbar strips based on current selection/bounds. Cheap — safe to call from draw().
     private func repositionToolbars() {
         guard let bottomStrip = bottomStripView, let rightStrip = rightStripView else { return }
@@ -5286,12 +5292,17 @@ class OverlayView: NSView {
         toolOptionsRowView?.setPresentationWidth(max(0, rowWidth))
         let optionSize = optionsVisible ? NSSize(width: rowWidth, height: toolOptionsRowView?.frame.height ?? 0) : .zero
         if isEditorMode {
+            // Pin to the window edges so live resizes keep the chrome in place;
+            // the editor window controller re-fits widths when the resize lands.
             bottomStrip.frame.origin = NSPoint(x: available.midX - bottomStrip.frame.width / 2, y: 16)
+            bottomStrip.autoresizingMask = [.minXMargin, .maxXMargin, .maxYMargin]
             rightStrip.frame.origin = NSPoint(x: available.maxX - rightStrip.frame.width - 16,
                                               y: available.maxY - rightStrip.frame.height - 48)
+            rightStrip.autoresizingMask = [.minXMargin, .minYMargin]
             if optionsVisible {
                 toolOptionsRowView?.frame.origin = NSPoint(x: available.midX - rowWidth / 2, y: bottomStrip.frame.maxY + 6)
             }
+            toolOptionsRowView?.autoresizingMask = [.minXMargin, .maxXMargin, .maxYMargin]
         } else {
             var obstacles = screenTopObstructionRects().map { $0.insetBy(dx: -4, dy: -2) }
             if shouldShowResolutionBox(), !resolutionBoxRect.isEmpty { obstacles.append(resolutionBoxRect.insetBy(dx: -6, dy: -6)) }
@@ -10183,6 +10194,8 @@ private final class PreSelectionPresetButton: NSButton {
 
     init() {
         super.init(frame: .zero)
+        // The idle helper is always a dark plate; resolve the palette against it.
+        appearance = NSAppearance(named: .darkAqua)
         isBordered = false
         bezelStyle = .regularSquare
         imagePosition = .imageOnly

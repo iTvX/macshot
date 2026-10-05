@@ -271,6 +271,10 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         if let scrollView = notification.object as? NSScrollView { topBar?.updateZoom(scrollView.magnification) }
     }
 
+    func windowDidResize(_ notification: Notification) {
+        overlayView?.relayoutEditorChrome()
+    }
+
     func windowShouldClose(_ sender: NSWindow) -> Bool {
         guard let view = overlayView else { return true }
 

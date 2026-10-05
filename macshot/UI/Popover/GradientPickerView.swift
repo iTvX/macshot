@@ -56,6 +56,11 @@ class GradientPickerView: NSView {
             } else if let grad = NSGradient(colors: style.stops.map { $0.0 }, atLocations: style.stops.map { $0.1 }, colorSpace: .deviceRGB) {
                 grad.draw(in: path, angle: style.angle - 90)
             }
+            // Hairline keeps near-white and near-black styles visible on either popover.
+            ToolbarLayout.iconColor.withAlphaComponent(0.15).setStroke()
+            let edge = NSBezierPath(roundedRect: sr.insetBy(dx: 0.25, dy: 0.25), xRadius: 6, yRadius: 6)
+            edge.lineWidth = 0.5
+            edge.stroke()
             if i == selectedIndex {
                 ToolbarLayout.accentColor.setStroke()
                 let ring = NSBezierPath(roundedRect: sr.insetBy(dx: -2, dy: -2), xRadius: 7, yRadius: 7)

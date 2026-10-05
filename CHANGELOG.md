@@ -1,5 +1,14 @@
 # Changelog
 
+## 4.3.2 — toolbar regression fixes (fork, 2026-10-05)
+
+- Keep the detached editor's floating toolbars pinned and re-fitted when its window is resized; Copy and Save no longer drift out of reach.
+- Place Save/Copy outside the selection when it reaches the top of the screen (beside the top corner, below the notch if needed), keeping the top resize handles usable.
+- Move the tools and options rows away from the selection, not onto it, when the size badge occupies the space above a selection near the bottom edge.
+- Keep the default palette dynamic after alpha adjustments, so labels, icons and the pre-selection preset button stay legible in light and dark appearances and when the system appearance changes while a window is open.
+- Refresh layer colors of the editor top bar, recording and scroll-capture controls and the video text panel when the appearance changes; fix dimmed video-editor icons and light-popover contrast in the color and gradient pickers.
+- Preserve partially customized palettes from earlier versions by pinning their unset colors to the previous dark palette once.
+
 ## 4.3.1 — annotation toolbar redesign (fork, 2026-10-04)
 
 - Add system-adaptive light and dark floating toolbars with outlined icons, grouped actions, and clearer selected states.
