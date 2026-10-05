@@ -1288,15 +1288,17 @@ private final class VideoEditorView: NSView {
         let alpha: CGFloat = dimmed ? 0.25 : 1.0
         if let img = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)?
                 .withSymbolConfiguration(.init(pointSize: 13, weight: .medium)) {
+            // Tint opaquely, then fade: a translucent .sourceAtop fill only blends
+            // over the black glyph, leaving dimmed icons dark in either appearance.
             let tinted = NSImage(size: img.size, flipped: false) { r in
                 img.draw(in: r, from: .zero, operation: .sourceOver, fraction: 1)
-                ToolbarLayout.iconColor.withAlphaComponent(alpha).setFill()
+                ToolbarLayout.iconColor.setFill()
                 r.fill(using: .sourceAtop)
                 return true
             }
             let imgRect = NSRect(x: rect.midX - img.size.width / 2, y: rect.midY - img.size.height / 2,
                                   width: img.size.width, height: img.size.height)
-            tinted.draw(in: imgRect)
+            tinted.draw(in: imgRect, from: .zero, operation: .sourceOver, fraction: alpha)
         }
     }
 
@@ -1321,11 +1323,12 @@ private final class VideoEditorView: NSView {
                 .withSymbolConfiguration(.init(pointSize: iconSize, weight: .medium)) {
             let tinted = NSImage(size: img.size, flipped: false) { r in
                 img.draw(in: r, from: .zero, operation: .sourceOver, fraction: 1)
-                ToolbarLayout.iconColor.withAlphaComponent(alpha).setFill()
+                ToolbarLayout.iconColor.setFill()
                 r.fill(using: .sourceAtop)
                 return true
             }
-            tinted.draw(in: NSRect(x: startX, y: rect.midY - img.size.height / 2, width: img.size.width, height: img.size.height))
+            tinted.draw(in: NSRect(x: startX, y: rect.midY - img.size.height / 2, width: img.size.width, height: img.size.height),
+                        from: .zero, operation: .sourceOver, fraction: alpha)
         }
         str.draw(at: NSPoint(x: startX + iconSize + iconGap, y: rect.midY - textSize.height / 2), withAttributes: attrs)
     }

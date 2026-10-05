@@ -53,6 +53,13 @@ class ScrollCaptureHUDView: NSView {
 
     required init?(coder: NSCoder) { fatalError() }
 
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            layer?.backgroundColor = ToolbarLayout.bgColor.cgColor
+        }
+    }
+
     func update(stripCount: Int, pixelSize: CGSize, backingScale: CGFloat,
                 maxScrollHeight: Int = 0, autoScrolling: Bool = false) {
         let pw = Int(pixelSize.width)

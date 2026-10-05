@@ -86,6 +86,13 @@ class EditorTopBarView: NSView {
 
     required init?(coder: NSCoder) { fatalError() }
 
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            layer?.backgroundColor = ToolbarLayout.bgColor.cgColor
+        }
+    }
+
     private func makeButton(_ symbol: String, tooltip: String, action: Selector) -> NSButton {
         let btn = NSButton()
         btn.bezelStyle = .recessed

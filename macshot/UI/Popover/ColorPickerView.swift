@@ -109,6 +109,11 @@ class ColorPickerView: NSView {
 
             color.setFill()
             NSBezierPath(roundedRect: r, xRadius: 4, yRadius: 4).fill()
+            // Hairline keeps white (light popover) and black (dark popover) swatches visible.
+            ToolbarLayout.iconColor.withAlphaComponent(0.15).setStroke()
+            let edge = NSBezierPath(roundedRect: r.insetBy(dx: 0.25, dy: 0.25), xRadius: 4, yRadius: 4)
+            edge.lineWidth = 0.5
+            edge.stroke()
 
             if colorsMatch(selectedColor, color) {
                 ToolbarLayout.iconColor.setStroke()
@@ -289,7 +294,8 @@ class ColorPickerView: NSView {
     }
 
     private func drawHexDisplay(in rect: NSRect) {
-        NSColor(white: 0.2, alpha: 0.8).setFill()
+        // Tint from the palette so the hex text keeps its contrast in light popovers.
+        ToolbarLayout.iconColor.withAlphaComponent(0.1).setFill()
         NSBezierPath(roundedRect: rect, xRadius: 4, yRadius: 4).fill()
 
         // Preview circle

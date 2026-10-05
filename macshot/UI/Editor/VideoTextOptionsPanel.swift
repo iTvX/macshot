@@ -61,6 +61,13 @@ final class VideoTextOptionsPanel: NSView {
 
     required init?(coder: NSCoder) { fatalError() }
 
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            layer?.backgroundColor = ToolbarLayout.iconColor.withAlphaComponent(0.06).cgColor
+        }
+    }
+
     // Consume clicks in the gaps between controls so they don't fall through
     // to the editor view's mouseDown (which clears the segment selection and
     // would immediately hide this panel).

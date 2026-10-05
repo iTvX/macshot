@@ -39,9 +39,8 @@ class RecordingHUDPanel: NSPanel {
         containerView.wantsLayer = true
         containerView.layer?.cornerRadius = cornerRadius
         containerView.panel = self
-        containerView.layer?.backgroundColor = ToolbarLayout.bgColor.withAlphaComponent(0.94).cgColor
         containerView.layer?.borderWidth = 0.5
-        containerView.layer?.borderColor = ToolbarLayout.iconColor.withAlphaComponent(0.1).cgColor
+        containerView.applySurfaceColors()
         contentView = containerView
 
         setupStopButton()
@@ -210,6 +209,19 @@ private class HUDContainerView: NSView {
     private var dragOffset: NSPoint = .zero  // offset from panel origin to mouse at drag start
     private var isDragging = false
     private var trackingArea: NSTrackingArea?
+
+    /// Layer colors are fixed CGColors; resolve them again when light/dark changes.
+    func applySurfaceColors() {
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            layer?.backgroundColor = ToolbarLayout.bgColor.withAlphaComponent(0.94).cgColor
+            layer?.borderColor = ToolbarLayout.iconColor.withAlphaComponent(0.1).cgColor
+        }
+    }
+
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        applySurfaceColors()
+    }
 
     override func updateTrackingAreas() {
         super.updateTrackingAreas()
