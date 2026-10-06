@@ -46,6 +46,8 @@ final class LocalizationTests: XCTestCase {
         "Selected applications will not appear in screenshots or recordings.",
         "Shortcut unavailable",
         "Some applications could not be added",
+        "Scrolled too fast — scroll back a little",
+        "Auto Scroll can't scroll this window — scroll manually",
         "This shortcut is already assigned to %@.",
         "This shortcut is unavailable. It may be used by macOS or another application.",
     ]

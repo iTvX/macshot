@@ -454,6 +454,8 @@
 "Auto Scroll" = "自動捲動";
 "Stop" = "停止";
 "Scrolling..." = "捲動中⋯";
+"Scrolled too fast — scroll back a little" = "捲動過快——請往回捲動一點";
+"Auto Scroll can't scroll this window — scroll manually" = "自動捲動無法捲動此視窗——請手動捲動";
 
 /* Effects Picker (Adjust popover) */
 "Presets" = "預設";
