@@ -1,5 +1,14 @@
 # Changelog
 
+## 4.3.3 — single CleanShot-style toolbar (fork, 2026-10-06)
+
+- Replace the separate action bar, tool bar and always-on options row with one toolbar right-aligned with the selection: move, tools, color and an options chip, undo/redo, Beautify/Pin/OCR, More, then Cancel, Save and a prominent Copy. It sits below the selection, above it when there is no room, and inside it only for selections that fill the screen.
+- Show tool options on demand in a panel hanging from the chip ("3 px", "20 pt", the stamp or censor mode). The panel wraps instead of scrolling, is remembered between captures, opens while text is being edited and for Beautify.
+- Keep specialist tools (magnifier, stamp, color picker, measure) and less frequent actions (Open in Editor, Share, Upload, Translate, Adjust, Invert, Remove Background, Scroll Capture, Record) in a grouped More menu; a tool in use or an active toggle stays on the bar.
+- Move the size pill to the selection's top-left corner, inside it when there is no room or the toolbar or notch is in the way.
+- Use the same toolbar for recording setup (ending with Cancel and Record) and in the editor window (bottom centre, panel above it).
+- Settings now describe the toolbar's image and output actions instead of the old bottom and right bars; censor modes are localized.
+
 ## 4.3.2 — toolbar regression fixes (fork, 2026-10-05)
 
 - Keep the detached editor's floating toolbars pinned and re-fitted when its window is resized; Copy and Save no longer drift out of reach.

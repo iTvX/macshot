@@ -348,20 +348,13 @@ class OverlayView: NSView {
                     if ann.tool == .text {
                         textEditor.restoreState(from: ann)
                     }
-                    toolOptionsRowView?.rebuild(forAnnotation: ann)
-                    repositionToolbars()
-                } else if selectedAnnotations.isEmpty {
-                    if let tool = currentTool as AnnotationTool? {
-                        toolOptionsRowView?.rebuild(for: tool)
-                        repositionToolbars()
-                    }
-                } else {
-                    // Multi-select: revert to tool options (no per-annotation editing)
-                    if let tool = currentTool as AnnotationTool? {
-                        toolOptionsRowView?.rebuild(for: tool)
-                        repositionToolbars()
-                    }
+                    ensureToolOptionsRowView().rebuild(forAnnotation: ann)
+                } else if let tool = currentTool as AnnotationTool? {
+                    // None or several selected: tool options (no per-annotation editing)
+                    toolOptionsRowView?.rebuild(for: tool)
                 }
+                // The options chip follows the selection (its value, or whether it shows).
+                if showToolbars { rebuildToolbarLayout() } else { repositionToolbars() }
             }
         }
     }
@@ -426,30 +419,35 @@ class OverlayView: NSView {
     private var textBoxOrigFrame: NSRect = .zero
     // (Text box move handle removed — standard annotation chrome handles movement)
 
-    // Toolbars (drawn inline)
-    var bottomButtons: [ToolbarButton] = []
-    var rightButtons: [ToolbarButton] = []
-    var bottomBarRect: NSRect = .zero
-    var rightBarRect: NSRect = .zero
+    // The single annotation bar and its options panel (real subviews)
+    var toolbarButtons: [ToolbarButton] = []
+    /// Overlay-space frame of the bar. .zero while hidden.
+    var toolbarRect: NSRect = .zero
     var showToolbars: Bool = false {
         didSet {
             if showToolbars && !oldValue {
                 rebuildToolbarLayout()
             } else if !showToolbars && oldValue {
-                bottomStripView?.isHidden = true
-                rightStripView?.isHidden = true
+                toolbarView?.isHidden = true
                 toolOptionsRowView?.isHidden = true
                 dismissResolutionBox()
+                toolbarRect = .zero
                 optionsRowRect = .zero
             }
         }
     }
-    private var bottomStripView: ToolbarStripView?
-    private var rightStripView: ToolbarStripView?
+    private var toolbarView: ToolbarStripView?
     private var toolOptionsRowView: ToolOptionsRowView?
+    static let toolOptionsOpenKey = "toolOptionsPanelOpen"
+    /// The options panel was opened from the chip; remembered across captures.
+    private var toolOptionsOpen: Bool = UserDefaults.standard.bool(forKey: OverlayView.toolOptionsOpenKey) {
+        didSet { UserDefaults.standard.set(toolOptionsOpen, forKey: OverlayView.toolOptionsOpenKey) }
+    }
+    /// The chip closed the panel that opened for the current text edit.
+    private var textEditingPanelDismissed = false
 
-    /// Intended overlay-space rect of the options row. .zero when the row is hidden.
-    private var optionsRowRect: NSRect = .zero
+    /// Overlay-space rect of the options panel. .zero when the panel is hidden.
+    private(set) var optionsRowRect: NSRect = .zero
     // Resolution box (W × H fields + presets). Replaces the old drawn size badge.
     private var resolutionBox: ResolutionBoxView?
     /// Overlay-space frame of the resolution box (for chrome hit-test / cursor /
@@ -588,7 +586,9 @@ class OverlayView: NSView {
         RectFillStyle(rawValue: UserDefaults.standard.integer(forKey: "currentRectFillStyle"))
         ?? .stroke
     var currentStampImage: NSImage?  // selected emoji/image for stamp tool
-    var currentStampEmoji: String?  // emoji string for highlight tracking
+    var currentStampEmoji: String? {  // emoji string for highlight tracking
+        didSet { if oldValue != currentStampEmoji { refreshToolOptionsChip() } }
+    }
     var currentStampSize: CGFloat = {
         let v = UserDefaults.standard.object(forKey: "stampSize") as? Double
         return v != nil ? CGFloat(v!) : 64
@@ -1143,13 +1143,12 @@ class OverlayView: NSView {
 
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
-        if bottomStripView != nil { handleToolbarColorsChanged() }
+        if toolbarView != nil { handleToolbarColorsChanged() }
     }
 
     @objc private func handleToolbarColorsChanged() {
-        // Rebuild toolbars and options row with new colors.
-        bottomStripView?.appearance = ToolbarLayout.appearance
-        rightStripView?.appearance = ToolbarLayout.appearance
+        // Rebuild the bar and options panel with new colors.
+        toolbarView?.appearance = ToolbarLayout.appearance
         toolOptionsRowView?.appearance = ToolbarLayout.appearance
         resolutionBox?.appearance = ToolbarLayout.appearance
         if let tool = toolOptionsRowView?.currentTool {
@@ -1544,14 +1543,11 @@ class OverlayView: NSView {
         // here would compare coordinates in different spaces and cause false matches.
         if !isEditorMode {
             let localPoint = convert(point, from: superview)
-            if let strip = bottomStripView, !strip.isHidden, strip.frame.contains(localPoint) {
-                return strip.hitTest(convert(point, to: strip.superview))
-            }
-            if let strip = rightStripView, !strip.isHidden, strip.frame.contains(localPoint) {
-                return strip.hitTest(convert(point, to: strip.superview))
-            }
             if let row = toolOptionsRowView, !row.isHidden, row.frame.contains(localPoint) {
                 return row.hitTest(convert(point, to: row.superview))
+            }
+            if let bar = toolbarView, !bar.isHidden, bar.frame.contains(localPoint) {
+                return bar.hitTest(convert(point, to: bar.superview))
             }
         }
         if let event = NSApp.currentEvent, shouldRouteTextEditorDoubleClickToCopy(event: event, at: point) {
@@ -1586,8 +1582,7 @@ class OverlayView: NSView {
     }
 
     private func isOverlayChromeRoot(_ view: NSView) -> Bool {
-        if let bottomStripView, view === bottomStripView { return true }
-        if let rightStripView, view === rightStripView { return true }
+        if let toolbarView, view === toolbarView { return true }
         if let toolOptionsRowView, view === toolOptionsRowView { return true }
         return false
     }
@@ -1600,8 +1595,7 @@ class OverlayView: NSView {
             // Use the shared OVERLAY-space rects, valid in both themes: in normal
             // mode they equal the strip frames; in glass mode the strips live in
             // panels (frame is panel-local), so the rects are the only truth.
-            if bottomStripView?.isHidden == false, bottomBarRect.contains(point) { return true }
-            if rightStripView?.isHidden == false, rightBarRect.contains(point) { return true }
+            if toolbarView?.isHidden == false, toolbarRect.contains(point) { return true }
             if toolOptionsRowView?.isHidden == false, optionsRowRect.width > 1,
                optionsRowRect.contains(point) { return true }
         }
@@ -2250,17 +2244,11 @@ class OverlayView: NSView {
                 context.restoreGraphicsState()
             }
 
-            // Toolbars — reposition only when selection/layout changes (not every draw).
-            // In editor mode toolbars have autoresizingMask, so they only need repositioning
-            // on explicit layout changes (handled by rebuildToolbarLayout).
+            // Toolbars — in editor mode the bar and panel have autoresizing masks and are
+            // re-fitted on explicit layout changes (rebuildToolbarLayout, window resizes).
             // In overlay mode the selection rect moves, so we must reposition here.
             if showToolbars && state == .selected && !isScrollCapturing {
                 if !isEditorMode { repositionToolbars() }
-                // Toolbars are real NSView subviews (ToolbarStripView) — no custom drawing needed.
-                // Tool options row handled by ToolOptionsRowView (real NSView subview)
-                if !toolHasOptionsRow || isRecording {
-                    // options row rect managed by ToolOptionsRowView
-                }
 
                 // Color picker popover
 
@@ -2435,79 +2423,12 @@ class OverlayView: NSView {
 
     private static let sizeLabelFont = NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .medium)
 
-    /// Compute where the resolution box sits relative to the selection. Aligns
-    /// the box's W↔H midpoint (the "×") with the selection's horizontal center,
-    /// so the dimensions read as centered on the selection — the trailing presets
-    /// button just overhangs to the right (not counted in the centering).
-    private func resolutionBoxFrame(size: NSSize, dimsCenterX: CGFloat) -> NSRect {
-        let x = selectionRect.midX - dimsCenterX
-        let clampedX = max(bounds.minX + 2, min(x, bounds.maxX - size.width - 2))
-        let edgeGap = handleSize / 2 + 3
-        let above = selectionRect.maxY + edgeGap
-        let below = selectionRect.minY - size.height - edgeGap
-        let minY = bounds.minY + 2
-        let maxY = bounds.maxY - 2
-
-        func rect(at y: CGFloat) -> NSRect {
-            NSRect(x: clampedX, y: y, width: size.width, height: size.height)
-        }
-        func fits(_ rect: NSRect) -> Bool {
-            rect.minY >= minY && rect.maxY <= maxY && rect.minX >= bounds.minX + 2 && rect.maxX <= bounds.maxX - 2
-        }
-        let toolbarAvoidanceRects = resolutionBoxAvoidanceRects().map { $0.insetBy(dx: -4, dy: -4) }
-        let topObstructionRects = screenTopObstructionRects().map { $0.insetBy(dx: -4, dy: -2) }
-        let avoidanceRects = toolbarAvoidanceRects + topObstructionRects
-        func loweredBelowTopObstructions(_ rect: NSRect) -> NSRect {
-            var adjusted = rect
-            for obstruction in topObstructionRects where adjusted.intersects(obstruction) {
-                adjusted.origin.y = min(adjusted.origin.y, obstruction.minY - adjusted.height - 2)
-            }
-            return adjusted
-        }
-        func overlapArea(_ rect: NSRect) -> CGFloat {
-            avoidanceRects.reduce(CGFloat(0)) { total, occupied in
-                let hit = rect.intersection(occupied)
-                guard !hit.isNull else { return total }
-                return total + max(0, hit.width) * max(0, hit.height)
-            }
-        }
-
-        let aboveRect = loweredBelowTopObstructions(rect(at: above))
-        let belowRect = loweredBelowTopObstructions(rect(at: below))
-        let leadingX = max(bounds.minX + 12, min(selectionRect.minX, bounds.maxX - size.width - 12))
-        let leadingAbove = loweredBelowTopObstructions(NSRect(x: leadingX, y: selectionRect.maxY + 12, width: size.width, height: size.height))
-        let besideLeft = NSRect(x: selectionRect.minX - size.width - 12, y: selectionRect.midY - size.height / 2, width: size.width, height: size.height)
-        let besideRight = NSRect(x: selectionRect.maxX + 12, y: besideLeft.minY, width: size.width, height: size.height)
-        let outsideCandidates = showToolbars ? [leadingAbove, aboveRect, belowRect, besideLeft, besideRight] : [aboveRect, belowRect]
-        if let clear = outsideCandidates.first(where: { fits($0) && overlapArea($0) == 0 }) {
-            return clear
-        }
-
-        let insideTop = loweredBelowTopObstructions(rect(at: selectionRect.maxY - size.height - edgeGap))
-        let insideBottom = loweredBelowTopObstructions(rect(at: selectionRect.minY + edgeGap))
-        func fitsInsideSelection(_ rect: NSRect) -> Bool {
-            rect.minY >= selectionRect.minY + 2 && rect.maxY <= selectionRect.maxY - 2
-        }
-        let insideCandidates: [NSRect]
-        if !fits(aboveRect) && fits(belowRect) {
-            insideCandidates = [insideTop, insideBottom]
-        } else if !fits(belowRect) && fits(aboveRect) {
-            insideCandidates = [insideBottom, insideTop]
-        } else {
-            insideCandidates = [insideTop, insideBottom]
-        }
-        let clearInsideCandidates = insideCandidates.filter { fits($0) && fitsInsideSelection($0) }
-        if let clearInside = clearInsideCandidates.first(where: { overlapArea($0) == 0 }) {
-            return clearInside
-        }
-
-        let candidates = outsideCandidates + clearInsideCandidates
-        if let leastBlocked = candidates.filter(fits).min(by: { overlapArea($0) < overlapArea($1) }) {
-            return leastBlocked
-        }
-        let clampedY = max(minY, min(above, maxY - size.height))
-        let clampedRect = loweredBelowTopObstructions(rect(at: clampedY))
-        return fits(clampedRect) ? clampedRect : rect(at: clampedY)
+    /// Where the size pill sits: above the selection's top-left corner, else inside it,
+    /// clear of the bar, the options panel and the notch.
+    private func resolutionBoxFrame(size: NSSize) -> NSRect {
+        let avoid = resolutionBoxAvoidanceRects().map { $0.insetBy(dx: -4, dy: -4) }
+            + screenTopObstructionRects().map { $0.insetBy(dx: -4, dy: -2) }
+        return ToolbarPlacement.placeBadge(size: size, selection: selectionRect, in: bounds, avoiding: avoid)
     }
 
     /// Notched displays expose the unobscured top-left/right menu-bar areas via
@@ -2570,28 +2491,21 @@ class OverlayView: NSView {
 
     private func resolutionBoxAvoidanceRects() -> [NSRect] {
         guard showToolbars && !isEditorMode && state == .selected && !isScrollCapturing else { return [] }
-
         var rects: [NSRect] = []
-        if bottomStripView?.isHidden == false {
-            rects.append(bottomBarRect)
-        }
-        if toolOptionsRowView?.isHidden == false, optionsRowRect.width > 1, optionsRowRect.height > 1 {
-            rects.append(optionsRowRect)
-        }
-        if rightStripView?.isHidden == false {
-            rects.append(rightBarRect)
-        }
+        if toolbarView?.isHidden == false { rects.append(toolbarRect) }
+        if toolOptionsRowView?.isHidden == false { rects.append(optionsRowRect) }
         return rects.filter { $0.width > 1 && $0.height > 1 }
     }
 
-    /// Create/position/update or remove the resolution box for the current state.
-    /// In the Liquid Glass theme the box is hosted in a glass chrome panel (like
-    /// the toolbars); otherwise it's a solid-bg overlay subview.
+    /// Create/position/update or remove the resolution box (the size pill) for the
+    /// current state. It is an overlay subview placed by ToolbarPlacement.placeBadge.
     func updateResolutionBox() {
         guard shouldShowResolutionBox() else {
             dismissResolutionBox()
             return
         }
+        // The pill keeps clear of the bar, so place the bar for this selection first.
+        if showToolbars { repositionToolbars() }
         // While a W/H field is being edited, leave the box exactly where it is.
         // Re-laying-out mid-edit disturbs the field editor / first responder,
         // which makes typing beep. The selection isn't changing during editing,
@@ -2618,7 +2532,7 @@ class OverlayView: NSView {
             box.onPresets = { [weak self] anchor in self?.showResolutionPresets(from: anchor) }
             resolutionBox = box
         }
-        let frame = resolutionBoxFrame(size: box.preferredSize, dimsCenterX: box.dimensionsCenterX)
+        let frame = resolutionBoxFrame(size: box.preferredSize)
         resolutionBoxRect = frame  // overlay-space rect (for chrome/cursor/zoom anchor)
         let px = selectionDisplaySize
         box.setDimensions(w: px.w, h: px.h)
@@ -2630,7 +2544,6 @@ class OverlayView: NSView {
     }
 
     private func refreshResolutionAndToolbarLayout() {
-        updateResolutionBox()
         repositionToolbars()
         updateResolutionBox()
     }
@@ -3440,21 +3353,70 @@ class OverlayView: NSView {
         context.restoreGraphicsState()
     }
 
-    /// Whether the current tool should show the options row
-    var toolHasOptionsRow: Bool {
-        // Show options row for a selected annotation's tool even when currentTool is .select
+    /// Whether the current tool (or the annotation being edited) has options.
+    var currentToolHasOptions: Bool {
+        // Show options for a selected annotation's tool even when currentTool is .select
         if selectedAnnotation != nil && toolOptionsRowView?.editingAnnotation != nil {
             return true
         }
         switch currentTool {
         case .pencil, .line, .arrow, .rectangle, .ellipse, .marker, .number, .loupe, .measure,
-            .pixelate, .stamp, .highlight:
-            return true
-        case .text:
+            .pixelate, .stamp, .highlight, .text:
             return true
         default:
-            return showBeautifyInOptionsRow
+            return false
         }
+    }
+
+    /// Whether the options panel has content to build (tool options or Beautify).
+    var toolHasOptionsRow: Bool {
+        currentToolHasOptions || showBeautifyInOptionsRow
+    }
+
+    /// The panel shows Beautify while that is being set up; otherwise the current tool's
+    /// options when the chip is open, and while text is being edited (✓ / ✕ live there).
+    var optionsPanelVisible: Bool {
+        guard showToolbars, state == .selected, !isScrollCapturing, !isRecording else { return false }
+        if showBeautifyInOptionsRow { return true }
+        guard currentToolHasOptions else { return false }
+        return toolOptionsOpen || (textEditor.isEditing && !textEditingPanelDismissed)
+    }
+
+    /// Short value for the options chip ("3 px", "20 pt"); empty shows the options glyph.
+    private func toolOptionsSummary() -> String {
+        let editing = toolOptionsRowView?.editingAnnotation
+        let tool = editing?.tool ?? currentTool
+        switch tool {
+        case .marker where smartMarkerEnabled && editing == nil:
+            return L("Smart")
+        case .pencil, .line, .arrow, .rectangle, .ellipse, .marker, .number:
+            let width = editing?.strokeWidth ?? activeStrokeWidthForTool(tool)
+            return "\(Int(width.rounded())) px"
+        case .text:
+            return "\(Int(textEditor.fontSize.rounded())) pt"
+        case .stamp where editing == nil:
+            return currentStampEmoji ?? ""
+        case .pixelate, .blur:
+            let mode: CensorMode
+            if let editing { mode = editing.censorMode } else {
+                mode = CensorMode(rawValue: UserDefaults.standard.integer(forKey: "censorMode")) ?? .pixelate
+            }
+            return L(mode.label)
+        default:
+            return ""
+        }
+    }
+
+    /// Refresh the options chip after a value it summarises changed.
+    func refreshToolOptionsChip() {
+        guard showToolbars, let bar = toolbarView,
+              let index = toolbarButtons.firstIndex(where: { if case .toolOptions = $0.action { return true }; return false })
+        else { return }
+        let summary = toolOptionsSummary()
+        guard toolbarButtons[index].title != summary else { return }
+        toolbarButtons[index].title = summary
+        bar.updateState(from: toolbarButtons)
+        repositionToolbars()
     }
 
     private func startBeautifyToolbarAnimation() {
@@ -5136,97 +5098,69 @@ class OverlayView: NSView {
 
     /// Rebuild toolbar button content. Call when tool, color, or state changes — NOT on every draw.
     func rebuildToolbarLayout() {
-        // Clear tooltip before rebuilding — old button views are about to be destroyed
+        // Clear tooltip before rebuilding — old button views may be replaced
         hoveredTooltip = nil
         hoveredTooltipButtonView = nil
 
-        let movableAnnotations = annotations.contains { $0.isMovable }
-        bottomButtons = ToolbarLayout.bottomButtons(
-            selectedTool: currentTool, selectedColor: currentColor,
-            beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex,
-            hasAnnotations: movableAnnotations, isRecording: isRecording,
-            effectsActive: effectsActive
-        )
-        if showBeautifyInOptionsRow {
-            for i in bottomButtons.indices {
-                if case .tool = bottomButtons[i].action {
-                    bottomButtons[i].isSelected = false
-                } else if case .beautify = bottomButtons[i].action {
-                    bottomButtons[i].isSelected = true
-                }
-            }
-        }
-        rightButtons = ToolbarLayout.rightButtons(
-            beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex,
-            hasAnnotations: movableAnnotations, translateEnabled: translateEnabled,
-            isRecording: isRecording,
-            isEditorMode: isEditorMode)
+        if !textEditor.isEditing { textEditingPanelDismissed = false }
+        let mode: ToolbarBarMode = isRecording ? .recording : (isEditorMode ? .editor : .overlay)
+        let toolOptions: (title: String, isOpen: Bool)? = currentToolHasOptions
+            ? (title: toolOptionsSummary(), isOpen: optionsPanelVisible && !showBeautifyInOptionsRow)
+            : nil
+        toolbarButtons = ToolbarLayout.barButtons(
+            mode: mode, selectedTool: currentTool, selectedColor: currentColor,
+            toolOptions: toolOptions,
+            beautifyEnabled: beautifyEnabled, beautifyOptionsShown: showBeautifyInOptionsRow,
+            translateEnabled: translateEnabled, effectsActive: effectsActive)
 
-        // Create strip views if needed — add to chrome parent (window content) when in scroll view
+        // Create the bar if needed — in the chrome parent (window content) when in a scroll view
         let parent = chromeParentView ?? self
-        if bottomStripView == nil {
-            let strip = ToolbarStripView(orientation: .horizontal)
-            strip.presentation = .tools
-            parent.addSubview(strip)
-            bottomStripView = strip
-        }
-        if rightStripView == nil {
-            let strip = ToolbarStripView(orientation: .horizontal)
-            strip.presentation = .actions
-            parent.addSubview(strip)
-            rightStripView = strip
-        }
-
-        // Update existing buttons if count matches, rebuild only if structure changed
-        if bottomStripView?.buttonViews.count == bottomButtons.count && bottomStripView?.buttonViews.count ?? 0 > 0 {
-            bottomStripView?.updateState(from: bottomButtons)
-        } else {
-            bottomStripView?.setButtons(bottomButtons)
-            bottomStripView?.onClick = { [weak self] action in self?.handleToolbarAction(action) }
-            bottomStripView?.onRightClick = { [weak self] action, view in
+        if toolbarView == nil {
+            let bar = ToolbarStripView()
+            bar.onClick = { [weak self] action in self?.handleToolbarAction(action) }
+            bar.onRightClick = { [weak self] action, view in
                 self?.handleToolbarButtonRightClick(action, anchorView: view)
             }
-            bottomStripView?.onHover = { [weak self] action, hovered in
-                self?.handleToolbarButtonHover(action, hovered: hovered, strip: self?.bottomStripView)
+            bar.onHover = { [weak self] action, hovered in
+                self?.handleToolbarButtonHover(action, hovered: hovered, strip: self?.toolbarView)
             }
+            parent.addSubview(bar)
+            toolbarView = bar
         }
-        if rightStripView?.buttonViews.count == rightButtons.count && rightStripView?.buttonViews.count ?? 0 > 0 {
-            rightStripView?.updateState(from: rightButtons)
-        } else {
-            rightStripView?.setButtons(rightButtons)
-            rightStripView?.onClick = { [weak self] action in self?.handleToolbarAction(action) }
-            rightStripView?.onRightClick = { [weak self] action, view in
-                self?.handleToolbarButtonRightClick(action, anchorView: view)
-            }
-            rightStripView?.onHover = { [weak self] action, hovered in
-                self?.handleToolbarButtonHover(action, hovered: hovered, strip: self?.rightStripView)
-            }
-        }
+        // Reuses the button views while the set of buttons is unchanged
+        toolbarView?.updateState(from: toolbarButtons)
         // Move button needs onMouseDown for press-and-drag (synchronous tracking loop)
-        for bv in rightStripView?.buttonViews ?? [] {
+        for bv in toolbarView?.buttonViews ?? [] {
             if case .moveSelection = bv.action, bv.onMouseDown == nil {
                 bv.onMouseDown = { [weak self] _ in self?.handleToolbarAction(.moveSelection) }
             }
         }
 
-        // Rebuild options row content
+        // Rebuild options panel content
         if toolHasOptionsRow {
-            if toolOptionsRowView == nil {
-                let row = ToolOptionsRowView()
-                row.overlayView = self
-                parent.addSubview(row)
-                toolOptionsRowView = row
-            }
+            let row = ensureToolOptionsRowView()
             // Don't overwrite annotation-specific options when editing a selected annotation
-            if let ann = selectedAnnotation, toolOptionsRowView?.editingAnnotation === ann {
+            if let ann = selectedAnnotation, row.editingAnnotation === ann {
                 // Already showing this annotation's options — skip rebuild
             } else {
-                toolOptionsRowView?.rebuild(for: currentTool)
+                row.rebuild(for: currentTool)
             }
         }
 
         repositionToolbars()
         updateResolutionBox()
+    }
+
+    /// The options panel view, created on first use beside the bar.
+    @discardableResult
+    private func ensureToolOptionsRowView() -> ToolOptionsRowView {
+        if let row = toolOptionsRowView { return row }
+        let row = ToolOptionsRowView()
+        row.overlayView = self
+        row.isHidden = true
+        (chromeParentView ?? self).addSubview(row)
+        toolOptionsRowView = row
+        return row
     }
 
     /// Editor window resized: re-fit the floating chrome (widths, overflow) to the new bounds.
@@ -5235,25 +5169,24 @@ class OverlayView: NSView {
         repositionToolbars()
     }
 
-    /// Reposition toolbar strips based on current selection/bounds. Cheap — safe to call from draw().
+    /// Reposition the bar and options panel for the current selection/bounds. Cheap — safe to call from draw().
     private func repositionToolbars() {
-        guard let bottomStrip = bottomStripView, let rightStrip = rightStripView else { return }
+        guard let bar = toolbarView else { return }
 
         // In editor mode, let toolbar gap clicks pass through to the image beneath
-        bottomStrip.passesThrough = isEditorMode
-        rightStrip.passesThrough = isEditorMode
+        bar.passesThrough = isEditorMode
 
         let visible = showToolbars && state == .selected && !isScrollCapturing
-        let bottomHasButtons = bottomStrip.buttonViews.count > 0
-        bottomStrip.isHidden = !visible || !bottomHasButtons
-        let rightHasButtons = rightStrip.buttonViews.count > 0
-        rightStrip.isHidden = !visible || !rightHasButtons
-        toolOptionsRowView?.isHidden = !visible || !toolHasOptionsRow || !bottomHasButtons
+        let hasButtons = !bar.buttonViews.isEmpty
+        bar.isHidden = !visible || !hasButtons
+        let panelVisible = visible && hasButtons && optionsPanelVisible && toolOptionsRowView != nil
+        toolOptionsRowView?.isHidden = !panelVisible
         guard visible else {
             // Toolbars hidden (deselected / scroll capture): dismiss the
             // resolution box and clear the chrome rects so isPointOnChrome
             // doesn't see stale areas.
             dismissResolutionBox()
+            toolbarRect = .zero
             optionsRowRect = .zero
             return
         }
@@ -5285,43 +5218,34 @@ class OverlayView: NSView {
         }
 
         let available = isEditorMode ? (chromeParentView?.bounds ?? bounds) : bounds
-        bottomStrip.maximumWidth = max(220, available.width - 24)
-        rightStrip.maximumWidth = max(220, available.width - 24)
-        let optionsVisible = toolOptionsRowView?.isHidden == false
-        let rowWidth = min(available.width - 24, bottomStrip.frame.width)
-        toolOptionsRowView?.setPresentationWidth(max(0, rowWidth))
-        let optionSize = optionsVisible ? NSSize(width: rowWidth, height: toolOptionsRowView?.frame.height ?? 0) : .zero
+        let usableWidth = available.width - ToolbarPlacement.margin * 2
+        bar.maximumWidth = max(220, usableWidth)
+        toolOptionsRowView?.setMaximumWidth(max(240, usableWidth))
+        let panelSize = panelVisible ? toolOptionsRowView?.frame.size : nil
+        // The panel hangs from the control that opened it.
+        let panelAnchorX = showBeautifyInOptionsRow
+            ? bar.midX(of: { if case .beautify = $0 { return true }; return false })
+            : bar.midX(of: { if case .toolOptions = $0 { return true }; return false })
+        let frames: ToolbarPlacement.Frames
         if isEditorMode {
+            frames = ToolbarPlacement.placeInEditor(
+                in: available, bar: bar.frame.size, panel: panelSize, panelAnchorX: panelAnchorX)
             // Pin to the window edges so live resizes keep the chrome in place;
             // the editor window controller re-fits widths when the resize lands.
-            bottomStrip.frame.origin = NSPoint(x: available.midX - bottomStrip.frame.width / 2, y: 16)
-            bottomStrip.autoresizingMask = [.minXMargin, .maxXMargin, .maxYMargin]
-            rightStrip.frame.origin = NSPoint(x: available.maxX - rightStrip.frame.width - 16,
-                                              y: available.maxY - rightStrip.frame.height - 48)
-            rightStrip.autoresizingMask = [.minXMargin, .minYMargin]
-            if optionsVisible {
-                toolOptionsRowView?.frame.origin = NSPoint(x: available.midX - rowWidth / 2, y: bottomStrip.frame.maxY + 6)
-            }
+            bar.autoresizingMask = [.minXMargin, .maxXMargin, .maxYMargin]
             toolOptionsRowView?.autoresizingMask = [.minXMargin, .maxXMargin, .maxYMargin]
         } else {
-            var obstacles = screenTopObstructionRects().map { $0.insetBy(dx: -4, dy: -2) }
-            if shouldShowResolutionBox(), !resolutionBoxRect.isEmpty { obstacles.append(resolutionBoxRect.insetBy(dx: -6, dy: -6)) }
-            let placement = ToolbarPlacement.place(in: available, around: anchorRect,
-                tools: bottomStrip.frame.size, actions: rightStrip.frame.size, options: optionSize, obstacles: obstacles)
-            bottomStrip.frame = placement.tools
-            rightStrip.frame = placement.actions
-            if optionsVisible { toolOptionsRowView?.frame.origin = placement.options.origin }
+            let obstacles = screenTopObstructionRects().map { $0.insetBy(dx: -4, dy: -2) }
+            frames = ToolbarPlacement.place(
+                in: available, around: anchorRect, bar: bar.frame.size,
+                panel: panelSize, panelAnchorX: panelAnchorX, obstacles: obstacles)
         }
-        bottomBarRect = bottomStrip.frame
-        rightBarRect = rightStrip.frame
-        optionsRowRect = optionsVisible ? (toolOptionsRowView?.frame ?? .zero) : .zero
+        bar.frame = frames.bar
+        if panelVisible { toolOptionsRowView?.frame = frames.panel }
+        toolbarRect = frames.bar
+        optionsRowRect = panelVisible ? frames.panel : .zero
     }
 
-    /// Liquid Glass: lift each toolbar surface (bottom strip, right strip, tool
-    /// options row) into a floating child panel above the overlay window,
-    /// positioned at its screen rect, so its glass refracts the overlay
-    /// (screenshot + dim) beneath. `repositionToolbars` has just set the intended
-    /// OVERLAY-space frames; we use those (not the live panel-local frames).
     /// Dismiss the resolution box. It is recreated on demand by
     /// updateResolutionBox(), so it's fully disposed (not just hidden) on
     /// deselect to avoid leaving a stray box behind.
@@ -5588,6 +5512,7 @@ class OverlayView: NSView {
         // Don't commit text if clicking on text formatting controls in the options row
         let isTextFormattingClick =
             textEditView != nil && currentTool == .text
+            && toolOptionsRowView?.isHidden == false
             && ((toolOptionsRowView?.frame.contains(point) ?? false))
         // A click that dismisses an open text editor should NOT also place a new
         // text box where it landed — remember that we just committed one so the
@@ -7384,11 +7309,16 @@ class OverlayView: NSView {
     private func handleToolbarButtonHover(_ action: ToolbarButtonAction, hovered: Bool, strip: ToolbarStripView?) {
         if isToolbarMoveDragActive { return }
         if hovered {
-            let btn = strip?.buttonViews.first { bv in
-                // Compare by identity — find the button that triggered the hover
-                if case .tool(let t1) = bv.action, case .tool(let t2) = action { return t1 == t2 }
-                // For non-tool actions, compare string representation
-                return "\(bv.action)" == "\(action)"
+            let btn: ToolbarButtonView?
+            if case .more = action {
+                btn = strip?.overflowButton
+            } else {
+                btn = strip?.buttonViews.first { bv in
+                    // Compare by identity — find the button that triggered the hover
+                    if case .tool(let t1) = bv.action, case .tool(let t2) = action { return t1 == t2 }
+                    // For non-tool actions, compare string representation
+                    return "\(bv.action)" == "\(action)"
+                }
             }
             hoveredTooltip = toolbarTooltipText(for: action, base: btn?.tooltipText)
             hoveredTooltipButtonView = btn
@@ -7416,10 +7346,7 @@ class OverlayView: NSView {
             hoveredTooltip = nil
             hoveredTooltipButtonView = nil
         }
-        bottomStripView?.clearInteractionState(
-            suppressHoverUntilMouseMoved: suppressUntilMouseMoved,
-            clearPressed: clearPressed)
-        rightStripView?.clearInteractionState(
+        toolbarView?.clearInteractionState(
             suppressHoverUntilMouseMoved: suppressUntilMouseMoved,
             clearPressed: clearPressed)
         needsDisplay = true
@@ -7432,7 +7359,7 @@ class OverlayView: NSView {
     }
 
     private func moveSelectionButtonView() -> ToolbarButtonView? {
-        rightStripView?.buttonViews.first {
+        toolbarView?.buttonViews.first {
             if case .moveSelection = $0.action { return true }
             return false
         }
@@ -7539,20 +7466,20 @@ class OverlayView: NSView {
     }
 
     private func setToolbarHoverSuppressed(_ suppressed: Bool) {
-        bottomStripView?.suppressesHover = suppressed
-        rightStripView?.suppressesHover = suppressed
+        toolbarView?.suppressesHover = suppressed
     }
 
-    /// True if `btn` belongs to `strip` (direct subview or via the strip's view
-    /// tree — covers both in-overlay and glass-chrome-panel hosting).
-    private func isButton(_ btn: NSView, inStrip strip: ToolbarStripView?) -> Bool {
-        guard let strip else { return false }
-        var v: NSView? = btn
-        while let cur = v {
-            if cur === strip { return true }
-            v = cur.superview
+    /// Tooltips sit on the bar's side away from the options panel, flipping at screen edges.
+    private func toolbarTooltipY(bar: NSRect, panel: NSRect, height: CGFloat, limits: NSRect) -> CGFloat {
+        let panelAbove = !panel.isEmpty && panel.minY >= bar.maxY
+        let panelBelow = !panel.isEmpty && !panelAbove
+        let aboveBar = bar.maxY + 4
+        let belowBar = bar.minY - height - 4
+        if panelAbove {
+            return belowBar >= limits.minY + 2 ? belowBar : panel.maxY + 4
         }
-        return strip.buttonViews.contains { $0 === btn }
+        if aboveBar + height <= limits.maxY - 2 { return aboveBar }
+        return panelBelow ? panel.minY - height - 4 : belowBar
     }
 
     private func drawHoveredTooltip() {
@@ -7589,21 +7516,8 @@ class OverlayView: NSView {
         } else {
             btnFrame = btn.convert(btn.bounds, to: self)
         }
-        // The button is hosted in a strip; find which strip via the panel chain.
-        let isBottomBar = isButton(btn, inStrip: bottomStripView)
-        let tipRect: NSRect
-
-        if isBottomBar {
-            // Above bottom bar, or below if no room
-            var tipY = bottomBarRect.maxY + 4
-            if tipY + tipH > bounds.maxY - 2 { tipY = bottomBarRect.minY - tipH - 4 }
-            tipRect = NSRect(x: btnFrame.midX - tipW / 2, y: tipY, width: tipW, height: tipH)
-        } else {
-            // Output actions are horizontal: keep tooltips outside the strip.
-            var tipY = rightBarRect.minY - tipH - 4
-            if tipY < bounds.minY + 2 { tipY = rightBarRect.maxY + 4 }
-            tipRect = NSRect(x: btnFrame.midX - tipW / 2, y: tipY, width: tipW, height: tipH)
-        }
+        let tipY = toolbarTooltipY(bar: toolbarRect, panel: optionsRowRect, height: tipH, limits: bounds)
+        let tipRect = NSRect(x: btnFrame.midX - tipW / 2, y: tipY, width: tipW, height: tipH)
 
         // Clamp to bounds
         let clamped = NSRect(
@@ -7644,21 +7558,11 @@ class OverlayView: NSView {
         let tipH = textSize.height + pad
 
         let btnFrame = btn.convert(btn.bounds, to: parent)
-        let isBottomBar = btn.superview === bottomStripView
-        let tipRect: NSRect
-
-        if isBottomBar {
-            let stripFrame = bottomStripView?.frame ?? .zero
-            let upperEdge = toolOptionsRowView?.isHidden == false ? max(stripFrame.maxY, optionsRowRect.maxY) : stripFrame.maxY
-            var tipY = upperEdge + 4
-            if tipY + tipH > parent.bounds.maxY - 2 { tipY = stripFrame.minY - tipH - 4 }
-            tipRect = NSRect(x: btnFrame.midX - tipW / 2, y: tipY, width: tipW, height: tipH)
-        } else {
-            let stripFrame = rightStripView?.frame ?? btnFrame
-            var tipY = stripFrame.minY - tipH - 4
-            if tipY < parent.bounds.minY + 2 { tipY = stripFrame.maxY + 4 }
-            tipRect = NSRect(x: btnFrame.midX - tipW / 2, y: tipY, width: tipW, height: tipH)
-        }
+        // Live frames: the editor chrome follows window resizes via autoresizing masks.
+        let barFrame = toolbarView?.frame ?? btnFrame
+        let panelFrame = toolOptionsRowView?.isHidden == false ? (toolOptionsRowView?.frame ?? .zero) : .zero
+        let tipY = toolbarTooltipY(bar: barFrame, panel: panelFrame, height: tipH, limits: parent.bounds)
+        let tipRect = NSRect(x: btnFrame.midX - tipW / 2, y: tipY, width: tipW, height: tipH)
 
         let clamped = NSRect(
             x: max(parent.bounds.minX + 2, min(tipRect.minX, parent.bounds.maxX - tipW - 2)),
@@ -7995,13 +7899,13 @@ class OverlayView: NSView {
 
     /// Update the color swatch on the main toolbar's color button without a full rebuild.
     private func updateToolbarColorSwatch() {
-        if let idx = bottomButtons.firstIndex(where: { if case .color = $0.action { return true } else { return false } }) {
-            bottomButtons[idx].bgColor = currentColor
-            bottomStripView?.updateState(from: bottomButtons)
+        if let idx = toolbarButtons.firstIndex(where: { if case .color = $0.action { return true } else { return false } }) {
+            toolbarButtons[idx].bgColor = currentColor
+            toolbarView?.updateState(from: toolbarButtons)
             // Schedule button redraw on next run loop iteration so it happens after
             // the overlay's own draw pass (which can paint over button subviews).
-            if idx < (bottomStripView?.buttonViews.count ?? 0) {
-                let buttonView = bottomStripView?.buttonViews[idx]
+            if idx < (toolbarView?.buttonViews.count ?? 0) {
+                let buttonView = toolbarView?.buttonViews[idx]
                 DispatchQueue.main.async {
                     buttonView?.needsDisplay = true
                 }
@@ -8026,8 +7930,8 @@ class OverlayView: NSView {
             needsDisplay = true
         case .color:
             if PopoverHelper.toggleClosedIfOpen() { break }
-            let colorBtn = bottomStripView?.buttonViews.first { if case .color = $0.action { return true }; return false }
-            showColorPickerPopover(target: .drawColor, anchorView: bottomStripView?.anchorView(for: colorBtn))
+            let colorBtn = toolbarView?.buttonViews.first { if case .color = $0.action { return true }; return false }
+            showColorPickerPopover(target: .drawColor, anchorView: toolbarView?.anchorView(for: colorBtn))
         case .sizeDisplay:
             break
         case .adjustSelection:
@@ -8035,7 +7939,7 @@ class OverlayView: NSView {
         case .moveSelection:
             guard let win = window else { break }
             isToolbarMoveDragActive = true
-            var moveButton = rightStripView?.buttonViews.first {
+            var moveButton = toolbarView?.buttonViews.first {
                 if case .moveSelection = $0.action { return true }
                 return false
             }
@@ -8048,7 +7952,7 @@ class OverlayView: NSView {
                 snappedWindowImage = nil
                 rebuildToolbarLayout()
                 setToolbarHoverSuppressed(true)
-                moveButton = rightStripView?.buttonViews.first {
+                moveButton = toolbarView?.buttonViews.first {
                     if case .moveSelection = $0.action { return true }
                     return false
                 }
@@ -8138,8 +8042,8 @@ class OverlayView: NSView {
             #endif
         case .share:
             // Show share picker anchored to the share button, then dismiss on selection
-            let shareBtn = rightStripView?.buttonViews.first { if case .share = $0.action { return true }; return false }
-            overlayDelegate?.overlayViewDidRequestShare(anchorView: rightStripView?.anchorView(for: shareBtn))
+            let shareBtn = toolbarView?.buttonViews.first { if case .share = $0.action { return true }; return false }
+            overlayDelegate?.overlayViewDidRequestShare(anchorView: toolbarView?.anchorView(for: shareBtn))
         case .pin:
             overlayDelegate?.overlayViewDidRequestPin()
         case .ocr:
@@ -8153,9 +8057,15 @@ class OverlayView: NSView {
         case .invertColors:
             invertImageColors()
         case .effects:
-            let btn = bottomStripView?.buttonViews.first { if case .effects = $0.action { return true }; return false }
-            showEffectsPopover(anchorView: bottomStripView?.anchorView(for: btn))
+            let btn = toolbarView?.buttonViews.first { if case .effects = $0.action { return true }; return false }
+            showEffectsPopover(anchorView: toolbarView?.anchorView(for: btn))
         case .beautify:
+            if showBeautifyInOptionsRow {
+                // A second click closes the Beautify panel; Beautify itself stays as set.
+                showBeautifyInOptionsRow = false
+                needsDisplay = true
+                break
+            }
             commitTextFieldIfNeeded()
             stampPreviewPoint = nil
             loupeCursorPoint = .zero
@@ -8164,6 +8074,22 @@ class OverlayView: NSView {
             ensureCustomBeautifyBackgroundLoaded()
             showBeautifyInOptionsRow = true
             needsDisplay = true
+        case .toolOptions:
+            if showBeautifyInOptionsRow {
+                // The chip switches the panel from Beautify back to the tool.
+                showBeautifyInOptionsRow = false
+                toolOptionsOpen = true
+            } else if optionsPanelVisible {
+                toolOptionsOpen = false
+                // Also closes the panel a text edit opened, for the rest of that edit.
+                if textEditor.isEditing { textEditingPanelDismissed = true }
+            } else {
+                toolOptionsOpen = true
+                textEditingPanelDismissed = false
+            }
+            needsDisplay = true
+        case .more:
+            break  // the bar shows its own menu
         case .beautifyStyle:
             beautifyStyleIndex = (beautifyStyleIndex + 1) % BeautifyRenderer.styles.count
             UserDefaults.standard.set(beautifyStyleIndex, forKey: "beautifyStyleIndex")
@@ -8212,8 +8138,8 @@ class OverlayView: NSView {
         case .addCapture:
             overlayDelegate?.overlayViewDidRequestAddCapture()
         case .recordSettings:
-            let gearBtn = rightStripView?.buttonViews.first { if case .recordSettings = $0.action { return true }; return false }
-            showRecordingSettingsPopover(anchorView: rightStripView?.anchorView(for: gearBtn))
+            let gearBtn = toolbarView?.buttonViews.first { if case .recordSettings = $0.action { return true }; return false }
+            showRecordingSettingsPopover(anchorView: toolbarView?.anchorView(for: gearBtn))
         }
 
         // Rebuild toolbars to reflect new state (selected tool, color, etc.)
@@ -8857,14 +8783,10 @@ class OverlayView: NSView {
     }
 
     private func setMicButtonLevel(_ level: Float) {
-        // Find mic button in both toolbar strips
-        let strips: [ToolbarStripView?] = [bottomStripView, rightStripView]
-        for strip in strips {
-            if let btn = strip?.buttonViews.first(where: {
-                if case .micAudio = $0.action { return true }; return false
-            }) {
-                btn.micLevel = level
-            }
+        if let btn = toolbarView?.buttonViews.first(where: {
+            if case .micAudio = $0.action { return true }; return false
+        }) {
+            btn.micLevel = level
         }
     }
 
@@ -10028,9 +9950,10 @@ class OverlayView: NSView {
         numberCounter = 0
         showToolbars = false
         dismissResolutionBox()
-        bottomStripView?.isHidden = true
-        rightStripView?.isHidden = true
+        toolbarView?.isHidden = true
         toolOptionsRowView?.isHidden = true
+        toolbarRect = .zero
+        optionsRowRect = .zero
         PopoverHelper.dismiss()
         editorTooltipView?.removeFromSuperview()
         editorTooltipView = nil

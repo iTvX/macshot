@@ -751,3 +751,8 @@
 
 "More" = "更多";
 "Options" = "选项";
+"Tool Options" = "工具选项";
+"Hidden tools are removed from the toolbar and its More menu." = "隐藏的工具会从工具栏及其“更多”菜单中移除。";
+"Hidden actions are removed from the toolbar and its More menu." = "隐藏的操作会从工具栏及其“更多”菜单中移除。";
+"Image Actions" = "图像操作";
+"Output Actions" = "输出操作";

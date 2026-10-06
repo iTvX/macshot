@@ -1900,7 +1900,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         stack.addArrangedSubview(sectionHeader(L("Annotation Tools")))
         stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
 
-        let noteA = NSTextField(labelWithString: L("Hidden tools are removed from the bottom toolbar."))
+        let noteA = NSTextField(labelWithString: L("Hidden tools are removed from the toolbar and its More menu."))
         noteA.font = NSFont.systemFont(ofSize: 11)
         noteA.textColor = .secondaryLabelColor
         stack.addArrangedSubview(noteA)
@@ -1921,43 +1921,43 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         toolsGrid.widthAnchor.constraint(equalTo: stack.widthAnchor, constant: -40).isActive = true
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
-        // ── Bottom Toolbar Actions ───────────────────────────
-        stack.addArrangedSubview(sectionHeader(L("Bottom Toolbar Actions")))
+        // ── Image Actions ─────────────────────────────────────
+        stack.addArrangedSubview(sectionHeader(L("Image Actions")))
         stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
 
-        let noteB = NSTextField(labelWithString: L("Hidden actions are removed from the bottom toolbar."))
+        let noteB = NSTextField(labelWithString: L("Hidden actions are removed from the toolbar and its More menu."))
         noteB.font = NSFont.systemFont(ofSize: 11)
         noteB.textColor = .secondaryLabelColor
         stack.addArrangedSubview(noteB)
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
-        let bottomActionItems = ToolbarCustomAction.bottomSettingsActions.map {
+        let imageActionItems = ToolbarCustomAction.imageSettingsActions.map {
             (tag: $0.rawValue, label: $0.settingsLabel)
         }
         let enabledActions = UserDefaults.standard.array(forKey: "enabledActions") as? [Int]
-        let bottomActionsGrid = makeToggleGrid(items: bottomActionItems,
+        let imageActionsGrid = makeToggleGrid(items: imageActionItems,
                                                defaultsKey: "enabledActions", enabledValues: enabledActions)
-        stack.addArrangedSubview(bottomActionsGrid)
-        bottomActionsGrid.widthAnchor.constraint(equalTo: stack.widthAnchor, constant: -40).isActive = true
+        stack.addArrangedSubview(imageActionsGrid)
+        imageActionsGrid.widthAnchor.constraint(equalTo: stack.widthAnchor, constant: -40).isActive = true
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
-        // ── Right Toolbar Actions ────────────────────────────
-        stack.addArrangedSubview(sectionHeader(L("Right Toolbar Actions")))
+        // ── Output Actions ────────────────────────────────────
+        stack.addArrangedSubview(sectionHeader(L("Output Actions")))
         stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
 
-        let noteC = NSTextField(labelWithString: L("Hidden actions are removed from the right toolbar."))
+        let noteC = NSTextField(labelWithString: L("Hidden actions are removed from the toolbar and its More menu."))
         noteC.font = NSFont.systemFont(ofSize: 11)
         noteC.textColor = .secondaryLabelColor
         stack.addArrangedSubview(noteC)
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
-        let rightActionItems = ToolbarCustomAction.rightSettingsActions.map {
+        let outputActionItems = ToolbarCustomAction.outputSettingsActions.map {
             (tag: $0.rawValue, label: $0.settingsLabel)
         }
-        let rightActionsGrid = makeToggleGrid(items: rightActionItems,
+        let outputActionsGrid = makeToggleGrid(items: outputActionItems,
                                               defaultsKey: "enabledActions", enabledValues: enabledActions)
-        stack.addArrangedSubview(rightActionsGrid)
-        rightActionsGrid.widthAnchor.constraint(equalTo: stack.widthAnchor, constant: -40).isActive = true
+        stack.addArrangedSubview(outputActionsGrid)
+        outputActionsGrid.widthAnchor.constraint(equalTo: stack.widthAnchor, constant: -40).isActive = true
 
         let clipView = scroll.contentView
         scroll.documentView = stack

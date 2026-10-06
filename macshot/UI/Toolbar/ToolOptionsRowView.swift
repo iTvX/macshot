@@ -1,15 +1,15 @@
 import Cocoa
 
-/// Real NSView-based tool options row, replacing the custom-drawn drawToolOptionsRow().
-/// Dynamically rebuilds its content when the selected tool changes.
+/// The current tool's options, shown as a panel hanging from the bar's options chip.
+/// Controls are built in one row; when the panel may not be that wide, whole groups
+/// (between separators) wrap onto further lines instead of scrolling.
 class ToolOptionsRowView: ToolbarSurfaceView {
 
-    private let optionsScroll = NSScrollView()
-    private let optionsContent = NSView()
-    private var centeredOffset: CGFloat = 0
-    private var verticalOffset: CGFloat = 0
-    private var presentationWidth: CGFloat?
-    private var controls: [NSView] { optionsContent.subviews }
+    private static let separatorID = NSUserInterfaceItemIdentifier("toolOptionsSeparator")
+    private var maximumWidth: CGFloat = .greatestFiniteMagnitude
+    /// Frames of the controls as built in a single row, before wrapping.
+    private var singleRowFrames: [ObjectIdentifier: NSRect] = [:]
+    private var controls: [NSView] { subviews }
 
     weak var overlayView: OverlayView?
     private(set) var currentTool: AnnotationTool?
@@ -17,18 +17,18 @@ class ToolOptionsRowView: ToolbarSurfaceView {
     private(set) var editingAnnotation: Annotation?
     /// Snapshot taken before the first property edit, for undo.
     private var editingSnapshot: Annotation?
-    private let rowHeight: CGFloat = 42
-    private let padding: CGFloat = 8
-    /// The natural content width calculated during rebuild, before any external resizing.
+    private let rowHeight: CGFloat = 40
+    private let padding: CGFloat = 10
+    /// The natural single-row content width calculated during rebuild.
     private(set) var contentWidth: CGFloat = 200
+    /// Lines the controls currently wrap onto.
+    private(set) var lineCount = 1
     // Consume clicks on gaps between controls so they don't fall through to OverlayView.
     // In editor mode, let gap clicks pass through so drawing works over the options area.
     override func hitTest(_ point: NSPoint) -> NSView? {
         let local = convert(point, from: superview)
         guard bounds.contains(local) else { return nil }
-        if let result = super.hitTest(point), result !== self, result !== optionsContent, result !== optionsScroll, result !== optionsScroll.contentView { return result }
-        // A scrollable row owns its gaps so wheel events cannot pan the image.
-        if optionsScroll.hasHorizontalScroller { return optionsScroll }
+        if let result = super.hitTest(point), result !== self { return result }
         if overlayView?.isEditorMode == true { return nil }
         return self
     }
@@ -43,8 +43,7 @@ class ToolOptionsRowView: ToolbarSurfaceView {
     /// Auto-tint controls to match toolbar accent color.
     /// Buttons with tag 990+ are excluded (they have custom colors like red/green/white).
     override func addSubview(_ view: NSView) {
-        if view === optionsScroll { super.addSubview(view); return }
-        optionsContent.addSubview(view)
+        super.addSubview(view)
         if let btn = view as? NSButton, btn.tag < 990 { btn.contentTintColor = ToolbarLayout.accentColor }
         if let slider = view as? NSSlider { slider.trackFillColor = ToolbarLayout.accentColor }
         if let seg = view as? NSSegmentedControl { seg.selectedSegmentBezelColor = ToolbarLayout.accentColor }
@@ -52,51 +51,86 @@ class ToolOptionsRowView: ToolbarSurfaceView {
 
     override init(frame: NSRect) {
         super.init(frame: frame)
-        optionsScroll.drawsBackground = false
-        optionsScroll.contentView.drawsBackground = false
-        optionsScroll.borderType = .noBorder
-        optionsScroll.scrollerStyle = .legacy
-        optionsScroll.horizontalScroller = NSScroller(frame: NSRect(x: 0, y: 0, width: 200, height: 12))
-        optionsScroll.autohidesScrollers = true
-        optionsScroll.hasVerticalScroller = false
-        optionsScroll.horizontalScrollElasticity = .allowed
-        optionsScroll.verticalScrollElasticity = .none
-        optionsScroll.documentView = optionsContent
-        super.addSubview(optionsScroll)
-
     }
 
     required init?(coder: NSCoder) { fatalError() }
 
-    func setPresentationWidth(_ width: CGFloat) {
-        presentationWidth = width
-        let needsScroll = contentWidth > width - 8
-        let oldScrollX = optionsScroll.contentView.bounds.minX
-        frame.size = NSSize(width: width, height: rowHeight + (needsScroll ? 14 : 0))
-        optionsScroll.frame = bounds.insetBy(dx: 4, dy: 1)
-        optionsScroll.hasHorizontalScroller = needsScroll
-        optionsScroll.tile()
-        positionControls(scrollX: oldScrollX)
+    /// Limit the panel width; groups wrap onto more lines when the row is wider.
+    func setMaximumWidth(_ width: CGFloat) {
+        guard abs(width - maximumWidth) > 0.5 else { return }
+        maximumWidth = width
+        layoutLines()
     }
 
-    override func layout() {
-        super.layout()
-        positionControls(scrollX: optionsScroll.contentView.bounds.minX)
-    }
-
-    private func positionControls(scrollX: CGFloat) {
-        let viewport = optionsScroll.contentView.bounds.size
-        let offset = max(0, (viewport.width - contentWidth) / 2)
-        let offsetY = (viewport.height - rowHeight) / 2
-        for control in controls {
-            control.frame.origin.x += offset - centeredOffset
-            control.frame.origin.y += offsetY - verticalOffset
+    /// Lay the built controls out on as few lines as `maximumWidth` allows.
+    private func layoutLines() {
+        let built = controls.filter { singleRowFrames[ObjectIdentifier($0)] != nil }
+        guard !built.isEmpty else {
+            lineCount = 1
+            frame.size = NSSize(width: contentWidth, height: rowHeight)
+            return
         }
-        centeredOffset = offset
-        verticalOffset = offsetY
-        optionsContent.frame = NSRect(x: 0, y: 0, width: max(viewport.width, contentWidth), height: viewport.height)
-        optionsScroll.contentView.scroll(to: NSPoint(x: min(max(0, scrollX), max(0, contentWidth - viewport.width)), y: 0))
-        optionsScroll.reflectScrolledClipView(optionsScroll.contentView)
+        // Groups are the runs of controls between separators, in row order.
+        let ordered = built.sorted { singleRowFrames[ObjectIdentifier($0)]!.minX < singleRowFrames[ObjectIdentifier($1)]!.minX }
+        var groups: [[NSView]] = [[]]
+        var separators: [NSView?] = [nil]
+        for view in ordered {
+            if view.identifier == Self.separatorID {
+                groups.append([])
+                separators.append(view)
+            } else {
+                groups[groups.count - 1].append(view)
+            }
+        }
+        let available = max(120, maximumWidth - padding * 2)
+        let separatorGap: CGFloat = 13
+        func span(_ group: [NSView]) -> (minX: CGFloat, width: CGFloat) {
+            let frames = group.map { singleRowFrames[ObjectIdentifier($0)]! }
+            guard let minX = frames.map(\.minX).min(), let maxX = frames.map(\.maxX).max() else { return (0, 0) }
+            return (minX, maxX - minX)
+        }
+        // Greedy line filling; a group never splits.
+        var lines: [[Int]] = [[]]
+        var lineWidth: CGFloat = 0
+        for (index, group) in groups.enumerated() where !group.isEmpty {
+            let width = span(group).width
+            let needed = lines[lines.count - 1].isEmpty ? width : lineWidth + separatorGap + width
+            if needed > available && !lines[lines.count - 1].isEmpty && contentWidth > maximumWidth {
+                lines.append([index])
+                lineWidth = width
+            } else {
+                lines[lines.count - 1].append(index)
+                lineWidth = needed
+            }
+        }
+        lineCount = lines.count
+        var widest: CGFloat = 0
+        for (lineIndex, line) in lines.enumerated() {
+            let yOffset = CGFloat(lineCount - 1 - lineIndex) * rowHeight
+            var cursor = padding
+            for (position, groupIndex) in line.enumerated() {
+                if let separator = separators[groupIndex] {
+                    let original = singleRowFrames[ObjectIdentifier(separator)]!
+                    separator.isHidden = position == 0
+                    if position > 0 {
+                        separator.frame = NSRect(x: cursor + (separatorGap - original.width) / 2, y: original.minY + yOffset,
+                                                 width: original.width, height: original.height)
+                        cursor += separatorGap
+                    }
+                }
+                let groupSpan = span(groups[groupIndex])
+                for view in groups[groupIndex] {
+                    let original = singleRowFrames[ObjectIdentifier(view)]!
+                    view.frame = NSRect(x: cursor + original.minX - groupSpan.minX, y: original.minY + yOffset,
+                                        width: original.width, height: original.height)
+                }
+                cursor += groupSpan.width
+            }
+            widest = max(widest, cursor + padding)
+        }
+        // Leading separators of empty groups stay hidden.
+        for (index, group) in groups.enumerated() where group.isEmpty { separators[index]?.isHidden = true }
+        frame.size = NSSize(width: max(widest, 120), height: rowHeight * CGFloat(lineCount))
     }
 
     override func viewDidChangeEffectiveAppearance() {
@@ -156,14 +190,14 @@ class ToolOptionsRowView: ToolbarSurfaceView {
     /// Rebuild the options row for the given tool. Call when tool or state changes.
     func rebuild(for tool: AnnotationTool) {
         effectiveAppearance.performAsCurrentDrawingAppearance { rebuildContent(for: tool) }
-        setPresentationWidth(presentationWidth ?? contentWidth + 8)
+        singleRowFrames = Dictionary(uniqueKeysWithValues: controls.map { (ObjectIdentifier($0), $0.frame) })
+        layoutLines()
     }
 
     private func rebuildContent(for tool: AnnotationTool) {
         // Remove old subviews
         controls.forEach { $0.removeFromSuperview() }
-        centeredOffset = 0
-        verticalOffset = 0
+        singleRowFrames = [:]
         guard let ov = overlayView else { return }
 
         currentTool = tool
@@ -272,6 +306,7 @@ class ToolOptionsRowView: ToolbarSurfaceView {
                 ov?.needsDisplay = true
                 // Rebuild to update stroke slider enabled state
                 self?.rebuild(for: .marker)
+                ov?.refreshToolOptionsChip()
             }
             // Disable stroke slider when smart marker is on (auto-sized)
             if ov.smartMarkerEnabled {
@@ -345,7 +380,8 @@ class ToolOptionsRowView: ToolbarSurfaceView {
     // MARK: - Section builders
 
     private func addSeparator(at x: CGFloat) -> CGFloat {
-        let sep = NSView(frame: NSRect(x: x + 6, y: 8, width: 1, height: rowHeight - 16))
+        let sep = NSView(frame: NSRect(x: x + 6, y: 10, width: 1, height: rowHeight - 20))
+        sep.identifier = Self.separatorID
         sep.wantsLayer = true
         sep.layer?.backgroundColor = ToolbarLayout.iconColor.withAlphaComponent(0.1).cgColor
         addSubview(sep)
@@ -583,7 +619,7 @@ class ToolOptionsRowView: ToolbarSurfaceView {
         seg.font = NSFont.systemFont(ofSize: 10, weight: .medium)
         (seg.cell as? NSSegmentedCell)?.segmentStyle = .roundRect
         for (i, mode) in CensorMode.allCases.enumerated() {
-            seg.setLabel(mode.label, forSegment: i)
+            seg.setLabel(L(mode.label), forSegment: i)
             seg.setWidth(0, forSegment: i)
         }
         let currentMode: CensorMode
@@ -1544,6 +1580,7 @@ class ToolOptionsRowView: ToolbarSurfaceView {
         if let label = viewWithTag(997) as? NSTextField {
             label.stringValue = currentTool == .loupe ? "\(Int(val))" : "\(Int(val))px"
         }
+        ov.refreshToolOptionsChip()
         ov.needsDisplay = true
     }
 
@@ -1706,6 +1743,7 @@ class ToolOptionsRowView: ToolbarSurfaceView {
             overlayView?.cachedCompositedImage = nil
             overlayView?.needsDisplay = true
         }
+        overlayView?.refreshToolOptionsChip()
     }
 
     @objc private func numberFormatChanged(_ sender: NSSegmentedControl) {
@@ -1848,6 +1886,7 @@ class ToolOptionsRowView: ToolbarSurfaceView {
         ov.textEditor.resizeToFit()
         ov.applyTextFormattingToSelectedAnnotations()
         if let label = viewWithTag(998) as? NSTextField { label.stringValue = "\(Int(ov.textEditor.fontSize))" }
+        ov.refreshToolOptionsChip()
         ov.needsDisplay = true
     }
 
@@ -1859,6 +1898,7 @@ class ToolOptionsRowView: ToolbarSurfaceView {
         ov.textEditor.resizeToFit()
         ov.applyTextFormattingToSelectedAnnotations()
         if let label = viewWithTag(998) as? NSTextField { label.stringValue = "\(Int(ov.textEditor.fontSize))" }
+        ov.refreshToolOptionsChip()
         ov.needsDisplay = true
     }
 

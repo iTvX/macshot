@@ -66,7 +66,7 @@ final class RecordingSetupTests: XCTestCase {
             reopened.applySelection(view.selectionRect)
             reopened.isRecording = true
             XCTAssertEqual(delegate.inputPermissionRequests, 0)
-            let buttons = ToolbarLayout.rightButtons(isRecording: true)
+            let buttons = ToolbarLayout.barButtons(mode: .recording)
             XCTAssertEqual(buttons.first { if case .mouseHighlight = $0.action { return true }; return false }?.isSelected, false)
             XCTAssertEqual(buttons.first { if case .showKeystrokes = $0.action { return true }; return false }?.isSelected, false)
             reopened.handleToolbarAction(.mouseHighlight)

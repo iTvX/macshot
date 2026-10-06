@@ -41,10 +41,13 @@ from this repository.
 The current source integrates upstream **4.3.0** plus selected reliability fixes.
 Original upstream attribution is retained in Git history and the changelog.
 
-The annotation toolbar follows the system's light/dark appearance, with grouped tools,
-a prominent **Copy** button, and a **More** menu for advanced tools and actions. Selected
-advanced tools appear in the main row. Contextual controls scroll horizontally when
-space is limited; existing custom toolbar palettes and enabled-tool preferences are preserved.
+After a selection, everything lives in one CleanShot-style toolbar beside it: tools, the
+color dot and an options chip (`3 px ▾`, `20 pt ▾`), undo/redo, Beautify, Pin and OCR, a
+**More** menu for less frequent tools and actions, then Cancel, **Save** and **Copy**. The
+chip opens the current tool's options in a panel under it (remembered between captures;
+it also opens while you edit text). The size pill sits at the selection's top-left. The
+toolbar follows the system's light/dark appearance; custom palettes and enabled tools and
+actions are preserved.
 
 Screenshot copying defaults to image data for compatibility with Teams, websites, and
 remote desktops. To paste screenshots as files in Finder on macOS 26 or earlier, enable
