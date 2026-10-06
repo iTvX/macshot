@@ -750,3 +750,8 @@
 
 "More" = "More";
 "Options" = "Options";
+"Tool Options" = "Tool Options";
+"Hidden tools are removed from the toolbar and its More menu." = "Hidden tools are removed from the toolbar and its More menu.";
+"Hidden actions are removed from the toolbar and its More menu." = "Hidden actions are removed from the toolbar and its More menu.";
+"Image Actions" = "Image Actions";
+"Output Actions" = "Output Actions";

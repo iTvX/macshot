@@ -1,7 +1,7 @@
 import Cocoa
 
 /// Real NSView for a single toolbar button. Handles its own hover, press, drawing.
-/// Adaptive selected states, SF Symbols, color swatches and primary output actions.
+/// Styles: glyph, colour dot, options chip, labelled pill and prominent pill.
 class ToolbarButtonView: NSView {
 
     var action: ToolbarButtonAction
@@ -11,6 +11,10 @@ class ToolbarButtonView: NSView {
     var selectedTintColor: NSColor? { didSet { cachedIcon = nil; cachedIconIsOn = nil; needsDisplay = true } }
     var swatchColor: NSColor? { didSet { needsDisplay = true } }
     var hasContextMenu: Bool = false
+    var style: ToolbarButtonStyle = .icon { didSet { if oldValue != style { cachedIcon = nil; needsDisplay = true } } }
+    var section: ToolbarSection = .outputs { didSet { if oldValue != section { cachedIcon = nil; needsDisplay = true } } }
+    var title: String? { didSet { needsDisplay = true } }
+    var prominentColor: NSColor? { didSet { needsDisplay = true } }
     /// Mic input level (0–1). When > 0, draws a green fill from the bottom of the button.
     var micLevel: Float = 0 { didSet { if abs(oldValue - micLevel) > 0.005 { needsDisplay = true } } }
 
@@ -20,16 +24,17 @@ class ToolbarButtonView: NSView {
     private var suppressHoverStartPoint: NSPoint?
     private var cachedIcon: NSImage?       // cached tinted SF Symbol for current state
     private var cachedIconIsOn: Bool?       // the isOn state when icon was cached
+    private var cachedIconColorKey: String?
 
     /// Shared cross-instance cache: avoids re-rasterizing SF Symbols when toolbar is rebuilt.
-    /// Key: "symbolName|isOn|colorHex"
+    /// Key: "symbolName|pointSize|colorHex"
     private static var iconCache: [String: NSImage] = [:]
 
-    private static func cacheKey(name: String, isOn: Bool, color: NSColor) -> String {
+    private static func cacheKey(name: String, pointSize: CGFloat, color: NSColor) -> String {
         let rgb = color.usingColorSpace(.sRGB) ?? color
-        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0
-        rgb.getRed(&r, green: &g, blue: &b, alpha: nil)
-        return "\(name)|\(isOn)|\(Int(r*255)),\(Int(g*255)),\(Int(b*255))"
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        rgb.getRed(&r, green: &g, blue: &b, alpha: &a)
+        return "\(name)|\(pointSize)|\(Int(r*255)),\(Int(g*255)),\(Int(b*255)),\(Int(a*255))"
     }
 
     var onClick: ((ToolbarButtonAction) -> Void)?
@@ -37,29 +42,25 @@ class ToolbarButtonView: NSView {
     var onRightClick: ((ToolbarButtonAction, NSView) -> Void)?
     var onHover: ((ToolbarButtonAction, Bool) -> Void)?  // (action, isHovered)
 
-    static let size: CGFloat = 34
+    static let size: CGFloat = 32
     private static let radius: CGFloat = 8
+    private static let titleFont = NSFont.systemFont(ofSize: 12.5, weight: .semibold)
+    private static let chipFont = NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .medium)
 
-    var showsActionTitle = false { didSet { needsDisplay = true } }
-    var actionTitle: String? {
-        guard showsActionTitle else { return nil }
-        switch action {
-        case .copy: return L("Copy")
-        case .save: return L("Save")
-        default: return nil
-        }
-    }
+    /// Width the bar gives this control; height is always `size`.
     var preferredWidth: CGFloat {
-        guard let title = actionTitle else { return Self.size }
-        let width = (title as NSString).size(withAttributes: [.font: NSFont.systemFont(ofSize: 12, weight: .semibold)]).width
-        return min(140, max(66, width + 40))
-    }
-    private var isPrimaryAction: Bool {
-        switch action { case .copy, .startRecord: return true; default: return false }
-    }
-    private var primaryColor: NSColor {
-        if case .startRecord = action { return .systemRed }
-        return ToolbarLayout.accentColor
+        switch style {
+        case .icon, .swatch:
+            return Self.size
+        case .chip:
+            let text = (title ?? "") as NSString
+            let textWidth = text.length == 0 ? 0 : ceil(text.size(withAttributes: [.font: Self.chipFont]).width) + 6
+            return max(40, 10 + textWidth + 9 + 10)
+        case .labeled, .prominent:
+            let text = (title ?? "") as NSString
+            let textWidth = ceil(text.size(withAttributes: [.font: Self.titleFont]).width)
+            return min(160, max(64, 11 + 16 + 6 + textWidth + 12))
+        }
     }
 
     var tooltipText: String = ""
@@ -82,6 +83,11 @@ class ToolbarButtonView: NSView {
         sfSymbol = data.sfSymbol
         tooltipText = data.tooltip
         hasContextMenu = data.hasContextMenu
+        style = data.style
+        section = data.section
+        title = data.title
+        prominentColor = data.prominentColor
+        cachedIcon = nil
         if case .micAudio = action {
             // Preserve the live mic meter while this reused view is still the
             // mic button.
@@ -98,27 +104,82 @@ class ToolbarButtonView: NSView {
         needsDisplay = true
     }
 
+    /// The selected annotation tool reads as a filled accent tile (CleanShot);
+    /// other "on" toggles keep a quieter tinted state.
+    private var isSelectedTool: Bool { isOn && section == .tools }
+
+    private func glyph(named name: String, pointSize: CGFloat, color: NSColor) -> NSImage? {
+        let key = Self.cacheKey(name: name, pointSize: pointSize, color: color)
+        if let cached = Self.iconCache[key] { return cached }
+        let img: NSImage?
+        if name == "_custom.checkerboard" {
+            img = Self.checkerboardIcon(color: color)
+        } else {
+            let cfg = NSImage.SymbolConfiguration(pointSize: pointSize, weight: .regular)
+            if let symbol = NSImage(systemSymbolName: name, accessibilityDescription: nil)?
+                    .withSymbolConfiguration(cfg) {
+                let resolved = color.usingColorSpace(.sRGB) ?? color
+                img = NSImage(size: symbol.size, flipped: false) { r in
+                    symbol.draw(in: r, from: .zero, operation: .sourceOver, fraction: 1.0)
+                    resolved.setFill()
+                    r.fill(using: .sourceAtop)
+                    return true
+                }
+            } else {
+                img = nil
+            }
+        }
+        if let img {
+            img.lockFocus(); img.unlockFocus()
+            Self.iconCache[key] = img
+        }
+        return img
+    }
+
     override func draw(_ dirtyRect: NSRect) {
         let surface = bounds.insetBy(dx: 1, dy: 1)
+        let tile = NSBezierPath(roundedRect: surface, xRadius: Self.radius, yRadius: Self.radius)
+        let icon = ToolbarLayout.iconColor
+        let accent = ToolbarLayout.accentColor
+
+        switch style {
+        case .prominent:
+            let base = prominentColor ?? accent
+            base.withAlphaComponent(isPressed ? 0.72 : (isHovered ? 0.88 : 1)).setFill()
+            tile.fill()
+            drawGlyphAndTitle(color: .white)
+            return
+        case .labeled:
+            icon.withAlphaComponent(isPressed ? 0.17 : (isHovered ? 0.12 : 0.07)).setFill()
+            tile.fill()
+            drawGlyphAndTitle(color: icon)
+            if hasContextMenu { drawContextTriangle() }
+            return
+        case .chip:
+            let fill = isOn ? accent.withAlphaComponent(isPressed ? 0.26 : 0.16)
+                : icon.withAlphaComponent(isPressed ? 0.15 : (isHovered ? 0.11 : 0.06))
+            fill.setFill()
+            tile.fill()
+            drawChip(color: isOn ? accent : icon)
+            return
+        case .swatch, .icon:
+            break
+        }
+
         let bg: NSColor
-        if isPrimaryAction {
-            bg = primaryColor.withAlphaComponent(isPressed ? 0.72 : (isHovered ? 0.88 : 1))
+        if isSelectedTool {
+            bg = accent.withAlphaComponent(isPressed ? 0.8 : 1)
         } else if isPressed {
-            bg = ToolbarLayout.iconColor.withAlphaComponent(0.15)
+            bg = icon.withAlphaComponent(0.15)
         } else if isOn {
-            bg = ToolbarLayout.accentColor.withAlphaComponent(0.15)
+            bg = accent.withAlphaComponent(0.15)
         } else if isHovered {
-            bg = ToolbarLayout.iconColor.withAlphaComponent(0.08)
+            bg = icon.withAlphaComponent(0.08)
         } else {
             bg = .clear
         }
         bg.setFill()
-        NSBezierPath(roundedRect: surface, xRadius: Self.radius, yRadius: Self.radius).fill()
-        if isOn && !isPrimaryAction {
-            ToolbarLayout.accentColor.withAlphaComponent(0.25).setStroke()
-            let outline = NSBezierPath(roundedRect: surface, xRadius: Self.radius, yRadius: Self.radius)
-            outline.lineWidth = 0.5; outline.stroke()
-        }
+        tile.fill()
 
         // Mic level fill — green bar rising from the bottom inside the button
         if micLevel > 0.001 {
@@ -131,80 +192,81 @@ class ToolbarButtonView: NSView {
             NSGraphicsContext.restoreGraphicsState()
         }
 
-        // Color swatch
-        if let swatch = swatchColor {
-            let inset: CGFloat = 7
-            let r = bounds.insetBy(dx: inset, dy: inset)
-            swatch.setFill()
+        // Colour dot
+        if style == .swatch || swatchColor != nil {
+            let diameter: CGFloat = 18
+            let r = NSRect(x: bounds.midX - diameter / 2, y: bounds.midY - diameter / 2, width: diameter, height: diameter)
+            (swatchColor ?? .clear).setFill()
             NSBezierPath(ovalIn: r).fill()
-            ToolbarLayout.iconColor.withAlphaComponent(0.4).setStroke()
-            let border = NSBezierPath(ovalIn: r)
-            border.lineWidth = 0.5
+            icon.withAlphaComponent(0.28).setStroke()
+            let border = NSBezierPath(ovalIn: r.insetBy(dx: -1.5, dy: -1.5))
+            border.lineWidth = 1
             border.stroke()
             return
         }
 
         // SF Symbol or custom icon (static cache survives toolbar rebuilds)
         guard let name = sfSymbol else { return }
-        let currentIsOn = isOn
-        if cachedIcon == nil || cachedIconIsOn != currentIsOn {
-            let color: NSColor = isPrimaryAction ? .white : (currentIsOn ? (selectedTintColor ?? ToolbarLayout.accentColor) : tintColor)
-            let key = Self.cacheKey(name: name, isOn: currentIsOn, color: color)
-            if let cached = Self.iconCache[key] {
-                cachedIcon = cached
-                cachedIconIsOn = currentIsOn
-            } else {
-                let img: NSImage?
-                if name == "_custom.checkerboard" {
-                    img = Self.checkerboardIcon(color: color)
-                } else {
-                    let cfg = NSImage.SymbolConfiguration(pointSize: 15, weight: .regular)
-                    if let symbol = NSImage(systemSymbolName: name, accessibilityDescription: nil)?
-                            .withSymbolConfiguration(cfg) {
-                        img = NSImage(size: symbol.size, flipped: false) { r in
-                            symbol.draw(in: r, from: .zero, operation: .sourceOver, fraction: 1.0)
-                            color.setFill()
-                            r.fill(using: .sourceAtop)
-                            return true
-                        }
-                    } else {
-                        img = nil
-                    }
-                }
-                if let img = img {
-                    img.lockFocus(); img.unlockFocus()
-                    Self.iconCache[key] = img
-                    cachedIcon = img
-                    cachedIconIsOn = currentIsOn
-                }
-            }
+        let color: NSColor = isSelectedTool ? .white : (isOn ? (selectedTintColor ?? accent) : tintColor)
+        let key = Self.cacheKey(name: name, pointSize: 15, color: color)
+        if cachedIcon == nil || cachedIconIsOn != isOn || cachedIconColorKey != key {
+            cachedIcon = glyph(named: name, pointSize: 15, color: color)
+            cachedIconIsOn = isOn
+            cachedIconColorKey = key
         }
-        if let icon = cachedIcon {
-            let x = actionTitle == nil ? bounds.midX - icon.size.width / 2 : 10
-            let y = bounds.midY - icon.size.height / 2
-            icon.draw(at: NSPoint(x: x, y: y), from: .zero, operation: .sourceOver, fraction: 1.0)
+        if let image = cachedIcon {
+            let origin = NSPoint(x: round(bounds.midX - image.size.width / 2), y: round(bounds.midY - image.size.height / 2))
+            image.draw(at: origin, from: .zero, operation: .sourceOver, fraction: 1.0)
         }
 
-        if let title = actionTitle {
-            let style = NSMutableParagraphStyle()
-            style.lineBreakMode = .byTruncatingTail
-            (title as NSString).draw(in: NSRect(x: 32, y: bounds.midY - 8, width: bounds.width - 38, height: 17),
-                withAttributes: [.font: NSFont.systemFont(ofSize: 12, weight: .semibold),
-                                 .foregroundColor: isPrimaryAction ? NSColor.white : ToolbarLayout.iconColor,
-                                 .paragraphStyle: style])
-        }
+        if hasContextMenu { drawContextTriangle() }
+    }
 
-        // Context menu triangle
-        if hasContextMenu {
-            let s: CGFloat = 4
-            let path = NSBezierPath()
-            path.move(to: NSPoint(x: bounds.maxX - s - 3, y: bounds.minY + 3))
-            path.line(to: NSPoint(x: bounds.maxX - 3, y: bounds.minY + 3))
-            path.line(to: NSPoint(x: bounds.maxX - 3, y: bounds.minY + 3 + s))
-            path.close()
-            ToolbarLayout.iconColor.withAlphaComponent(0.35).setFill()
-            path.fill()
+    private func drawGlyphAndTitle(color: NSColor) {
+        var x: CGFloat = 11
+        if let name = sfSymbol, let image = glyph(named: name, pointSize: 13, color: color) {
+            image.draw(at: NSPoint(x: x + round((16 - image.size.width) / 2), y: round(bounds.midY - image.size.height / 2)),
+                       from: .zero, operation: .sourceOver, fraction: 1.0)
+            x += 16 + 6
         }
+        guard let title else { return }
+        let style = NSMutableParagraphStyle()
+        style.lineBreakMode = .byTruncatingTail
+        let attrs: [NSAttributedString.Key: Any] = [.font: Self.titleFont, .foregroundColor: color, .paragraphStyle: style]
+        let height = ceil((title as NSString).size(withAttributes: attrs).height)
+        (title as NSString).draw(in: NSRect(x: x, y: round(bounds.midY - height / 2), width: bounds.width - x - 8, height: height),
+                                 withAttributes: attrs)
+    }
+
+    private func drawChip(color: NSColor) {
+        let chevronWidth: CGFloat = 9
+        var x: CGFloat = 10
+        if let title, !title.isEmpty {
+            let attrs: [NSAttributedString.Key: Any] = [.font: Self.chipFont, .foregroundColor: color]
+            let size = (title as NSString).size(withAttributes: attrs)
+            (title as NSString).draw(at: NSPoint(x: x, y: round(bounds.midY - size.height / 2)), withAttributes: attrs)
+            x += ceil(size.width) + 6
+        } else if let image = glyph(named: "slider.horizontal.3", pointSize: 13, color: color) {
+            image.draw(at: NSPoint(x: x, y: round(bounds.midY - image.size.height / 2)), from: .zero, operation: .sourceOver, fraction: 1)
+            x += image.size.width + 4
+        }
+        if let chevron = glyph(named: isOn ? "chevron.up" : "chevron.down", pointSize: 9, color: color.withAlphaComponent(0.75)) {
+            let origin = NSPoint(x: min(x, bounds.maxX - 10 - chevronWidth) + round((chevronWidth - chevron.size.width) / 2),
+                                 y: round(bounds.midY - chevron.size.height / 2))
+            chevron.draw(at: origin, from: .zero, operation: .sourceOver, fraction: 1)
+        }
+    }
+
+    private func drawContextTriangle() {
+        let s: CGFloat = 4
+        let path = NSBezierPath()
+        path.move(to: NSPoint(x: bounds.maxX - s - 3, y: bounds.minY + 3))
+        path.line(to: NSPoint(x: bounds.maxX - 3, y: bounds.minY + 3))
+        path.line(to: NSPoint(x: bounds.maxX - 3, y: bounds.minY + 3 + s))
+        path.close()
+        let color = style == .prominent ? NSColor.white.withAlphaComponent(0.7) : ToolbarLayout.iconColor.withAlphaComponent(0.35)
+        color.setFill()
+        path.fill()
     }
 
     override func viewDidChangeEffectiveAppearance() {
@@ -215,7 +277,10 @@ class ToolbarButtonView: NSView {
 
     override func isAccessibilityElement() -> Bool { true }
     override func accessibilityRole() -> NSAccessibility.Role? { .button }
-    override func accessibilityLabel() -> String? { tooltipText }
+    override func accessibilityLabel() -> String? {
+        guard style == .chip, let title, !title.isEmpty else { return tooltipText }
+        return "\(tooltipText), \(title)"
+    }
     override func accessibilityValue() -> Any? { isOn ? 1 : 0 }
     override func accessibilityPerformPress() -> Bool {
         // Drag controls need a real press/release pair; a synthetic accessibility

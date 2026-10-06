@@ -109,13 +109,6 @@ final class ResolutionBoxView: ToolbarSurfaceView, NSTextFieldDelegate {
                height: fieldH + pad * 2)
     }
 
-    /// X (in this view's coords) of the midpoint of the W↔H pair — i.e. the center
-    /// of the "×". OverlayView aligns this with the selection center so the box
-    /// reads as centered on the dimensions, ignoring the trailing presets button.
-    var dimensionsCenterX: CGFloat {
-        pad + fieldW + gap + timesWidth / 2
-    }
-
     private func layoutPieces() {
         let h = fieldH + pad * 2
         var x = pad

@@ -43,6 +43,25 @@ enum ToolbarButtonAction {
     case webcam
     case recordSettings  // recording mode: open format/FPS/when-done popover
     case effects  // image effects (CIFilter adjustments + presets)
+    case toolOptions  // options chip: shows/hides the current tool's options panel
+    case more  // the bar's own overflow menu button
+}
+
+/// Groups of the single annotation bar, in display order. Hairline dividers
+/// separate sections.
+enum ToolbarSection: Int, Comparable {
+    case leading, tools, style, history, outputs, finish
+
+    static func < (lhs: ToolbarSection, rhs: ToolbarSection) -> Bool { lhs.rawValue < rhs.rawValue }
+}
+
+/// How a bar control renders.
+enum ToolbarButtonStyle: Equatable {
+    case icon       // glyph button
+    case swatch     // colour dot
+    case chip       // value + chevron (tool options)
+    case labeled    // glyph + title on a quiet pill (Save)
+    case prominent  // glyph + title on a filled pill (Copy, Record)
 }
 
 struct ToolbarButton {
@@ -54,6 +73,25 @@ struct ToolbarButton {
     var selectedTintColor: NSColor? = nil  // optional status tint that remains visible while selected
     var bgColor: NSColor? = nil  // for color swatches
     var hasContextMenu: Bool = false  // draw small corner triangle to indicate right-click options
+    var section: ToolbarSection = .outputs
+    var style: ToolbarButtonStyle = .icon
+    var title: String? = nil  // chip / labeled / prominent text
+    var prominentColor: NSColor? = nil  // fill of a prominent button; accent when nil
+    /// Less frequent actions live in the More menu so the bar stays short.
+    var prefersMenu: Bool = false
+    /// Never moved into the More menu when the bar must shrink.
+    var isEssential: Bool = false
+    /// When the bar must shrink, lower priorities move into More first.
+    var keepPriority: Int = 0
+    /// Separator groups inside the More menu.
+    var menuGroup: Int = 0
+}
+
+/// What the single bar is showing.
+enum ToolbarBarMode {
+    case overlay    // in-place annotation after a selection
+    case editor     // detached editor window
+    case recording  // recording setup before the take starts
 }
 
 enum ToolbarCustomAction: Int {
@@ -85,24 +123,12 @@ enum ToolbarCustomAction: Int {
         return actions
     }
 
-    static var bottomToolbarActions: [ToolbarCustomAction] {
+    /// Settings groups: actions that change the image, and outputs/capture modes.
+    static var imageSettingsActions: [ToolbarCustomAction] {
         [.invertColors, .effects, .beautify, .removeBackground]
     }
 
-    static var rightToolbarActions: [ToolbarCustomAction] {
-        var actions: [ToolbarCustomAction] = [.share]
-        #if !OFFLINE
-        actions.append(.upload)
-        #endif
-        actions.append(contentsOf: [.pin, .ocr, .translate, .scrollCapture, .record])
-        return actions
-    }
-
-    static var bottomSettingsActions: [ToolbarCustomAction] {
-        bottomToolbarActions
-    }
-
-    static var rightSettingsActions: [ToolbarCustomAction] {
+    static var outputSettingsActions: [ToolbarCustomAction] {
         var actions: [ToolbarCustomAction] = []
         #if !OFFLINE
         actions.append(.upload)
@@ -152,9 +178,7 @@ enum ToolbarCustomAction: Int {
         case .beautify:
             var button = ToolbarButton(action: .beautify, sfSymbol: "sparkles", tooltip: L("Beautify"))
             if beautifyEnabled {
-                let enabledColor = NSColor(calibratedRed: 1.0, green: 0.8, blue: 0.2, alpha: 1.0)
-                button.tintColor = enabledColor
-                button.selectedTintColor = enabledColor
+                button.tintColor = ToolbarLayout.accentColor
             }
             return button
         case .removeBackground:
@@ -192,7 +216,7 @@ enum ToolbarCustomAction: Int {
         case .effects:
             var button = ToolbarButton(action: .effects, sfSymbol: "slider.horizontal.3", tooltip: L("Adjust"))
             if effectsActive {
-                button.tintColor = NSColor(calibratedRed: 1.0, green: 0.8, blue: 0.2, alpha: 1.0)
+                button.tintColor = ToolbarLayout.accentColor
             }
             return button
         }
@@ -281,7 +305,7 @@ class ToolbarLayout {
         return defaultBgColor
     }
     static var handleColor: NSColor { accentColor }
-    static let cornerRadius: CGFloat = 14
+    static let cornerRadius: CGFloat = 12
 
     /// Save accent color to UserDefaults.
     static func saveAccentColor(_ color: NSColor) {
@@ -343,18 +367,9 @@ class ToolbarLayout {
         UserDefaults.standard.removeObject(forKey: "toolbarBgColor")
     }
 
-    // Bottom toolbar items (drawing tools + colors + undo/redo + processing actions)
-    static func bottomButtons(
-        selectedTool: AnnotationTool, selectedColor: NSColor, beautifyEnabled: Bool = false,
-        beautifyStyleIndex: Int = 0, hasAnnotations: Bool = false, isRecording: Bool = false,
-        effectsActive: Bool = false
-    ) -> [ToolbarButton] {
-        // Hide the bottom bar entirely while recording
-        if isRecording { return [] }
-
-        var buttons: [ToolbarButton] = []
-
-        // Get enabled tools from UserDefaults — migrate: only add tools that are brand-new.
+    /// Enabled annotation tools in bar order. A newly introduced tool is enabled once;
+    /// tools the user switched off in Settings stay off.
+    static func enabledTools() -> [(tool: AnnotationTool, symbol: String, tooltip: String)] {
         // Track introduced tools in `knownToolRawValues` so user-disabled tools are never re-enabled.
         let allKnownToolRawValues = AnnotationTool.allCases
             .filter { $0 != .select && $0 != .translateOverlay }
@@ -396,143 +411,117 @@ class ToolbarLayout {
             (.colorSampler, "eyedropper", L("Color Picker")),
             (.measure, "ruler", L("Measure (px)")),
         ]
+        return tools
+            .filter { enabledRawValues?.contains($0.0.rawValue) ?? true }
+            .map { (tool: $0.0, symbol: $0.1, tooltip: $0.2) }
+    }
 
-        for (tool, symbol, tip) in tools {
-            // Skip if disabled
-            if let enabledRawValues = enabledRawValues, !enabledRawValues.contains(tool.rawValue) {
-                continue
-            }
+    /// Tools offered from More rather than the bar, unless selected.
+    static let menuTools: Set<AnnotationTool> = [.loupe, .stamp, .colorSampler, .measure]
+
+    /// Output actions in bar order. The first three stay on the bar; the rest live in
+    /// More, in the listed groups, unless they are active.
+    private static let outputOrder: [(action: ToolbarCustomAction, inline: Bool, group: Int)] = {
+        var order: [(ToolbarCustomAction, Bool, Int)] = [
+            (.beautify, true, 0), (.pin, true, 0), (.ocr, true, 0),
+            (.share, false, 2),
+        ]
+        #if !OFFLINE
+        order.append((.upload, false, 2))
+        #endif
+        order += [
+            (.translate, false, 3),
+            (.effects, false, 4), (.invertColors, false, 4), (.removeBackground, false, 4),
+            (.scrollCapture, false, 5), (.record, false, 5),
+        ]
+        return order.map { (action: $0.0, inline: $0.1, group: $0.2) }
+    }()
+
+    /// Everything the single bar shows for `mode`, in display order.
+    /// `toolOptions` is nil when the current tool has no options.
+    static func barButtons(
+        mode: ToolbarBarMode,
+        selectedTool: AnnotationTool = .arrow, selectedColor: NSColor = .systemRed,
+        toolOptions: (title: String, isOpen: Bool)? = nil,
+        beautifyEnabled: Bool = false, beautifyOptionsShown: Bool = false,
+        translateEnabled: Bool = false, effectsActive: Bool = false
+    ) -> [ToolbarButton] {
+        if mode == .recording { return recordingButtons() }
+        let isOverlay = mode == .overlay
+        var buttons: [ToolbarButton] = []
+
+        if isOverlay {
+            var move = ToolbarButton(
+                action: .moveSelection, sfSymbol: "arrow.up.and.down.and.arrow.left.and.right",
+                tooltip: L("Move Selection"))
+            move.section = .leading
+            move.isEssential = true
+            buttons.append(move)
+        }
+
+        for (tool, symbol, tip) in enabledTools() {
             var btn = ToolbarButton(action: .tool(tool), sfSymbol: symbol, tooltip: tip)
-            btn.isSelected = (tool == selectedTool)
-            switch tool {
-            case .pencil, .line, .arrow, .rectangle, .ellipse, .marker, .number, .loupe:
-                break  // options shown in the tool options row, not via right-click
-            default:
-                break
-            }
+            btn.section = .tools
+            btn.isSelected = tool == selectedTool && !beautifyOptionsShown
+            btn.keepPriority = 50
+            // Specialist tools wait in More (still one key away) unless in use.
+            btn.prefersMenu = menuTools.contains(tool) && tool != selectedTool
             buttons.append(btn)
         }
 
-        // Color button
         var colorBtn = ToolbarButton(action: .color, sfSymbol: nil, tooltip: L("Color"))
         colorBtn.bgColor = selectedColor
+        colorBtn.section = .style
+        colorBtn.style = .swatch
+        colorBtn.isEssential = true
         buttons.append(colorBtn)
+        if let toolOptions {
+            var chip = ToolbarButton(action: .toolOptions, sfSymbol: "chevron.down", tooltip: L("Tool Options"))
+            chip.section = .style
+            chip.style = .chip
+            chip.title = toolOptions.title
+            chip.isSelected = toolOptions.isOpen
+            chip.isEssential = true
+            buttons.append(chip)
+        }
 
-        // Undo / Redo
-        buttons.append(
-            ToolbarButton(
-                action: .undo, sfSymbol: "arrow.uturn.backward", tooltip: L("Undo")))
-        buttons.append(
-            ToolbarButton(
-                action: .redo, sfSymbol: "arrow.uturn.forward", tooltip: L("Redo")))
+        for (action, symbol, tip) in [(ToolbarButtonAction.undo, "arrow.uturn.backward", L("Undo")),
+                                      (.redo, "arrow.uturn.forward", L("Redo"))] {
+            var button = ToolbarButton(action: action, sfSymbol: symbol, tooltip: tip)
+            button.section = .history
+            button.keepPriority = 40
+            buttons.append(button)
+        }
 
+        if isOverlay {
+            var editor = ToolbarButton(
+                action: .detach, sfSymbol: "arrow.up.forward.app", tooltip: L("Open in Editor Window"))
+            editor.prefersMenu = true
+            editor.menuGroup = 1
+            buttons.append(editor)
+        }
         let enabledActions = ToolbarActionPreferences.enabledRawValuesAfterMigration()
-        for action in ToolbarCustomAction.bottomToolbarActions {
-            guard ToolbarActionPreferences.isEnabled(action, in: enabledActions) else { continue }
-            if let button = action.makeToolbarButton(
-                beautifyEnabled: beautifyEnabled,
-                effectsActive: effectsActive,
-                isRecording: isRecording
-            ) {
-                buttons.append(button)
-            }
+        for (index, entry) in outputOrder.enumerated() {
+            guard ToolbarActionPreferences.isEnabled(entry.action, in: enabledActions),
+                  var button = entry.action.makeToolbarButton(
+                      beautifyEnabled: beautifyEnabled, translateEnabled: translateEnabled,
+                      effectsActive: effectsActive, isEditorMode: !isOverlay)
+            else { continue }
+            if entry.action == .beautify { button.isSelected = beautifyOptionsShown }
+            let isActive = button.isSelected || (entry.action == .beautify && beautifyEnabled)
+                || (entry.action == .effects && effectsActive)
+            button.prefersMenu = !entry.inline && !isActive
+            button.menuGroup = entry.group
+            button.keepPriority = 30 - index
+            buttons.append(button)
         }
 
-        return buttons
-    }
-
-    // Right toolbar items (output actions + cancel + delay)
-    static func rightButtons(
-        beautifyEnabled: Bool = false, beautifyStyleIndex: Int = 0, hasAnnotations: Bool = false,
-        translateEnabled: Bool = false, isRecording: Bool = false,
-        isEditorMode: Bool = false
-    ) -> [ToolbarButton] {
-        var buttons: [ToolbarButton] = []
-
-        // Recording setup mode — show start button + toggles, then return early
-        if isRecording {
-            var startBtn = ToolbarButton(
-                action: .startRecord, sfSymbol: "record.circle", tooltip: L("Start Recording"))
-            startBtn.tintColor = .systemRed
-            buttons.append(startBtn)
-
-            // Stop/cancel button to exit recording mode without starting
-            buttons.append(
-                ToolbarButton(action: .stopRecord, sfSymbol: "xmark", tooltip: L("Cancel Recording")))
-
-            let mouseHighlightOn = UserDefaults.standard.bool(forKey: "recordMouseHighlight")
-            var mouseBtn = ToolbarButton(
-                action: .mouseHighlight, sfSymbol: "cursorarrow.click.2", tooltip: L("Highlight Mouse Clicks"))
-            mouseBtn.isSelected = mouseHighlightOn
-            buttons.append(mouseBtn)
-
-            let keystrokesOn = UserDefaults.standard.bool(forKey: "recordKeystroke")
-            var keystrokeBtn = ToolbarButton(
-                action: .showKeystrokes, sfSymbol: "keyboard", tooltip: L("Show Keystrokes"))
-            keystrokeBtn.isSelected = keystrokesOn
-            keystrokeBtn.hasContextMenu = true
-            buttons.append(keystrokeBtn)
-
-            let audioOn = UserDefaults.standard.bool(forKey: "recordSystemAudio")
-            var audioBtn = ToolbarButton(
-                action: .systemAudio, sfSymbol: audioOn ? "speaker.wave.2.fill" : "speaker.slash",
-                tooltip: L("Record System Audio"))
-            audioBtn.isSelected = audioOn
-            buttons.append(audioBtn)
-
-            let micOn = UserDefaults.standard.bool(forKey: "recordMicAudio")
-            var micBtn = ToolbarButton(
-                action: .micAudio, sfSymbol: micOn ? "mic.fill" : "mic.slash", tooltip: L("Record Microphone"))
-            micBtn.isSelected = micOn
-            micBtn.hasContextMenu = true
-            buttons.append(micBtn)
-
-            let webcamOn = UserDefaults.standard.bool(forKey: "recordWebcam")
-            let webcamSymbol: String = {
-                if #available(macOS 14.0, *) {
-                    return webcamOn ? "web.camera.fill" : "web.camera"
-                }
-                return webcamOn ? "camera.fill" : "camera"
-            }()
-            var webcamBtn = ToolbarButton(
-                action: .webcam, sfSymbol: webcamSymbol, tooltip: L("Webcam Overlay"))
-            webcamBtn.isSelected = webcamOn
-            webcamBtn.hasContextMenu = true
-            buttons.append(webcamBtn)
-
-            // Recording settings gear
-            buttons.append(
-                ToolbarButton(
-                    action: .recordSettings, sfSymbol: "gearshape",
-                    tooltip: L("Recording Settings")))
-
-            // Allow moving the selection before starting
-            buttons.append(
-                ToolbarButton(
-                    action: .moveSelection, sfSymbol: "arrow.up.and.down.and.arrow.left.and.right",
-                    tooltip: L("Move Selection")))
-
-            return buttons
+        if isOverlay {
+            var cancel = ToolbarButton(action: .cancel, sfSymbol: "xmark", tooltip: L("Cancel"))
+            cancel.section = .finish
+            cancel.isEssential = true
+            buttons.append(cancel)
         }
-
-        let enabledActions = ToolbarActionPreferences.enabledRawValuesAfterMigration()
-
-        // Cancel, move-selection, editor — not shown in editor window
-        if !isEditorMode {
-            buttons.append(
-                ToolbarButton(action: .cancel, sfSymbol: "xmark", tooltip: L("Cancel")))
-            buttons.append(
-                ToolbarButton(
-                    action: .moveSelection, sfSymbol: "arrow.up.and.down.and.arrow.left.and.right",
-                    tooltip: L("Move Selection")))
-            buttons.append(
-                ToolbarButton(
-                    action: .detach, sfSymbol: "arrow.up.forward.app",
-                    tooltip: L("Open in Editor Window")))
-        }
-        // Copy and save are always present
-        buttons.append(
-            ToolbarButton(action: .copy, sfSymbol: "doc.on.doc", tooltip: L("Copy")))
         let saveTooltip: String = {
             switch SaveActionPreference.current {
             case .saveToFolder:
@@ -541,24 +530,86 @@ class ToolbarLayout {
                 return L("Ask where to save")
             }
         }()
-        var saveBtn = ToolbarButton(
-            action: .save, sfSymbol: "square.and.arrow.down",
-            tooltip: saveTooltip
-        )
-        saveBtn.hasContextMenu = true
-        buttons.append(saveBtn)
+        var save = ToolbarButton(action: .save, sfSymbol: "square.and.arrow.down", tooltip: saveTooltip)
+        save.hasContextMenu = true
+        save.section = .finish
+        save.style = .labeled
+        save.title = L("Save")
+        save.isEssential = true
+        buttons.append(save)
+        var copy = ToolbarButton(action: .copy, sfSymbol: "doc.on.doc", tooltip: L("Copy"))
+        copy.section = .finish
+        copy.style = .prominent
+        copy.title = L("Copy")
+        copy.isEssential = true
+        buttons.append(copy)
+        return buttons
+    }
 
-        for action in ToolbarCustomAction.rightToolbarActions {
-            guard ToolbarActionPreferences.isEnabled(action, in: enabledActions) else { continue }
-            if let button = action.makeToolbarButton(
-                translateEnabled: translateEnabled,
-                isRecording: isRecording,
-                isEditorMode: isEditorMode
-            ) {
-                buttons.append(button)
+    /// Recording setup: options for the take, then Cancel and the Record button.
+    private static func recordingButtons() -> [ToolbarButton] {
+        var buttons: [ToolbarButton] = []
+        var move = ToolbarButton(
+            action: .moveSelection, sfSymbol: "arrow.up.and.down.and.arrow.left.and.right",
+            tooltip: L("Move Selection"))
+        move.section = .leading
+        move.isEssential = true
+        buttons.append(move)
+
+        let mouseHighlightOn = UserDefaults.standard.bool(forKey: "recordMouseHighlight")
+        var mouseBtn = ToolbarButton(
+            action: .mouseHighlight, sfSymbol: "cursorarrow.click.2", tooltip: L("Highlight Mouse Clicks"))
+        mouseBtn.isSelected = mouseHighlightOn
+        buttons.append(mouseBtn)
+
+        let keystrokesOn = UserDefaults.standard.bool(forKey: "recordKeystroke")
+        var keystrokeBtn = ToolbarButton(
+            action: .showKeystrokes, sfSymbol: "keyboard", tooltip: L("Show Keystrokes"))
+        keystrokeBtn.isSelected = keystrokesOn
+        keystrokeBtn.hasContextMenu = true
+        buttons.append(keystrokeBtn)
+
+        let audioOn = UserDefaults.standard.bool(forKey: "recordSystemAudio")
+        var audioBtn = ToolbarButton(
+            action: .systemAudio, sfSymbol: audioOn ? "speaker.wave.2.fill" : "speaker.slash",
+            tooltip: L("Record System Audio"))
+        audioBtn.isSelected = audioOn
+        buttons.append(audioBtn)
+
+        let micOn = UserDefaults.standard.bool(forKey: "recordMicAudio")
+        var micBtn = ToolbarButton(
+            action: .micAudio, sfSymbol: micOn ? "mic.fill" : "mic.slash", tooltip: L("Record Microphone"))
+        micBtn.isSelected = micOn
+        micBtn.hasContextMenu = true
+        buttons.append(micBtn)
+
+        let webcamOn = UserDefaults.standard.bool(forKey: "recordWebcam")
+        let webcamSymbol: String = {
+            if #available(macOS 14.0, *) {
+                return webcamOn ? "web.camera.fill" : "web.camera"
             }
-        }
+            return webcamOn ? "camera.fill" : "camera"
+        }()
+        var webcamBtn = ToolbarButton(action: .webcam, sfSymbol: webcamSymbol, tooltip: L("Webcam Overlay"))
+        webcamBtn.isSelected = webcamOn
+        webcamBtn.hasContextMenu = true
+        buttons.append(webcamBtn)
 
+        buttons.append(ToolbarButton(
+            action: .recordSettings, sfSymbol: "gearshape", tooltip: L("Recording Settings")))
+        for index in 1..<buttons.count { buttons[index].keepPriority = 60 - index }
+
+        var cancel = ToolbarButton(action: .stopRecord, sfSymbol: "xmark", tooltip: L("Cancel Recording"))
+        cancel.section = .finish
+        cancel.isEssential = true
+        buttons.append(cancel)
+        var start = ToolbarButton(action: .startRecord, sfSymbol: "record.circle", tooltip: L("Start Recording"))
+        start.section = .finish
+        start.style = .prominent
+        start.title = L("Record")
+        start.prominentColor = .systemRed
+        start.isEssential = true
+        buttons.append(start)
         return buttons
     }
 }
