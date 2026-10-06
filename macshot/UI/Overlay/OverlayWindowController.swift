@@ -387,18 +387,17 @@ class OverlayWindowController {
                                maxHeight: Int = 0) {
         overlayView?.scrollCaptureMaxHeight = maxHeight
         if isActive {
-            // Make the overlay window fully transparent + pass-through so the
-            // user sees AND interacts with the live app underneath. We must:
-            //   1) Clear the rootView's previewLayer (which holds the frozen
-            //      screenshot independent of OverlayView's drawing).
-            //   2) Mark the window non-opaque + clear background so AppKit
-            //      doesn't paint a solid backing behind the layer.
-            //   3) ignoresMouseEvents = true so scroll/click events fall
-            //      through to the app beneath (the HUD has its own panel).
+            // Get the overlay out of the way of the live app being captured.
+            // Even a transparent, click-through window above it changes what
+            // that app sees (hover, cursor, which window is under the pointer),
+            // so the window is ordered out; the HUD and the frame live in
+            // their own panels.
             rootView?.clearScreenshotPreview()
             overlayWindow?.isOpaque = false
             overlayWindow?.backgroundColor = .clear
             overlayView?.startScrollCaptureMode()
+            overlayWindow?.ignoresMouseEvents = true
+            overlayWindow?.orderOut(nil)
         } else {
             overlayView?.stopScrollCaptureMode()
             // Restore the screenshot-backed opaque overlay so the next
@@ -415,11 +414,25 @@ class OverlayWindowController {
         overlayView?.needsDisplay = true
     }
 
+    /// Another display's overlay steps aside while a scroll capture runs there:
+    /// its frozen screenshot would only block that display.
+    func hideForScrollCapture() {
+        overlayWindow?.ignoresMouseEvents = true
+        overlayWindow?.orderOut(nil)
+    }
+
+    /// The scroll capture HUD's window; frames come from the windows below it.
+    var scrollCaptureHUDWindowID: CGWindowID? { overlayView?.scrollCaptureHUDWindowID }
+
+    /// macshot's windows on screen during scroll capture (HUD and frame).
+    var scrollCaptureChromeWindowIDs: [CGWindowID] { overlayView?.scrollCaptureChromeWindowIDs ?? [] }
+
     func updateScrollCaptureProgress(stripCount: Int, pixelSize: CGSize,
-                                     autoScrolling: Bool = false) {
+                                     autoScrolling: Bool = false, status: String? = nil) {
         overlayView?.scrollCaptureStripCount = stripCount
         overlayView?.scrollCapturePixelSize = pixelSize
         overlayView?.scrollCaptureAutoScrolling = autoScrolling
+        overlayView?.scrollCaptureStatus = status
         overlayView?.updateScrollCaptureHUD()
         overlayView?.needsDisplay = true
     }

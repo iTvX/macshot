@@ -1,7 +1,7 @@
 import Cocoa
 
-/// Real NSView-based HUD for scroll capture. Hosted in its own NSPanel so it receives
-/// mouse events independently of the overlay window (which has ignoresMouseEvents = true).
+/// Real NSView-based HUD for scroll capture. Hosted in its own NSPanel: the overlay
+/// window is out of the way while the user scrolls the live app.
 class ScrollCaptureHUDView: NSView {
 
     private let infoLabel = NSTextField(labelWithString: "")
@@ -61,16 +61,23 @@ class ScrollCaptureHUDView: NSView {
     }
 
     func update(stripCount: Int, pixelSize: CGSize, backingScale: CGFloat,
-                maxScrollHeight: Int = 0, autoScrolling: Bool = false) {
+                maxScrollHeight: Int = 0, autoScrolling: Bool = false, status: String? = nil) {
         let pw = Int(pixelSize.width)
         let ph = Int(pixelSize.height)
         let ptW = Int(CGFloat(pw) / backingScale)
         let ptH = Int(CGFloat(ph) / backingScale)
 
-        if ptW > 0 && ptH > 0 {
+        if let status, !status.isEmpty {
+            // Something needs the user's attention (lost the page, auto-scroll
+            // gave up): say so in place of the size.
+            infoLabel.stringValue = status
+            infoLabel.textColor = .systemOrange
+        } else if ptW > 0 && ptH > 0 {
             infoLabel.stringValue = "\(L("Scroll Capture"))  ·  \(ptW)×\(ptH)"
+            infoLabel.textColor = ToolbarLayout.iconColor
         } else {
             infoLabel.stringValue = L("Scroll Capture")
+            infoLabel.textColor = ToolbarLayout.iconColor
         }
 
         updateAutoScrollState(autoScrolling)
@@ -121,8 +128,9 @@ class ScrollCaptureHUDView: NSView {
 
 }
 
-/// Floating panel that hosts the scroll capture HUD. Uses its own window so it receives
-/// mouse events even when the overlay window has ignoresMouseEvents = true.
+/// Floating panel that hosts the scroll capture HUD. Frames are composited from the
+/// windows below it, so the HUD never shows up in the capture even when it has to sit
+/// inside a full-height selection.
 class ScrollCaptureHUDPanel: NSPanel {
 
     let hudView = ScrollCaptureHUDView()

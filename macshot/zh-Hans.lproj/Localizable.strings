@@ -443,6 +443,8 @@
 "Auto Scroll" = "自动滚动";
 "Stop" = "停止";
 "Scrolling..." = "滚动中...";
+"Scrolled too fast — scroll back a little" = "滚动过快——请往回滚动一点";
+"Auto Scroll can't scroll this window — scroll manually" = "自动滚动无法滚动此窗口——请手动滚动";
 
 /* Effects Picker (Adjust popover) */
 "Presets" = "预设";

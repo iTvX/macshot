@@ -60,7 +60,7 @@ when the destination app has trouble reading clipboard files.
 
 - **Capture & annotate in one flow** — select a region, draw arrows/text/shapes/blur, copy to clipboard. One hotkey, zero friction.
 - **Screen recording with built-in editor** — record any area or full screen as MP4/GIF with system audio + microphone. Audio merge dialog with per-track volume control. Trim and export without leaving the app.
-- **Scroll capture** — select a region and scroll. macshot stitches it into one seamless tall (or wide) image automatically.
+- **Scroll capture** — select a region and scroll. macshot stitches it into one seamless tall image automatically.
 - **Upload anywhere** — one-click upload to Google Drive, imgbb, or any S3-compatible service (Cloudflare R2, AWS S3, MinIO, etc.). Link copied to clipboard instantly.
 - **Lightweight & native** — lives in your menu bar. Built with Swift and AppKit, not a web browser in disguise.
 - **40 languages** — English, 中文, 日本語, 한국어, Deutsch, Français, Español, Italiano, Português, العربية, हिन्दी, and 29 more. Auto-detects your system language.
@@ -104,7 +104,7 @@ filtered capture cannot be produced.
 - **Window snap** — hover over a window and click to capture it exactly; `Tab` toggles snap, `F` for full screen
 - **Resolution & aspect presets** — set an exact pixel size or lock an aspect ratio (1:1, 4:3, 16:9, 9:16, …) before or after selecting; editable width/height fields
 - **Boundary snap** — selection edges snap to strong color edges (UI lines, window borders) while dragging or resizing; hold `Option` to bypass
-- **Scroll capture** — auto-detects vertical or horizontal scrolling, stitches with Apple Vision, live preview panel beside the capture region
+- **Scroll capture** — follows your scrolling (or scrolls by itself with Auto Scroll), pixel-exact seams, sticky headers and footers kept out of the strips, live preview panel beside the capture region
 - **Capture delay** — 3/5/10/30 second countdown before capture, set via menu bar. Escape to cancel.
 - **Multi-monitor** — captures all screens simultaneously; drag a selection across screens for a stitched image
 - **Quick save** — `Cmd+Shift+S` to select and save/copy instantly without annotation. Enter key also saves/copies based on preference.

@@ -462,6 +462,8 @@
 "Auto Scroll" = "Auto Scroll";
 "Stop" = "Stop";
 "Scrolling..." = "Scrolling...";
+"Scrolled too fast — scroll back a little" = "Scrolled too fast — scroll back a little";
+"Auto Scroll can't scroll this window — scroll manually" = "Auto Scroll can't scroll this window — scroll manually";
 
 /* Effects Picker (Adjust popover) */
 "Presets" = "Presets";

@@ -1702,11 +1702,32 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
     @objc private func spaceDidChange() {
         guard !overlayControllers.isEmpty else { return }
+        // A scroll capture can't follow its window to another Space. End it
+        // like Stop does, keeping what was captured; its completion dismisses
+        // the overlays.
+        if let scc = scrollCaptureController {
+            scc.stopSession()
+            return
+        }
         dismissOverlays()
     }
 
     private func dismissOverlays(refocusPreviousApp: Bool = true) {
         captureTimingTrace?.mark("dismissOverlays entered refocus=\(refocusPreviousApp)")
+        // Scroll capture ends through its own handlers, which clear this
+        // first. Anything else dismissing the overlays mid-session must not
+        // leave the session running behind them.
+        if let scc = scrollCaptureController {
+            scrollCaptureController = nil
+            scc.onProgressChanged = nil
+            scc.onPreviewUpdated = nil
+            scc.onSessionDone = nil
+            scc.cancelSession()
+            scrollCapturePreviewPanel?.close()
+            scrollCapturePreviewPanel = nil
+            scrollCaptureOverlayController?.setScrollCaptureState(isActive: false)
+            scrollCaptureOverlayController = nil
+        }
         autoreleasepool {
             for controller in overlayControllers {
                 controller.dismiss()
@@ -3168,37 +3189,41 @@ extension AppDelegate: OverlayWindowControllerDelegate {
 
         scrollCaptureOverlayController = controller
 
-        let scc = ScrollCaptureController(captureRect: rect, screen: screen)
-        scc.excludedWindowIDs = overlayControllers.map { $0.windowNumber }
-        scrollCaptureController = scc
-
         // Read max height for the overlay HUD progress bar
         let maxH = UserDefaults.standard.object(forKey: "scrollMaxHeight") as? Int ?? 30000
 
-        // Tell the triggering overlay to enter scroll capture mode
+        // Tell the triggering overlay to enter scroll capture mode: it steps
+        // aside for the live app and shows the HUD and the selection frame.
         controller.setScrollCaptureState(isActive: true, maxHeight: maxH)
+        // Other displays show live content again instead of a frozen screenshot.
+        for other in overlayControllers where other !== controller {
+            other.hideForScrollCapture()
+        }
 
         // Create live preview panel if there's space beside the capture region
         let overlayLevel = 257  // matches overlay window level
         if let previewPanel = ScrollCapturePreviewPanel(captureRect: rect, screen: screen, overlayLevel: overlayLevel) {
-            previewPanel.orderFront(nil)
+            previewPanel.orderFrontRegardless()
             scrollCapturePreviewPanel = previewPanel
         }
 
-        scc.onStripAdded = { [weak self, weak controller] count in
-            guard let self = self, let scc = self.scrollCaptureController else { return }
-            controller?.updateScrollCaptureProgress(
-                stripCount: count, pixelSize: scc.stitchedPixelSize,
-                autoScrolling: scc.autoScrollActive)
+        let scc = ScrollCaptureController(captureRect: rect, screen: screen)
+        var ownWindows = overlayControllers.map { $0.windowNumber } + controller.scrollCaptureChromeWindowIDs
+        if let preview = scrollCapturePreviewPanel, preview.windowNumber > 0 {
+            ownWindows.append(CGWindowID(preview.windowNumber))
         }
-        scc.onPreviewUpdated = { [weak self] image in
-            self?.scrollCapturePreviewPanel?.updatePreview(image: image)
-        }
-        scc.onAutoScrollStarted = { [weak self, weak controller] in
+        scc.excludedWindowIDs = ownWindows
+        scc.captureBelowWindowID = controller.scrollCaptureHUDWindowID ?? kCGNullWindowID
+        scrollCaptureController = scc
+
+        scc.onProgressChanged = { [weak self, weak controller] in
             guard let self = self, let scc = self.scrollCaptureController else { return }
             controller?.updateScrollCaptureProgress(
                 stripCount: scc.stripCount, pixelSize: scc.stitchedPixelSize,
-                autoScrolling: true)
+                autoScrolling: scc.autoScrollActive, status: scc.statusMessage)
+        }
+        scc.onPreviewUpdated = { [weak self] image in
+            self?.scrollCapturePreviewPanel?.updatePreview(image: image)
         }
         scc.onSessionDone = { [weak self] finalImage in
             self?.handleScrollCaptureCompleted(finalImage: finalImage)
@@ -3220,9 +3245,8 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         scrollCaptureController = nil
         // Detach callbacks first so even an already-in-flight initial capture
         // cannot report completion after cancellation.
-        captureController?.onStripAdded = nil
+        captureController?.onProgressChanged = nil
         captureController?.onPreviewUpdated = nil
-        captureController?.onAutoScrollStarted = nil
         captureController?.onSessionDone = nil
         captureController?.cancelSession()
         scrollCapturePreviewPanel?.close()
@@ -3274,6 +3298,9 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         if !scc.autoScrollActive {
             if !AXIsProcessTrusted() {
                 // Cancel session without delivering a result, then dismiss overlays
+                scc.onProgressChanged = nil
+                scc.onPreviewUpdated = nil
+                scc.onSessionDone = nil
                 scc.cancelSession()
                 scrollCaptureController = nil
                 scrollCapturePreviewPanel?.close()
@@ -3304,7 +3331,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         let autoScrolling = scc.isActive && scc.autoScrollActive
         controller.updateScrollCaptureProgress(
             stripCount: scc.stripCount, pixelSize: scc.stitchedPixelSize,
-            autoScrolling: autoScrolling)
+            autoScrolling: autoScrolling, status: scc.statusMessage)
     }
 
     func overlayDidBeginSelection(_ controller: OverlayWindowController) {

@@ -773,92 +773,57 @@ class OverlayView: NSView {
     var scrollCapturePixelSize: CGSize = .zero
     var scrollCaptureMaxHeight: Int = 0
     var scrollCaptureAutoScrolling: Bool = false
+    var scrollCaptureStatus: String?
     private var scrollCaptureHUDPanel: ScrollCaptureHUDPanel?
-    private var scrollCaptureMouseTap: CFMachPort?
-    private var scrollCaptureMouseTapSource: CFRunLoopSource?
+    private var scrollCaptureFrame: ScrollCaptureFrameWindows?
+    private var scrollCaptureEscape: ScrollCaptureEscapeInterceptor?
     private var scrollCaptureKeyMonitor: Any?
     private var scrollCaptureLocalKeyMonitor: Any?
-    /// Activate the app visible under the selection rect so the user doesn't need a warmup click.
-    private func activateAppUnderSelection() {
-        guard selectionRect.width > 0, let win = window else { return }
-        // Convert selection center to global screen coords
-        let centerLocal = NSPoint(x: selectionRect.midX, y: selectionRect.midY)
-        let centerScreen = win.convertToScreen(NSRect(origin: centerLocal, size: .zero)).origin
 
-        guard
-            let windowList = CGWindowListCopyWindowInfo(
-                [.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID
-            ) as? [[String: Any]]
-        else { return }
-
-        let overlayWindowNumber = win.windowNumber
-        let screenH = NSScreen.screens.first?.frame.height ?? 0
-
-        for info in windowList {
-            guard let layer = info[kCGWindowLayer as String] as? Int, layer == 0,
-                let boundsDict = info[kCGWindowBounds as String] as? [String: CGFloat],
-                let winNum = info[kCGWindowNumber as String] as? Int,
-                let pid = info[kCGWindowOwnerPID as String] as? pid_t,
-                winNum != overlayWindowNumber
-            else { continue }
-
-            let cgX = boundsDict["X"] ?? 0
-            let cgY = boundsDict["Y"] ?? 0
-            let cgW = boundsDict["Width"] ?? 0
-            let cgH = boundsDict["Height"] ?? 0
-            let appKitRect = NSRect(x: cgX, y: screenH - cgY - cgH, width: cgW, height: cgH)
-
-            if appKitRect.contains(centerScreen) {
-                NSRunningApplication(processIdentifier: pid)?.activate(options: [])
-                return
-            }
-        }
+    /// The HUD's window. Scroll capture composites frames from the windows
+    /// below it, which keeps the HUD out of the image.
+    var scrollCaptureHUDWindowID: CGWindowID? {
+        guard let number = scrollCaptureHUDPanel?.windowNumber, number > 0 else { return nil }
+        return CGWindowID(number)
     }
 
+    /// macshot's windows on screen during scroll capture: the HUD and the frame.
+    var scrollCaptureChromeWindowIDs: [CGWindowID] {
+        (scrollCaptureHUDWindowID.map { [$0] } ?? []) + (scrollCaptureFrame?.windowIDs ?? [])
+    }
+
+    /// While scroll capture runs, the overlay window is ordered out and the
+    /// live app underneath has the screen to itself: no window above it, no
+    /// event interception, and focus handed to it by the capture controller.
+    /// Only the HUD and a frame drawn outside the selection remain.
     func startScrollCaptureMode() {
         isScrollCapturing = true
         updateResolutionBox()  // hide the box during scroll capture
         scrollCaptureStripCount = 0
         scrollCapturePixelSize = .zero
         scrollCaptureAutoScrolling = false
+        scrollCaptureStatus = nil
 
-        activateAppUnderSelection()
-        window?.ignoresMouseEvents = true
-
-        // Suppress mouse-moved events via CGEvent tap so hover effects in the
-        // target app don't break stitch detection. Requires Accessibility permission
-        // (checked before entering scroll capture mode).
-        if AXIsProcessTrusted() {
-            let tap = CGEvent.tapCreate(
-                tap: .cgSessionEventTap,
-                place: .headInsertEventTap,
-                options: .defaultTap,
-                eventsOfInterest: CGEventMask(1 << CGEventType.mouseMoved.rawValue),
-                callback: { _, _, _, _ in nil },
-                userInfo: nil)
-            if let tap = tap {
-                let source = CFMachPortCreateRunLoopSource(nil, tap, 0)
-                CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)
-                CGEvent.tapEnable(tap: tap, enable: true)
-                scrollCaptureMouseTap = tap
-                scrollCaptureMouseTapSource = source
+        // Escape cancels. The captured app has keyboard focus, so a tap
+        // catches the key — and keeps it from reaching that app too. The
+        // global monitor is the fallback when the tap can't be installed;
+        // the local one covers macshot's own windows.
+        let interceptor = ScrollCaptureEscapeInterceptor { [weak self] in
+            Task { @MainActor [weak self] in self?.requestScrollCaptureCancel() }
+        }
+        if interceptor.start() {
+            scrollCaptureEscape = interceptor
+        } else {
+            // Its thread may still be getting there: make sure it never does.
+            interceptor.stop()
+            scrollCaptureKeyMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+                if event.keyCode == 53 { self?.requestScrollCaptureCancel() }
             }
         }
-
-        // Escape key monitor — global catches when another app has focus; local when macshot has focus.
-        let handleScrollKey: (NSEvent) -> Void = { [weak self] event in
-            guard let self = self, self.isScrollCapturing else { return }
-            if event.keyCode == 53 {  // Escape
-                self.overlayDelegate?.overlayViewDidRequestCancelScrollCapture()
-            }
-        }
-        scrollCaptureKeyMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { event in
-            handleScrollKey(event)
-        }
-        scrollCaptureLocalKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            handleScrollKey(event)
-            if event.keyCode == 53 { return nil }  // consume
-            return event
+        scrollCaptureLocalKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard event.keyCode == 53, let self, self.isScrollCapturing else { return event }
+            self.requestScrollCaptureCancel()
+            return nil
         }
 
         // Show real NSPanel-based HUD (receives clicks independently of overlay window)
@@ -876,11 +841,21 @@ class OverlayView: NSView {
             autoScrolling: scrollCaptureAutoScrolling)
         if let win = window {
             panel.position(relativeTo: selectionRect, in: win)
+            let frame = ScrollCaptureFrameWindows()
+            frame.show(around: win.convertToScreen(selectionRect))
+            scrollCaptureFrame = frame
         }
-        panel.orderFront(nil)
+        // macshot isn't the active app here (the overlay never activates it),
+        // and the HUD has to show regardless.
+        panel.orderFrontRegardless()
         scrollCaptureHUDPanel = panel
 
         needsDisplay = true
+    }
+
+    private func requestScrollCaptureCancel() {
+        guard isScrollCapturing else { return }
+        overlayDelegate?.overlayViewDidRequestCancelScrollCapture()
     }
 
     func stopScrollCaptureMode() {
@@ -888,20 +863,16 @@ class OverlayView: NSView {
         scrollCaptureStripCount = 0
         scrollCapturePixelSize = .zero
         scrollCaptureAutoScrolling = false
+        scrollCaptureStatus = nil
 
+        scrollCaptureEscape?.stop()
+        scrollCaptureEscape = nil
         if let m = scrollCaptureKeyMonitor { NSEvent.removeMonitor(m); scrollCaptureKeyMonitor = nil }
         if let m = scrollCaptureLocalKeyMonitor { NSEvent.removeMonitor(m); scrollCaptureLocalKeyMonitor = nil }
-        if let tap = scrollCaptureMouseTap {
-            CGEvent.tapEnable(tap: tap, enable: false)
-            if let source = scrollCaptureMouseTapSource {
-                CFRunLoopRemoveSource(CFRunLoopGetMain(), source, .commonModes)
-            }
-            scrollCaptureMouseTap = nil
-            scrollCaptureMouseTapSource = nil
-        }
         scrollCaptureHUDPanel?.close()
         scrollCaptureHUDPanel = nil
-        window?.ignoresMouseEvents = false
+        scrollCaptureFrame?.hide()
+        scrollCaptureFrame = nil
 
         needsDisplay = true
     }
@@ -913,7 +884,8 @@ class OverlayView: NSView {
             pixelSize: scrollCapturePixelSize,
             backingScale: window?.backingScaleFactor ?? 2,
             maxScrollHeight: scrollCaptureMaxHeight,
-            autoScrolling: scrollCaptureAutoScrolling)
+            autoScrolling: scrollCaptureAutoScrolling,
+            status: scrollCaptureStatus)
         if let win = window {
             scrollCaptureHUDPanel?.position(relativeTo: selectionRect, in: win)
         }
@@ -9935,6 +9907,9 @@ class OverlayView: NSView {
     }
 
     func reset() {
+        // A session torn down from outside (a Space change, say) must not
+        // leave its HUD, frame or Escape tap behind.
+        if isScrollCapturing { stopScrollCaptureMode() }
         state = .idle
         selectionRect = .zero
         selectionIsWindowSnap = false

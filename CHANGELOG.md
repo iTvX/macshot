@@ -1,5 +1,15 @@
 # Changelog
 
+## 4.3.4 — scroll capture rework (fork, 2026-10-06)
+
+- Scroll smoothly while capturing: scroll capture no longer installs a system-wide mouse-moved filter on the main thread, which held back every scroll, pointer and click event whenever the main thread was busy. Frame grabs, matching and stitching now run on background queues.
+- Scroll the captured window straight away, without clicking it first: the overlay steps aside instead of covering the app, mouse movement reaches the app again, and the window under the selection is raised and focused the way a click would.
+- Escape cancels scroll capture without also reaching the captured app; a Space change ends the capture with what was taken instead of stranding its HUD.
+- Stitch by tracking where every frame sits in the page: scrolling back up and down no longer duplicates content, a frame that moved more than a screen is set aside (with a hint to scroll back a little) instead of leaving a silent gap, and seams no longer drop or repeat a pixel row, including on Retina content.
+- Replace Vision-based matching, which misread regularly spaced text, with exact row matching verified on the pixels. Sidebars, other windows over part of the selection and translucent bars are left out of matching; translucent and opaque footers are kept out of every strip and added once.
+- Auto Scroll learns how far each app scrolls, keeps steps inside the visible part, steps back after an overshoot, ignores mouse utilities that rewrite wheel events, and falls back to manual scrolling with a note when a window can't be scrolled.
+- Apply the maximum height in manual mode too (with hard limits for "unlimited"), keep the HUD out of the image for full-height selections, and build the final image and the live preview without per-strip copies of the whole page.
+
 ## 4.3.3 — single CleanShot-style toolbar (fork, 2026-10-06)
 
 - Replace the separate action bar, tool bar and always-on options row with one toolbar right-aligned with the selection: move, tools, color and an options chip, undo/redo, Beautify/Pin/OCR, More, then Cancel, Save and a prominent Copy. It sits below the selection, above it when there is no room, and inside it only for selections that fill the screen.
