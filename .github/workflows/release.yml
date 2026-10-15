@@ -1,6 +1,12 @@
 name: Release
 
 on:
+  workflow_dispatch:
+    inputs:
+      validate_only:
+        description: "Build, notarize, and verify without publishing"
+        type: boolean
+        default: false
   pull_request:
     branches:
       - main
@@ -17,8 +23,8 @@ concurrency:
 jobs:
   release:
     name: Build, notarize, and publish
-    if: github.event.pull_request.merged == true
-    runs-on: [self-hosted, macOS, ARM64, macshot-release]
+    if: github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch'
+    runs-on: [self-hosted, macOS, ARM64, macshot-local]
     timeout-minutes: 120
 
     steps:
@@ -32,8 +38,14 @@ jobs:
       - name: Check out the merged source
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
         with:
-          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          ref: ${{ github.event.pull_request.merge_commit_sha || github.sha }}
           fetch-depth: 0
+
+      - name: Confirm publication source
+        if: inputs.validate_only != true
+        run: |
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
 
       - name: Validate public-repository privacy
         run: ./Scripts/privacy_check.sh
@@ -66,6 +78,7 @@ jobs:
 
       - name: Build, sign, and notarize on this Mac
         env:
+          CODESIGN_VIA_LAUNCHCTL: "0"
           BUILD_NUMBER: ${{ steps.release.outputs.build_number }}
           RELEASE_VERSION: ${{ steps.release.outputs.version }}
         run: ./Scripts/build_release.sh
@@ -79,9 +92,10 @@ jobs:
         run: ./Scripts/generate_appcast.sh
 
       - name: Publish release tag
+        if: inputs.validate_only != true
         env:
           RELEASE_TAG: ${{ steps.release.outputs.tag }}
-          MERGE_COMMIT: ${{ github.event.pull_request.merge_commit_sha }}
+          MERGE_COMMIT: ${{ github.event.pull_request.merge_commit_sha || github.sha }}
         shell: bash
         run: |
           set -euo pipefail
@@ -93,10 +107,12 @@ jobs:
             }
           else
             git tag "$RELEASE_TAG" "$MERGE_COMMIT"
+            /opt/homebrew/bin/python3 "${HOME}/.config/git/identity-guard/guard.py" check
             git push origin "refs/tags/$RELEASE_TAG"
           fi
 
       - name: Publish GitHub Release
+        if: inputs.validate_only != true
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ steps.release.outputs.tag }}
@@ -117,6 +133,7 @@ jobs:
           fi
 
       - name: Publish Sparkle update feed
+        if: inputs.validate_only != true
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
