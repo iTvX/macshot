@@ -261,3 +261,13 @@ macOS 12.3 (Monterey) or later.
 ## License
 
 [GPLv3](LICENSE)
+
+### Local CI runner
+
+PR checks, normal/Offline regression tests, and releases use the dedicated
+`macshot-local` runner. Only branches in this repository may execute PR jobs on
+that runner. A merged PR still builds, signs, notarizes, and publishes automatically.
+Manual Release runs support `validate_only` to verify the full release and Sparkle
+appcast without publishing. Signing and notarization stay in the runner's private
+Keychain; Sparkle retains the existing update-signing key. The LaunchAgent starts
+at user login, so the Mac must remain powered on and logged in.

@@ -10,8 +10,9 @@ permissions:
 
 jobs:
   build:
-    name: Build on hosted macOS
-    runs-on: macos-26
+    name: Build on local macOS
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, macOS, ARM64, macshot-local]
     timeout-minutes: 45
 
     steps:

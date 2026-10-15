@@ -67,6 +67,7 @@ while IFS= read -r commit; do
     parents="$(git show -s --format='%P' "$commit")"
 
     case "${author_name} <${author_email}>" in
+        "Max Yu <46791134+iTvX@users.noreply.github.com>"|\
         "MacShot Fork Maintainers <macshot-maintainers@users.noreply.github.com>"|\
         "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>")
             continue
