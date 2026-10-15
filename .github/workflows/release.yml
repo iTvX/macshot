@@ -78,6 +78,7 @@ jobs:
 
       - name: Build, sign, and notarize on this Mac
         env:
+          CODESIGN_VIA_LAUNCHCTL: "0"
           BUILD_NUMBER: ${{ steps.release.outputs.build_number }}
           RELEASE_VERSION: ${{ steps.release.outputs.version }}
         run: ./Scripts/build_release.sh
