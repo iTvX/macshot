@@ -61,7 +61,7 @@ final class SettingsPortabilityTests: XCTestCase {
         let systemKeys = [
             "NSWindowFrame main", "AppleLanguages", "com.apple.trackpad.scrolling",
             "kCIEnableCoreImage", "_internalThing", "AKLastIDMSEnvironment",
-            "METAL_ERROR_MODE", "KB_Something", "Country",
+            "METAL_ERROR_MODE", "KB_Something", "Country", "userMenuExtraStyle",
         ]
         for key in systemKeys {
             XCTAssertFalse(SettingsPortability.isPortable(key), "`\(key)` is injected by macOS, not a macshot setting")
