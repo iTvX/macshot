@@ -24,7 +24,7 @@ jobs:
   release:
     name: Build, notarize, and publish
     if: github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch'
-    runs-on: [self-hosted, macOS, ARM64, macshot-local]
+    runs-on: [self-hosted, macOS, ARM64, macshot-release]
     timeout-minutes: 120
 
     steps:
