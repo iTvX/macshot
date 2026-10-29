@@ -79,6 +79,7 @@ enum SettingsPortability {
     /// injected by macOS, not macshot. Kept small; add only when a real export surfaces one.
     static let systemExactKeys: Set<String> = [
         "Country", "NavPanelFileListModeForOpenMode", "shouldShowRSVPDataDetectors",
+        "userMenuExtraStyle",  // fast user switching menu style
     ]
 
     /// Substrings that mark a key as a credential/secret. Case-insensitive. This guard fails
